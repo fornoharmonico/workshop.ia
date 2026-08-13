@@ -1,0 +1,8 @@
+{
+  "name": "v2.2 IA Aplicada: do Problema ao Protótipo",
+  "description": "v2.2 da Landing page e webapp do workshop de Inteligência Artificial Generativa Aplicada criado por Pedro Lago (O Forno).",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
