@@ -1,14 +1,25 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { WORKSHOP_METADATA } from '../../data/syllabus';
-import { Flame, Sparkles, Clock, Calendar, Users, ShieldCheck, ArrowRight, BookOpen } from 'lucide-react';
+import { 
+  Building2, 
+  BookOpen, 
+  Clock, 
+  Calendar, 
+  ShieldCheck, 
+  ArrowRight, 
+  Sparkles
+} from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
-  const { setCurrentView, setActiveWebappTab, openBrandModal } = useApp();
+  const { setCurrentView, setActiveWebappTab } = useApp();
 
   return (
-    <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 bg-gradient-to-b from-amber-50/60 via-slate-50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 transition-colors">
-      
+    <section 
+      id="top" 
+      aria-labelledby="hero-main-title" 
+      className="relative overflow-hidden pt-8 pb-16 sm:pt-14 sm:pb-24 lg:pt-16 lg:pb-28 bg-gradient-to-b from-amber-50/80 via-slate-50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 transition-colors"
+    >
       {/* Decorative subtle background accents */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-200/30 dark:bg-amber-900/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 left-10 w-80 h-80 bg-orange-200/20 dark:bg-orange-950/10 rounded-full blur-3xl pointer-events-none" />
@@ -16,84 +27,100 @@ export const HeroSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-3xl mx-auto space-y-6">
           
-          {/* Badge */}
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white border border-slate-800 text-xs sm:text-sm font-semibold shadow-xs select-none"
-          >
+          {/* Institutional Badge with explicit image dimensions */}
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-900 dark:bg-slate-800 text-slate-100 border border-slate-700 text-xs sm:text-sm font-semibold shadow-xs select-none">
             <img
               src="https://i.postimg.cc/RhpFKdKb/LOGO-FORNO-branco-sem-fundo.png"
-              alt="O Forno Logo"
+              alt="Logo O Forno"
+              width={24}
+              height={24}
+              loading="eager"
+              decoding="async"
               referrerPolicy="no-referrer"
-              className="w-5 h-5 sm:w-6 sm:h-6 object-contain p-0 shrink-0"
+              className="w-5 h-5 sm:w-6 sm:h-6 object-contain shrink-0"
             />
-            <span>Fornologia: A arte e ciência de tirar projetos do Forno.</span>
+            <span>Fornologia: A arte e ciência de tirar projetos d&apos;O Forno.</span>
           </div>
 
-          {/* Main Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+          {/* Main Title with Guaranteed High-Contrast Fallback */}
+          <h1 id="hero-main-title" className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-950 dark:text-white tracking-tight leading-[1.15]">
             Inteligência Artificial Aplicada:{' '}
-            <span className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-500 bg-clip-text text-transparent">
+            <span className="text-amber-700 dark:text-amber-400 font-black inline-block sm:bg-gradient-to-r sm:from-amber-600 sm:via-orange-600 sm:to-amber-700 sm:dark:from-amber-400 sm:dark:via-orange-400 sm:dark:to-amber-300 sm:bg-clip-text sm:text-transparent">
               do Problema ao Protótipo
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-200 leading-relaxed">
             {WORKSHOP_METADATA.headlineDescription}
           </p>
 
-          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Um workshop prático e imersivo para jovens e estudantes de 12 a 17 anos aprenderem a transformar desafios reais em soluções concretas, utilizando a IA Generativa como parceira cognitiva e crítica.
+          {/* Target Audience & Purpose */}
+          <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-medium">
+            Um workshop prático e imersivo para pessoas que querem aprender a utilizar a IA como parceira no desenvolvimento de um projeto de ponta a ponta, da investigação do problema a construção do protótipo da solução.
           </p>
 
-          {/* Key Quick Badges */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
-              <Clock className="w-4 h-4 text-amber-500" />
+          {/* Quick Key Badges with High Contrast */}
+          <div className="pt-1 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
+              <Clock className="w-4 h-4 text-amber-700 dark:text-amber-400" />
               <span>{WORKSHOP_METADATA.totalDuration} (4 x 3h)</span>
             </div>
 
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
-              <Calendar className="w-4 h-4 text-orange-500" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
+              <Calendar className="w-4 h-4 text-orange-700 dark:text-orange-400" />
               <span>4 Encontros Práticos</span>
             </div>
 
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
-              <Users className="w-4 h-4 text-blue-500" />
-              <span>Até 20 estudantes (4 equipes)</span>
-            </div>
-
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs">
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
               <span>Presencial ou Híbrido</span>
             </div>
           </div>
 
-          {/* Primary Action Buttons */}
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => {
-                setCurrentView('webapp');
-                setActiveWebappTab('dashboard');
-              }}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-base shadow-xl shadow-amber-500/25 transition-all flex items-center justify-center gap-2 group"
+          {/* Primary B2B Action Buttons */}
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            {/* Primary B2B Institutional Action */}
+            <a
+              href="#contato"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-base shadow-xl shadow-amber-600/25 hover:shadow-2xl hover:shadow-amber-600/35 transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] group"
             >
-              <Sparkles className="w-5 h-5 text-amber-200" />
-              <span>Acessar o Webapp Operacional</span>
+              <Building2 className="w-5 h-5 text-amber-200" />
+              <span>Leve para sua Escola ou Instituição</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </a>
 
+            {/* Secondary Pedagogical Journey Action */}
             <a
               href="#jornada"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-base border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 font-bold text-base border border-slate-300 dark:border-slate-700 shadow-xs transition-all flex items-center justify-center gap-2"
             >
-              <BookOpen className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-              <span>Conhecer a Jornada</span>
+              <BookOpen className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+              <span>Conhecer os 4 Encontros</span>
             </a>
           </div>
 
+          {/* Tertiary Discrete Note for Active Students */}
+          <div className="pt-1">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              Já é estudante ou professor de uma turma em andamento?{' '}
+              <button
+                onClick={() => {
+                  setCurrentView('webapp');
+                  setActiveWebappTab('jornada');
+                }}
+                className="font-bold text-amber-800 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Acessar o Webapp da Oficina
+              </button>
+            </p>
+          </div>
+
         </div>
+
       </div>
     </section>
   );
 };
+

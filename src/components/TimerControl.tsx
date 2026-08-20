@@ -1,18 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Play, Pause, RotateCcw, Maximize2, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  Play, 
+  Pause, 
+  RotateCcw, 
+  Maximize2, 
+  Clock, 
+  AlertCircle, 
+  ChevronDown, 
+  ChevronUp, 
+  ArrowRight,
+  X,
+  Sparkles
+} from 'lucide-react';
+import { PILOT_CHAIN_ACTIVITIES } from '../data/pilotChain';
 
 export const TimerControl: React.FC = () => {
-  const { timer, pauseTimer, resumeTimer, resetTimer, addMinutesToTimer, toggleTimerFullscreen } = useApp();
+  const { 
+    state,
+    timer, 
+    pauseTimer, 
+    resumeTimer, 
+    resetTimer, 
+    addMinutesToTimer, 
+    toggleTimerFullscreen,
+    setCurrentPilotActivityId,
+    setActiveWebappTab
+  } = useApp();
+  
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const [hasBeenActivated, setHasBeenActivated] = useState<boolean>(false);
+  const [isZeroAlertDismissed, setIsZeroAlertDismissed] = useState<boolean>(false);
 
   // Track if timer has ever been started in this session
-  React.useEffect(() => {
+  useEffect(() => {
     if (timer.isRunning) {
       setHasBeenActivated(true);
+      setIsZeroAlertDismissed(false);
     }
   }, [timer.isRunning]);
+
+  // Reset dismissed state when activity changes
+  useEffect(() => {
+    setIsZeroAlertDismissed(false);
+  }, [state.currentPilotActivityId]);
 
   // Hide floating footer timer ONLY before any timer has been activated
   if (!hasBeenActivated && !timer.isRunning && !timer.isFinished) return null;
@@ -22,7 +53,23 @@ export const TimerControl: React.FC = () => {
   };
 
   const isLowTime = timer.totalSeconds > 0 && timer.totalSeconds <= 180; // 3 mins or less
-  const isPillMinimized = isMinimized || (!timer.isRunning && !timer.isFinished);
+  const isPillMinimized = isMinimized || (!timer.isRunning && !timer.isFinished && isZeroAlertDismissed);
+
+  // Determine current & next activity in chain
+  const currentActId = state.currentPilotActivityId || 'E1-A01';
+  const currentIndex = PILOT_CHAIN_ACTIVITIES.findIndex((a) => a.id === currentActId);
+  const nextActivity = currentIndex >= 0 && currentIndex < PILOT_CHAIN_ACTIVITIES.length - 1 
+    ? PILOT_CHAIN_ACTIVITIES[currentIndex + 1] 
+    : null;
+
+  const handleAdvanceToNextActivity = () => {
+    if (nextActivity) {
+      setCurrentPilotActivityId(nextActivity.id);
+      setActiveWebappTab('atividade');
+      resetTimer();
+      setIsZeroAlertDismissed(true);
+    }
+  };
 
   if (isPillMinimized) {
     return (
@@ -31,7 +78,7 @@ export const TimerControl: React.FC = () => {
           onClick={() => setIsMinimized(false)}
           className={`px-3.5 py-2 rounded-2xl border backdrop-blur-md font-mono font-extrabold text-sm flex items-center gap-2.5 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ${
             timer.isFinished
-              ? 'bg-rose-900/95 text-white border-rose-500 animate-pulse shadow-rose-900/40'
+              ? 'bg-rose-950 text-rose-100 border-rose-500 shadow-rose-950/60 ring-2 ring-rose-500/50 animate-pulse'
               : !timer.isRunning
                 ? 'bg-slate-900/95 text-amber-300 border-amber-500/50 shadow-black/50'
                 : isLowTime
@@ -40,11 +87,18 @@ export const TimerControl: React.FC = () => {
           }`}
           title="Expandir Cronômetro"
         >
-          <div className={`p-1 rounded-lg font-bold shrink-0 ${!timer.isRunning ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-500 text-slate-950'}`}>
+          <div className={`p-1 rounded-lg font-bold shrink-0 ${
+            timer.isFinished ? 'bg-rose-600 text-white' : !timer.isRunning ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-500 text-slate-950'
+          }`}>
             <Clock className="w-3.5 h-3.5" />
           </div>
           <span className="tracking-tight">{formatTime(timer.minutes, timer.seconds)}</span>
-          {!timer.isRunning && (
+          
+          {timer.isFinished ? (
+            <span className="text-2xs font-extrabold px-1.5 py-0.5 rounded bg-rose-800 text-white uppercase tracking-wider hidden sm:inline">
+              Tempo Esgotado
+            </span>
+          ) : !timer.isRunning ? (
             <button
               type="button"
               onClick={(e) => {
@@ -57,7 +111,23 @@ export const TimerControl: React.FC = () => {
             >
               <Play className="w-3.5 h-3.5 fill-current" />
             </button>
+          ) : null}
+
+          {/* Quick +2m button even in pill mode when time is finished */}
+          {timer.isFinished && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                addMinutesToTimer(2);
+              }}
+              className="px-2 py-0.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-2xs font-black transition cursor-pointer shadow-xs"
+              title="Adicionar 2 minutos"
+            >
+              +2m
+            </button>
           )}
+
           <ChevronUp className="w-4 h-4 text-amber-400" />
         </div>
       </div>
@@ -68,24 +138,28 @@ export const TimerControl: React.FC = () => {
     <div className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:w-[580px] md:w-[660px] z-50 shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
       <div className={`p-3 sm:p-4 rounded-2xl border backdrop-blur-md transition-all ${
         timer.isFinished 
-          ? 'bg-rose-900/95 text-white border-rose-500 animate-pulse shadow-rose-900/40' 
+          ? 'bg-slate-950 text-white border-rose-500 shadow-rose-950/60 ring-2 ring-rose-500/40' 
           : isLowTime 
             ? 'bg-slate-900/95 text-white border-amber-500/80 shadow-amber-900/30' 
             : 'bg-slate-900/95 text-white border-slate-700/80 shadow-black/50'
       }`}>
+        
+        {/* Main Dock Header Row */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           
           {/* Activity Name & Icon */}
           <div className="flex items-center gap-2.5 min-w-0 justify-between sm:justify-start">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className={`p-1.5 sm:p-2 rounded-xl text-white font-bold shrink-0 ${
-                timer.isFinished ? 'bg-rose-600' : isLowTime ? 'bg-amber-500' : 'bg-amber-500 text-slate-950'
+                timer.isFinished ? 'bg-rose-600 animate-pulse' : isLowTime ? 'bg-amber-500' : 'bg-amber-500 text-slate-950'
               }`}>
                 <Clock className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider block">
-                  Em Andamento
+                <span className={`text-[10px] font-extrabold uppercase tracking-wider block ${
+                  timer.isFinished ? 'text-rose-400' : 'text-amber-400'
+                }`}>
+                  {timer.isFinished ? '⚠️ Tempo Encerrado' : 'Em Andamento'}
                 </span>
                 <h4 className="text-xs font-bold text-white truncate max-w-[150px] sm:max-w-[180px]">
                   {timer.activityTitle || 'Atividade em Andamento'}
@@ -96,7 +170,7 @@ export const TimerControl: React.FC = () => {
             {/* Mobile Clock Digits Display inline next to title */}
             <div className={`sm:hidden font-mono font-black text-xl tracking-tight ${
               timer.isFinished 
-                ? 'text-rose-400' 
+                ? 'text-rose-400 animate-pulse' 
                 : isLowTime 
                   ? 'text-amber-400 animate-pulse' 
                   : 'text-white'
@@ -110,7 +184,7 @@ export const TimerControl: React.FC = () => {
             {/* Desktop Clock Digits */}
             <div className={`hidden sm:block font-mono font-black text-2xl sm:text-3xl tracking-tight ${
               timer.isFinished 
-                ? 'text-rose-400' 
+                ? 'text-rose-400 animate-pulse' 
                 : isLowTime 
                   ? 'text-amber-400 animate-pulse' 
                   : 'text-white'
@@ -135,7 +209,11 @@ export const TimerControl: React.FC = () => {
               ) : (
                 <button
                   onClick={() => {
-                    resumeTimer();
+                    if (timer.remainingSeconds === 0) {
+                      addMinutesToTimer(2);
+                    } else {
+                      resumeTimer();
+                    }
                     setIsMinimized(false);
                   }}
                   className="p-2 sm:p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors cursor-pointer"
@@ -160,7 +238,7 @@ export const TimerControl: React.FC = () => {
 
               <div className="h-4 w-[1px] bg-slate-700 my-auto mx-0.5" />
 
-              {/* Quick minute buttons — hidden on tiny mobile, visible from sm */}
+              {/* Quick minute buttons */}
               <div className="hidden sm:flex items-center gap-1">
                 <button
                   onClick={() => addMinutesToTimer(-1)}
@@ -220,10 +298,52 @@ export const TimerControl: React.FC = () => {
 
         </div>
 
+        {/* Persistent, Non-Blocking Zero-Time Notice */}
         {timer.isFinished && (
-          <div className="mt-2 text-xs font-semibold text-rose-300 flex items-center justify-center gap-1.5">
-            <AlertCircle className="w-4 h-4" />
-            <span>Tempo encerrado para esta atividade! Conclua o registro ou adicione mais minutos.</span>
+          <div className="mt-3 pt-3 border-t border-slate-800 space-y-2 animate-in fade-in">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-rose-950/60 border border-rose-500/40 rounded-xl p-2.5">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 animate-pulse" />
+                <span className="text-xs font-medium text-rose-200">
+                  Tempo previsto de <strong>{timer.activityTitle}</strong> encerrado. Você pode continuar ou estender:
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+                <button
+                  onClick={() => addMinutesToTimer(2)}
+                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 text-2xs font-black rounded-lg transition cursor-pointer"
+                >
+                  +2 min
+                </button>
+                <button
+                  onClick={() => addMinutesToTimer(5)}
+                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 text-2xs font-bold rounded-lg transition cursor-pointer"
+                >
+                  +5 min
+                </button>
+                {nextActivity && (
+                  <button
+                    onClick={handleAdvanceToNextActivity}
+                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-2xs font-extrabold rounded-lg transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Próxima</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setIsZeroAlertDismissed(true);
+                    setIsMinimized(true);
+                  }}
+                  className="p-1 text-slate-400 hover:text-white rounded-lg transition cursor-pointer"
+                  title="Dispensar aviso"
+                  aria-label="Dispensar aviso"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

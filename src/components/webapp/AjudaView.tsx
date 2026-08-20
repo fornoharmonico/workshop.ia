@@ -60,7 +60,17 @@ export const AjudaView: React.FC = () => {
       }
     },
     {
-      question: '6. Qual é exatamente o papel da IA e qual é o papel da nossa equipe?',
+      question: '6. Como garantir que meu progresso não seja perdido se eu trocar de computador?',
+      answer: 'O webapp salva suas decisões automaticamente neste navegador em tempo real. Se você fechar a aba ou desligar o computador, seus dados permanecerão gravados. Para levar o trabalho da equipe para outro computador (ex: no próximo encontro ou em casa), vá em "4. Recursos" -> "Exportar & Backup", clique em "Baixar JSON" e, no outro aparelho, clique em "Carregar Backup".',
+      cta: {
+        label: 'Acessar Exportar & Backup',
+        action: () => {
+          setActiveWebappTab('recursos');
+        }
+      }
+    },
+    {
+      question: '7. Qual é exatamente o papel da IA e qual é o papel da nossa equipe?',
       answer: 'A IA atua como um copiloto socrático: ela ajuda a organizar ideias, sintetizar discussões, fazer perguntas críticas e propor estruturas. A decisão, a autoria, a escolha do problema e a validação são 100% da sua equipe.',
       cta: null
     }

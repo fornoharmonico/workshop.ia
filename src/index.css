@@ -2,8 +2,18 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
 html, body {
   overscroll-behavior-y: contain;
+}
+
+:focus-visible {
+  outline: 2px solid #d97706;
+  outline-offset: 2px;
 }
 
 @media print {

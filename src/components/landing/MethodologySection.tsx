@@ -16,19 +16,23 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
 
 export const MethodologySection: React.FC = () => {
   return (
-    <section id="metodologia" className="py-16 lg:py-24 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors">
+    <section 
+      id="metodologia" 
+      aria-labelledby="metodologia-title" 
+      className="py-16 lg:py-24 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-          <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
-            MÉTODOS & FERRAMENTAS
+          <span className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-widest px-3 py-1 bg-amber-100 dark:bg-amber-950/80 rounded-full border border-amber-300 dark:border-amber-800">
+            MÉTODOS & ESTRUTURAS
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h2 id="metodologia-title" className="text-3xl sm:text-4xl font-black text-slate-950 dark:text-white tracking-tight">
             Perguntas orientadoras que guiam cada etapa
           </h2>
-          <p className="text-base text-slate-600 dark:text-slate-400">
-            A metodologia combina o rigor do design de produtos e gestão de projetos com a agilidade do questionamento socrático apoiado por IA.
+          <p className="text-base text-slate-700 dark:text-slate-300">
+            A metodologia combina o rigor da gestão de projetos (Fornologia) e design de produtos com o questionamento socrático apoiado por IA.
           </p>
         </div>
 
@@ -39,28 +43,28 @@ export const MethodologySection: React.FC = () => {
             return (
               <div
                 key={tool.id}
-                className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/80 hover:border-amber-400 dark:hover:border-amber-500 transition-all shadow-xs flex flex-col justify-between group"
+                className="bg-slate-50 dark:bg-slate-800/70 p-6 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-400 transition-all shadow-xs flex flex-col justify-between group"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 group-hover:scale-105 transition-transform">
+                    <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 group-hover:scale-105 transition-transform">
                       <IconComponent className="w-6 h-6" />
                     </div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
                       FERRAMENTA
                     </span>
                   </div>
 
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-black text-slate-950 dark:text-white">
                       {tool.name}
                     </h3>
-                    <p className="text-sm font-semibold text-amber-600 dark:text-amber-400 leading-snug">
-                      "{tool.orientingQuestion}"
+                    <p className="text-sm font-bold text-amber-900 dark:text-amber-200 leading-snug">
+                      &ldquo;{tool.orientingQuestion}&rdquo;
                     </p>
                   </div>
 
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
                     {tool.description}
                   </p>
                 </div>

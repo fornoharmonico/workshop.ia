@@ -1,156 +1,168 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { WORKSHOP_METADATA } from '../data/syllabus';
-import { Flame, Mail, Phone, ExternalLink, Sparkles, Shield, Heart } from 'lucide-react';
+import { Mail, Phone, ExternalLink, Sparkles, Shield, FileText } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { setCurrentView, setActiveWebappTab, openBrandModal } = useApp();
+  const { setCurrentView, setActiveWebappTab, openBrandModal, openPrivacyModal } = useApp();
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-slate-900 text-slate-300 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+    <footer className="bg-slate-950 text-slate-300 border-t border-slate-800 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
           
-          {/* Brand Column */}
-          <div className="md:col-span-2 space-y-4">
+          {/* Brand Column (5 Cols) */}
+          <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              <button
-                onClick={() =>
-                  openBrandModal({
-                    imageUrl: 'https://i.postimg.cc/RhpFKdKb/LOGO-FORNO-branco-sem-fundo.png',
-                    title: 'O FORNO',
-                    subtitle: 'Escola de Planejamento & Gestão Cultural',
-                    ctaUrl: 'https://ofornoapp.netlify.app/',
-                    ctaLabel: "Confira o que tem n'O Forno!"
-                  })
-                }
-                className="w-14 h-14 rounded-xl bg-slate-950 border border-slate-800 p-0.5 flex items-center justify-center shadow-md shrink-0 hover:scale-105 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 overflow-hidden cursor-pointer group"
-                title="Clique para ampliar a logo d'O Forno"
-                aria-label="Ampliar Logo O Forno"
+              <a
+                href="#top"
+                onClick={(e) => {
+                  setCurrentView('landing');
+                }}
+                className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 p-1.5 flex items-center justify-center shadow-md shrink-0 hover:scale-105 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 overflow-hidden group"
+                title="Voltar ao início"
+                aria-label="O Forno - Início"
               >
                 <img
                   src="https://i.postimg.cc/RhpFKdKb/LOGO-FORNO-branco-sem-fundo.png"
-                  alt="O Forno Logo"
+                  alt="Logomarca O Forno"
+                  width={48}
+                  height={48}
+                  loading="lazy"
+                  decoding="async"
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-contain p-0"
+                  className="w-full h-full object-contain p-0 group-hover:brightness-110 transition-all"
                 />
-              </button>
+              </a>
               <div>
-                <h3 className="text-lg font-bold text-white tracking-tight">
-                  O FORNO | Escola de Planejamento & Gestão Cultural
+                <h3 className="text-lg font-black text-white tracking-tight">
+                  O FORNO | Fornologia
                 </h3>
-                <p className="text-xs text-amber-400 font-medium">
-                  Fornologia: A arte e ciência de tirar projetos do Forno.
+                <p className="text-xs text-amber-400 font-semibold">
+                  A arte e ciência de tirar projetos do Forno.
                 </p>
               </div>
             </div>
             
-            <p className="text-sm text-slate-400 max-w-md leading-relaxed">
-              Workshop Inteligência Artificial Aplicada: do Problema ao Protótipo. Capacitando jovens a criar valor com ética, senso crítico e responsabilidade através da IA Generativa.
+            <p className="text-sm text-slate-400 max-w-md leading-relaxed font-normal">
+              Workshop Inteligência Artificial Aplicada: do Problema ao Protótipo. Capacitando pessoas a utilizar a IA de forma ética, crítica, criativa e produtiva.
             </p>
 
-            <div className="flex items-center gap-2 text-xs text-slate-400 pt-2">
-              <Shield className="w-4 h-4 text-emerald-400" />
-              <span>Privacidade em primeiro lugar: Dados salvos localmente em seu navegador.</span>
+            <div className="pt-2 flex flex-col gap-2 text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Privacidade Local-First: Todos os seus dados ficam salvos APENAS no seu dispositivo.</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-amber-400 shrink-0" />
+                <button
+                  onClick={openPrivacyModal}
+                  className="text-amber-300 hover:text-amber-200 underline font-semibold"
+                >
+                  Ver Política de Privacidade & Termo LGPD (Art. 14)
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Navegação
+          {/* Institutional Anchor Navigation (3 Cols) */}
+          <div className="md:col-span-3 space-y-3">
+            <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              Institucional & Programa
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <button
-                  onClick={() => setCurrentView('landing')}
-                  className="hover:text-amber-400 transition-colors"
-                >
-                  Apresentação do Workshop
-                </button>
+                <a href="#desafio" className="text-slate-400 hover:text-amber-400 transition-colors">
+                  Por que ensinar IA?
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => {
-                    setCurrentView('webapp');
-                    setActiveWebappTab('dashboard');
-                  }}
-                  className="hover:text-amber-400 transition-colors flex items-center gap-1"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Webapp Operacional
-                </button>
+                <a href="#jornada" className="text-slate-400 hover:text-amber-400 transition-colors">
+                  A Jornada dos 4 Encontros
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => {
-                    setCurrentView('webapp');
-                    setActiveWebappTab('projeto');
-                  }}
-                  className="hover:text-amber-400 transition-colors"
-                >
-                  Área do Projeto da Equipe
-                </button>
+                <a href="#metodologia" className="text-slate-400 hover:text-amber-400 transition-colors">
+                  Métodos & Ferramentas
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => {
-                    setCurrentView('webapp');
-                    setActiveWebappTab('prompts');
-                  }}
-                  className="hover:text-amber-400 transition-colors"
-                >
-                  Biblioteca de Prompts
-                </button>
+                <a href="#resultados" className="text-slate-400 hover:text-amber-400 transition-colors">
+                  Resultados Esperados
+                </a>
+              </li>
+              <li>
+                <a href="#etica-lgpd" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                  LGPD & Privacidade (13-17 anos)
+                </a>
+              </li>
+              <li>
+                <a href="#contato" className="text-amber-400 hover:text-amber-300 font-bold transition-colors">
+                  Solicitar Proposta para sua Escola
+                </a>
               </li>
             </ul>
           </div>
 
-          {/* Facilitator & Contacts */}
-          <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-              Facilitador & Contato
+          {/* Webapp & Active Classes (4 Cols) */}
+          <div className="md:col-span-4 space-y-4">
+            <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              Webapp da Turma & Contato
             </h4>
-            <div className="space-y-2.5 text-sm">
-              <p className="font-semibold text-white">Pedro Lago</p>
-              
-              <a
-                href={`mailto:${WORKSHOP_METADATA.facilitator.email}`}
-                className="flex items-center gap-2 text-slate-400 hover:text-amber-400 transition-colors"
+            
+            <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+              <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                Ambiente de Aprendizagem Ativo
+              </p>
+              <p className="text-xs text-slate-400">
+                Acesse o cronômetro, a biblioteca de prompts e as telas de trabalho da sua equipe.
+              </p>
+              <button
+                onClick={() => {
+                  setCurrentView('webapp');
+                  setActiveWebappTab('jornada');
+                }}
+                className="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
               >
-                <Mail className="w-4 h-4 text-amber-500" />
-                <span className="truncate">{WORKSHOP_METADATA.facilitator.email}</span>
-              </a>
+                <span>Acessar Webapp da Oficina</span>
+              </button>
+            </div>
 
-              <a
-                href={WORKSHOP_METADATA.facilitator.whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-colors"
-              >
-                <Phone className="w-4 h-4 text-emerald-500" />
-                <span>{WORKSHOP_METADATA.facilitator.phone}</span>
-              </a>
-
-              <a
-                href={WORKSHOP_METADATA.facilitator.fornoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-slate-400 hover:text-amber-400 transition-colors pt-1"
-              >
-                <ExternalLink className="w-4 h-4 text-amber-500" />
-                <span>ofornoapp.netlify.app</span>
-              </a>
+            <div className="space-y-1.5 text-xs text-slate-400 pt-1">
+              <div className="flex items-center gap-2">
+                <Mail className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <a href={`mailto:${WORKSHOP_METADATA.facilitator.email}`} className="hover:text-white truncate">
+                  {WORKSHOP_METADATA.facilitator.email}
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <a href={WORKSHOP_METADATA.facilitator.whatsappUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                  {WORKSHOP_METADATA.facilitator.phone}
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <ExternalLink className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <a href={WORKSHOP_METADATA.facilitator.fornoUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                  ofornoapp.netlify.app
+                </a>
+              </div>
             </div>
           </div>
 
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {year} O Forno. Todos os direitos reservados. Metodologia Fornologia.</p>
-          <div className="flex items-center gap-1 text-slate-400">
-            <span>Desenvolvido com foco em clareza pedagógica e uso ético da IA</span>
+        <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+          <p>© {year} O Forno — Escola de Planejamento & Gestão Cultural. Metodologia Fornologia.</p>
+          <div className="flex items-center gap-2 text-slate-400">
+            <button onClick={openPrivacyModal} className="hover:text-amber-300 underline">
+              Termos de Privacidade & LGPD
+            </button>
+            <span>•</span>
+            <span>Uso Pedagógico Responsável da IA</span>
           </div>
         </div>
       </div>

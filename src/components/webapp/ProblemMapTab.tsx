@@ -184,8 +184,11 @@ export const ProblemMapTab: React.FC = () => {
             Mapa de Problemas e Desafios
           </h1>
 
-          <blockquote className="p-4 rounded-2xl bg-amber-500/10 border-l-4 border-amber-500 text-amber-100 italic text-sm sm:text-base leading-relaxed">
-            “Antes de pensar na solução, precisamos compreender melhor o problema.”
+          <blockquote className="p-4 rounded-2xl bg-amber-500/10 border-l-4 border-amber-500 text-amber-100 italic text-sm sm:text-base leading-relaxed flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span>“Antes de pensar na solução, precisamos compreender melhor o problema.”</span>
+            <span className="not-italic text-2xs font-semibold px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+              💡 <strong>Incerteza:</strong> “Não sabemos” também é um resultado útil. Pode virar algo para investigar.
+            </span>
           </blockquote>
 
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">

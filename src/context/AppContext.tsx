@@ -145,7 +145,7 @@ function loadPersistedState(): AppState {
 const INITIAL_TEAMS: TeamProject[] = [
   {
     id: 'team-1',
-    name: 'Equipe Alfa - Descarte Consciente',
+    name: 'Equipe 1 — Alfa (Descarte Consciente)',
     members: ['Participante 1', 'Participante 2', 'Participante 3'],
     problemStatement: 'Acúmulo de lixo eletrônico sem destinação adequada na escola e no bairro.',
     targetUsers: 'Estudantes, professores e moradores do entorno escolar.',
@@ -156,14 +156,36 @@ const INITIAL_TEAMS: TeamProject[] = [
   },
   {
     id: 'team-2',
-    name: 'Equipe Beta - Estudo Guiado',
-    members: ['Participante 1', 'Participante 2'],
+    name: 'Equipe 2 — Beta (Estudo Guiado)',
+    members: ['Participante 1', 'Participante 2', 'Participante 3'],
     problemStatement: 'Dificuldade de organização de rotina de estudos para o ENEM entre jovens.',
     targetUsers: 'Estudantes do 3º ano do Ensino Médio.',
     solutionConcept: 'Gerador de planos de estudos personalizados com revisões espaçadas por IA.',
     aiToolsUsed: ['Claude', 'Bolt.new'],
     prototypeUrl: 'https://bolt.new',
     stage: 'briefing'
+  },
+  {
+    id: 'team-3',
+    name: 'Equipe 3 — Gama (Alimentação Saudável)',
+    members: ['Participante 1', 'Participante 2', 'Participante 3'],
+    problemStatement: 'Falta de opções saudáveis e acessíveis na cantina e no entorno escolar.',
+    targetUsers: 'Comunidade escolar e cantineiros.',
+    solutionConcept: 'Guia nutricional interativo e cardápio colaborativo.',
+    aiToolsUsed: ['ChatGPT'],
+    prototypeUrl: '',
+    stage: 'diagnostico'
+  },
+  {
+    id: 'team-4',
+    name: 'Equipe 4 — Delta (Mobilidade Segura)',
+    members: ['Participante 1', 'Participante 2', 'Participante 3'],
+    problemStatement: 'Insegurança e falta de iluminação no trajeto dos estudantes até a escola.',
+    targetUsers: 'Alunos do período noturno e pedestres.',
+    solutionConcept: 'Mapeamento colaborativo de rotas seguras e alertas com IA.',
+    aiToolsUsed: ['ChatGPT'],
+    prototypeUrl: '',
+    stage: 'diagnostico'
   }
 ];
 
@@ -226,7 +248,25 @@ const INITIAL_PROJECT_DATA: TeamProjectData = {
   pitchAiRole: '',
   pitchLearnings: '',
   pitchCallToAction: '',
-  pitchScriptText: ''
+  pitchScriptText: '',
+  v3ProblemDiagnosis: '',
+  v3GoldenCircle: '',
+  v3BriefingV0: '',
+  v3BriefingReview: '',
+  v3BriefingV1: '',
+  v3PrdV0: '',
+  v3Mvp: '',
+  v3PrototypeV0: '',
+  v3TestPlan: '',
+  v3RawFeedbacks: '',
+  v3FeedbackSynthesis: '',
+  v3Bmc: '',
+  v3Roadmap: '',
+  v3PrototypeV1: '',
+  v3PitchScript: '',
+  v3PitchPresentation: '',
+  v3RehearsalStatus: 'nao_iniciado',
+  v3RehearsalNotes: ''
 };
 
 export interface TimerState {
@@ -249,6 +289,12 @@ interface AppContextType {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   timer: TimerState;
   lastSavedTime: string | null;
+  lastManualSaveTime: string | null;
+  saveStatus: 'saved' | 'saving' | 'pending' | 'just_saved';
+  hasUnsavedChanges: boolean;
+  showUnsavedPrompt: boolean;
+  triggerManualSave: () => boolean;
+  dismissUnsavedPrompt: () => void;
   
   // Navigation & Views
   setCurrentView: (view: 'landing' | 'webapp') => void;
@@ -306,6 +352,7 @@ interface AppContextType {
   addFacilitatorObservation: (
     observation: Omit<FacilitatorObservation, 'id' | 'timestamp'>
   ) => void;
+  deleteFacilitatorObservation: (id: string) => void;
   saveDraftArtifact: (activityId: string, content: string) => void;
   setCurrentPilotActivityId: (activityId: string) => void;
 
@@ -327,6 +374,11 @@ interface AppContextType {
   }) => void;
   closeBrandModal: () => void;
 
+  // Privacy & LGPD Modal
+  isPrivacyModalOpen: boolean;
+  openPrivacyModal: () => void;
+  closePrivacyModal: () => void;
+
   // Local-First Hardening & Emergency Recovery
   restoreSafetyBackup: () => boolean;
   hasSafetyBackup: boolean;
@@ -334,10 +386,162 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+/**
+ * Parses window.location.hash to extract the active view, webapp tab, activity ID and user mode.
+ */
+export function parseRouteFromLocation(): {
+  view: 'landing' | 'webapp';
+  tab?: AppState['activeWebappTab'];
+  activityId?: string;
+  userMode?: UserMode;
+} {
+  if (typeof window === 'undefined') return { view: 'landing' };
+
+  const hash = window.location.hash.replace(/^#\/?/, '').trim();
+  const lowerHash = hash.toLowerCase();
+
+  // Facilitator
+  if (lowerHash === 'facilitador' || lowerHash.startsWith('facilitador/')) {
+    return { view: 'webapp', tab: 'facilitador', userMode: 'facilitador' };
+  }
+
+  // Activities (e.g. atividade/e1-a01, atividade/E2-A03)
+  if (lowerHash.startsWith('atividade') || lowerHash.startsWith('v2-atividade')) {
+    const parts = hash.split('/');
+    const actIdRaw = parts[1];
+    const actId = actIdRaw ? actIdRaw.toUpperCase() : undefined;
+    return { view: 'webapp', tab: 'atividade', activityId: actId, userMode: 'participante' };
+  }
+
+  // Jornada
+  if (lowerHash === 'jornada' || lowerHash === 'dashboard') {
+    return { view: 'webapp', tab: 'jornada', userMode: 'participante' };
+  }
+
+  // Projeto
+  if (lowerHash === 'projeto' || lowerHash === 'v2-projeto') {
+    return { view: 'webapp', tab: 'projeto', userMode: 'participante' };
+  }
+
+  // Recursos and shortcuts
+  if (
+    lowerHash === 'recursos' ||
+    lowerHash.startsWith('recursos/') ||
+    lowerHash === 'prompts' ||
+    lowerHash === 'ementa' ||
+    lowerHash === 'mapa' ||
+    lowerHash === 'mapa-problemas' ||
+    lowerHash === 'exportar' ||
+    lowerHash === 'materiais'
+  ) {
+    return { view: 'webapp', tab: 'recursos', userMode: 'participante' };
+  }
+
+  // Ajuda
+  if (lowerHash === 'ajuda') {
+    return { view: 'webapp', tab: 'ajuda', userMode: 'participante' };
+  }
+
+  // Webapp root fallback
+  if (lowerHash === 'webapp') {
+    return { view: 'webapp', tab: 'jornada', userMode: 'participante' };
+  }
+
+  // Landing page anchor hashes or empty
+  return { view: 'landing' };
+}
+
+/**
+ * Updates URL hash to reflect current view, tab, and activity without full page reloads.
+ */
+export function syncRouteToLocation(
+  view: 'landing' | 'webapp',
+  tab: AppState['activeWebappTab'],
+  activityId?: string,
+  userMode?: UserMode
+) {
+  if (typeof window === 'undefined') return;
+
+  if (view === 'landing') {
+    if (window.location.hash.startsWith('#/')) {
+      window.history.pushState(null, '', window.location.pathname + window.location.search);
+    }
+    return;
+  }
+
+  let targetHash = '#/jornada';
+  if (userMode === 'facilitador' || tab === 'facilitador') {
+    targetHash = '#/facilitador';
+  } else if (tab === 'atividade' || tab === 'v2-atividade') {
+    targetHash = `#/atividade/${(activityId || 'E1-A01').toUpperCase()}`;
+  } else if (tab === 'projeto' || tab === 'v2-projeto') {
+    targetHash = '#/projeto';
+  } else if (tab === 'recursos' || tab === 'prompts' || tab === 'ementa' || tab === 'mapa' || tab === 'exportar') {
+    targetHash = '#/recursos';
+  } else if (tab === 'ajuda') {
+    targetHash = '#/ajuda';
+  }
+
+  if (window.location.hash !== targetHash) {
+    window.history.pushState(null, '', targetHash);
+  }
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AppState>(() => loadPersistedState());
+  const [state, setState] = useState<AppState>(() => {
+    const loaded = loadPersistedState();
+    const parsed = parseRouteFromLocation();
+    return {
+      ...loaded,
+      currentView: parsed.view,
+      activeWebappTab: parsed.tab || loaded.activeWebappTab || 'jornada',
+      currentPilotActivityId: parsed.activityId || loaded.currentPilotActivityId || 'E1-A01',
+      userMode: parsed.userMode || loaded.userMode || 'participante',
+    };
+  });
 
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+  const [lastManualSaveTime, setLastManualSaveTime] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'pending' | 'just_saved'>('saved');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState<boolean>(false);
+  const isInitialMount = React.useRef(true);
+  const unsavedTimerRef = React.useRef<any>(null);
+
+  // Trigger manual save
+  const triggerManualSave = (): boolean => {
+    try {
+      setSaveStatus('saving');
+      safeSaveToLocalStorage(STORAGE_KEY, state);
+      safeSaveToLocalStorage(BACKUP_KEY, state);
+      safeSaveToLocalStorage(PRE_RESET_KEY, state);
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setLastSavedTime(timeStr);
+      setLastManualSaveTime(timeStr);
+      setHasUnsavedChanges(false);
+      setShowUnsavedPrompt(false);
+      setSaveStatus('just_saved');
+      
+      if (unsavedTimerRef.current) {
+        clearTimeout(unsavedTimerRef.current);
+        unsavedTimerRef.current = null;
+      }
+
+      setTimeout(() => {
+        setSaveStatus('saved');
+      }, 2500);
+      return true;
+    } catch (e) {
+      console.error('[ManualSave] Error triggering manual save:', e);
+      setSaveStatus('saved');
+      return false;
+    }
+  };
+
+  const dismissUnsavedPrompt = () => {
+    setShowUnsavedPrompt(false);
+  };
 
   // Brand Preview Modal State
   const [brandModal, setBrandModal] = useState<{
@@ -374,6 +578,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setBrandModal((prev) => ({ ...prev, isOpen: false }));
   };
 
+  // Privacy Modal State
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const openPrivacyModal = () => setIsPrivacyModalOpen(true);
+  const closePrivacyModal = () => setIsPrivacyModalOpen(false);
+
   // Timer internal state
   const [timerInternal, setTimerInternal] = useState(() => {
     const currentAct = getPilotActivityById(state.currentPilotActivityId || 'E1-A01');
@@ -388,27 +597,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   });
 
+  // Automatically synchronize timer duration with current activity when changed
+  useEffect(() => {
+    const act = getPilotActivityById(state.currentPilotActivityId || 'E1-A01');
+    if (act && !timerInternal.isRunning) {
+      const secs = (act.durationMinutes || 30) * 60;
+      setTimerInternal((prev) => ({
+        ...prev,
+        initialSeconds: secs,
+        remainingSeconds: secs,
+        activityTitle: act.title,
+      }));
+    }
+  }, [state.currentPilotActivityId]);
+
+  // URL Route Synchronization on popstate & hashchange (Browser Back / Forward / Direct Link support)
+  useEffect(() => {
+    const handleHashSync = () => {
+      const parsed = parseRouteFromLocation();
+      setState((prev) => {
+        const next = { ...prev };
+        next.currentView = parsed.view;
+        if (parsed.tab) next.activeWebappTab = parsed.tab;
+        if (parsed.activityId) next.currentPilotActivityId = parsed.activityId;
+        if (parsed.userMode) next.userMode = parsed.userMode;
+        return next;
+      });
+    };
+
+    window.addEventListener('hashchange', handleHashSync);
+    window.addEventListener('popstate', handleHashSync);
+    return () => {
+      window.removeEventListener('hashchange', handleHashSync);
+      window.removeEventListener('popstate', handleHashSync);
+    };
+  }, []);
+
   // Save to LocalStorage (Primary + Shadow Backup Copy)
   useEffect(() => {
     safeSaveToLocalStorage(STORAGE_KEY, state);
     safeSaveToLocalStorage(BACKUP_KEY, state);
     const now = new Date();
     setLastSavedTime(now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Mark as having unsaved manual changes
+    setHasUnsavedChanges(true);
+
+    // After 5 minutes (300,000ms) of active editing without manual save, show gentle non-intrusive prompt
+    if (!unsavedTimerRef.current) {
+      unsavedTimerRef.current = setTimeout(() => {
+        setShowUnsavedPrompt(true);
+      }, 300000);
+    }
   }, [state]);
-
-  // Prevent accidental tab closing, page refresh, or pull-to-refresh
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (state.currentView === 'webapp') {
-        e.preventDefault();
-        e.returnValue = 'Você possui dados e progresso no workshop. Tem certeza que deseja atualizar ou sair da página?';
-        return e.returnValue;
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [state.currentView]);
 
   // Multi-tab real-time state synchronization
   useEffect(() => {
@@ -438,13 +684,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [state.activeTheme]);
 
-  // Timer countdown ticker
+  // Timer countdown ticker with Web Audio chime when reaching 0
   useEffect(() => {
     let interval: any = null;
     if (timerInternal.isRunning && timerInternal.remainingSeconds > 0) {
       interval = setInterval(() => {
         setTimerInternal((prev) => {
           if (prev.remainingSeconds <= 1) {
+            // Play gentle audio chime if sound is enabled
+            if (prev.soundEnabled) {
+              try {
+                const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+                if (AudioCtx) {
+                  const ctx = new AudioCtx();
+                  const now = ctx.currentTime;
+                  const osc1 = ctx.createOscillator();
+                  const gain1 = ctx.createGain();
+                  osc1.type = 'sine';
+                  osc1.frequency.setValueAtTime(587.33, now); // D5
+                  osc1.frequency.exponentialRampToValueAtTime(880, now + 0.3); // A5
+                  gain1.gain.setValueAtTime(0.12, now);
+                  gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                  osc1.connect(gain1);
+                  gain1.connect(ctx.destination);
+                  osc1.start(now);
+                  osc1.stop(now + 0.8);
+                }
+              } catch (e) {
+                // Audio autoplay constraint fallback
+              }
+            }
+
             return {
               ...prev,
               remainingSeconds: 0,
@@ -480,11 +750,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Navigation & Views
   const setCurrentView = (view: 'landing' | 'webapp') => {
-    setState((prev) => ({ ...prev, currentView: view }));
+    setState((prev) => {
+      syncRouteToLocation(view, prev.activeWebappTab, prev.currentPilotActivityId, prev.userMode);
+      return { ...prev, currentView: view };
+    });
   };
 
   const setActiveWebappTab = (tab: AppState['activeWebappTab']) => {
-    setState((prev) => ({ ...prev, activeWebappTab: tab }));
+    setState((prev) => {
+      syncRouteToLocation('webapp', tab, prev.currentPilotActivityId, prev.userMode);
+      return { ...prev, currentView: 'webapp', activeWebappTab: tab };
+    });
   };
 
   const setSelectedEncounterId = (id: number) => {
@@ -492,7 +768,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setUserMode = (mode: UserMode) => {
-    setState((prev) => ({ ...prev, userMode: mode }));
+    setState((prev) => {
+      syncRouteToLocation(prev.currentView, prev.activeWebappTab, prev.currentPilotActivityId, mode);
+      return { ...prev, userMode: mode };
+    });
   };
 
   const toggleTheme = () => {
@@ -690,7 +969,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const newTotal = Math.max(0, prev.remainingSeconds + addedSecs);
       return {
         ...prev,
-        remainingSeconds: newTotal
+        remainingSeconds: newTotal,
+        // Auto-resume timer if adding positive time when timer was at zero or finished
+        isRunning: newTotal > 0 ? (prev.remainingSeconds === 0 ? true : prev.isRunning) : false
       };
     });
   };
@@ -949,6 +1230,13 @@ ${p.pitchScriptText || 'Pendente'}
     }));
   };
 
+  const deleteFacilitatorObservation = (id: string) => {
+    setState((prev) => ({
+      ...prev,
+      facilitatorObservations: (prev.facilitatorObservations || []).filter((o) => o.id !== id),
+    }));
+  };
+
   const saveDraftArtifact = (activityId: string, content: string) => {
     setState((prev) => ({
       ...prev,
@@ -961,7 +1249,10 @@ ${p.pitchScriptText || 'Pendente'}
 
   const setCurrentPilotActivityId = (activityId: string) => {
     const act = getPilotActivityById(activityId);
-    setState((prev) => ({ ...prev, currentPilotActivityId: activityId }));
+    setState((prev) => {
+      syncRouteToLocation(prev.currentView, prev.activeWebappTab, activityId, prev.userMode);
+      return { ...prev, currentPilotActivityId: activityId };
+    });
     if (act && !timerInternal.isRunning) {
       const defaultSecs = (act.durationMinutes || 30) * 60;
       setTimerInternal((prev) => ({
@@ -996,6 +1287,12 @@ ${p.pitchScriptText || 'Pendente'}
         setAppState: setState,
         timer: timerContext,
         lastSavedTime,
+        lastManualSaveTime,
+        saveStatus,
+        hasUnsavedChanges,
+        showUnsavedPrompt,
+        triggerManualSave,
+        dismissUnsavedPrompt,
         setCurrentView,
         setActiveWebappTab,
         setSelectedEncounterId,
@@ -1025,11 +1322,15 @@ ${p.pitchScriptText || 'Pendente'}
         saveArtifactVersion,
         updateProjectClaim,
         addFacilitatorObservation,
+        deleteFacilitatorObservation,
         saveDraftArtifact,
         setCurrentPilotActivityId,
         brandModal,
         openBrandModal,
         closeBrandModal,
+        isPrivacyModalOpen,
+        openPrivacyModal,
+        closePrivacyModal,
         restoreSafetyBackup,
         hasSafetyBackup,
       }}
