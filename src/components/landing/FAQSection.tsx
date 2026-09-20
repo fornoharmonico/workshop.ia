@@ -9,7 +9,7 @@ interface FAQItem {
 const FAQS: FAQItem[] = [
   {
     question: "Para qual público e faixa etária o workshop é indicado?",
-    answer: "O workshop é estruturado especialmente para jovens e estudantes de 13 a 17 anos (Ensino Fundamental II e Ensino Médio). É ideal para implementação em escolas públicas, privadas, organizações do terceiro setor e centros de inovação pedagógica, mediante consentimento parental e adesão pedagógica."
+    answer: "O workshop é estruturado especialmente para jovens e estudantes de 12 a 17 anos (Ensino Fundamental II e Ensino Médio). É ideal para implementação em escolas públicas, privadas, organizações do terceiro setor e centros de inovação pedagógica, mediante consentimento parental e adesão pedagógica."
   },
   {
     question: "É necessário saber programar ou ter conhecimentos avançados em tecnologia?",

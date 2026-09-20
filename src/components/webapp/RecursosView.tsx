@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   BookOpen, 
   Download, 
-  ShieldCheck, 
   FolderKanban, 
   Terminal, 
   FileText, 
@@ -12,17 +11,30 @@ import {
   Copy,
   ExternalLink,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Wrench
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { PromptSynthesizerTab } from './PromptSynthesizerTab';
 import { SyllabusTab } from './SyllabusTab';
 import { ProblemMapTab } from './ProblemMapTab';
 import { ExportTab } from './ExportTab';
+import { ToolboxTab } from './ToolboxTab';
 
 export const RecursosView: React.FC = () => {
-  const { setActiveWebappTab } = useApp();
-  const [activeSubTab, setActiveSubTab] = useState<'prompts' | 'materiais' | 'mapa' | 'exportar' | 'etica'>('prompts');
+  const { appState, setActiveWebappTab } = useApp();
+  const [activeSubTab, setActiveSubTab] = useState<'exportar' | 'mapa' | 'prompts' | 'materiais' | 'ferramentas'>(() => {
+    if (appState.activeWebappTab === 'ferramentas' || appState.activeWebappTab === 'caixa-ferramentas') {
+      return 'ferramentas';
+    }
+    return 'exportar';
+  });
+
+  useEffect(() => {
+    if (appState.activeWebappTab === 'ferramentas' || appState.activeWebappTab === 'caixa-ferramentas') {
+      setActiveSubTab('ferramentas');
+    }
+  }, [appState.activeWebappTab]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 px-4 sm:px-6">
@@ -35,7 +47,7 @@ export const RecursosView: React.FC = () => {
             Recursos do Participante • Ferramentas & Apoio
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Consulte a biblioteca de prompts, guia de materiais, mapa de problemas, opções de exportação e diretrizes de ética em IA.
+            Consulte opções de exportação e backup, mapa de problemas, biblioteca de prompts, ementa do método e caixa de ferramentas de IA.
           </p>
         </div>
 
@@ -45,38 +57,24 @@ export const RecursosView: React.FC = () => {
           aria-label="Abas de Recursos e Ferramentas" 
           className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-t border-slate-100 dark:border-slate-800 pt-3"
         >
+          {/* 1. Exportar/Importar Backup */}
           <button
-            id="subtab-prompts"
+            id="subtab-exportar"
             role="tab"
-            aria-selected={activeSubTab === 'prompts'}
-            aria-controls="subtabpanel-prompts"
-            onClick={() => setActiveSubTab('prompts')}
+            aria-selected={activeSubTab === 'exportar'}
+            aria-controls="subtabpanel-exportar"
+            onClick={() => setActiveSubTab('exportar')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
-              activeSubTab === 'prompts'
+              activeSubTab === 'exportar'
                 ? 'bg-amber-500 text-slate-950 shadow-xs'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
-            <Terminal className="w-4 h-4" aria-hidden="true" />
-            <span>Biblioteca de Prompts</span>
+            <Download className="w-4 h-4" aria-hidden="true" />
+            <span>Exportar/Importar Backup</span>
           </button>
 
-          <button
-            id="subtab-materiais"
-            role="tab"
-            aria-selected={activeSubTab === 'materiais'}
-            aria-controls="subtabpanel-materiais"
-            onClick={() => setActiveSubTab('materiais')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
-              activeSubTab === 'materiais'
-                ? 'bg-amber-500 text-slate-950 shadow-xs'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" aria-hidden="true" />
-            <span>Ementa & Guia do Método</span>
-          </button>
-
+          {/* 2. Mapa de Problemas */}
           <button
             id="subtab-mapa"
             role="tab"
@@ -93,48 +91,79 @@ export const RecursosView: React.FC = () => {
             <span>Mapa de Problemas</span>
           </button>
 
+          {/* 3. Biblioteca de Prompts */}
           <button
-            id="subtab-exportar"
+            id="subtab-prompts"
             role="tab"
-            aria-selected={activeSubTab === 'exportar'}
-            aria-controls="subtabpanel-exportar"
-            onClick={() => setActiveSubTab('exportar')}
+            aria-selected={activeSubTab === 'prompts'}
+            aria-controls="subtabpanel-prompts"
+            onClick={() => setActiveSubTab('prompts')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
-              activeSubTab === 'exportar'
+              activeSubTab === 'prompts'
                 ? 'bg-amber-500 text-slate-950 shadow-xs'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
-            <Download className="w-4 h-4" aria-hidden="true" />
-            <span>Exportar & Backup</span>
+            <Terminal className="w-4 h-4" aria-hidden="true" />
+            <span>Biblioteca de Prompts</span>
           </button>
 
+          {/* 4. Ementa do Método */}
           <button
-            id="subtab-etica"
+            id="subtab-materiais"
             role="tab"
-            aria-selected={activeSubTab === 'etica'}
-            aria-controls="subtabpanel-etica"
-            onClick={() => setActiveSubTab('etica')}
+            aria-selected={activeSubTab === 'materiais'}
+            aria-controls="subtabpanel-materiais"
+            onClick={() => setActiveSubTab('materiais')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
-              activeSubTab === 'etica'
+              activeSubTab === 'materiais'
                 ? 'bg-amber-500 text-slate-950 shadow-xs'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
-            <ShieldCheck className="w-4 h-4" aria-hidden="true" />
-            <span>Ética & LGPD</span>
+            <BookOpen className="w-4 h-4" aria-hidden="true" />
+            <span>Ementa do Método</span>
+          </button>
+
+          {/* 5. Caixa de Ferramentas */}
+          <button
+            id="subtab-ferramentas"
+            role="tab"
+            aria-selected={activeSubTab === 'ferramentas'}
+            aria-controls="subtabpanel-ferramentas"
+            onClick={() => setActiveSubTab('ferramentas')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+              activeSubTab === 'ferramentas'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <Wrench className="w-4 h-4" aria-hidden="true" />
+            <span>Caixa de Ferramentas</span>
           </button>
         </div>
       </div>
 
       {/* SUBTAB CONTENTS WITH ROLE TABPANEL */}
+      {activeSubTab === 'exportar' && (
+        <div id="subtabpanel-exportar" role="tabpanel" aria-labelledby="subtab-exportar">
+          <ExportTab />
+        </div>
+      )}
+
+      {activeSubTab === 'mapa' && (
+        <div id="subtabpanel-mapa" role="tabpanel" aria-labelledby="subtab-mapa">
+          <ProblemMapTab />
+        </div>
+      )}
+
       {activeSubTab === 'prompts' && (
         <div id="subtabpanel-prompts" role="tabpanel" aria-labelledby="subtab-prompts" className="space-y-4">
           <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-xs text-amber-950 dark:text-amber-200 flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-start gap-2 max-w-2xl">
               <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
               <div>
-                <strong className="text-slate-900 dark:text-white font-extrabold">Dica importante:</strong> Durante a execução da jornada na aba <strong>Atividade Atual</strong>, o prompt específico de cada etapa com seu Context Pack é injetado automaticamente! Esta biblioteca serve para consultas diretas ou adaptações livres da equipe.
+                <strong className="text-slate-900 dark:text-white font-extrabold">Dica prática:</strong> Durante a realização da oficina na aba <strong>Etapa Atual</strong>, as orientações de cada momento com o histórico acumulado do seu projeto já são organizadas automaticamente. Esta biblioteca serve para consultas diretas e aprofundamento da equipe.
               </div>
             </div>
             <button
@@ -158,71 +187,9 @@ export const RecursosView: React.FC = () => {
         </div>
       )}
 
-      {activeSubTab === 'mapa' && (
-        <div id="subtabpanel-mapa" role="tabpanel" aria-labelledby="subtab-mapa">
-          <ProblemMapTab />
-        </div>
-      )}
-
-      {activeSubTab === 'exportar' && (
-        <div id="subtabpanel-exportar" role="tabpanel" aria-labelledby="subtab-exportar">
-          <ExportTab />
-        </div>
-      )}
-
-      {activeSubTab === 'etica' && (
-        <div id="subtabpanel-etica" role="tabpanel" aria-labelledby="subtab-etica" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">
-                Uso Responsável & Seguro da IA
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Diretrizes fundamentais para o trabalho de investigação e prototipação no workshop O FORNO.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
-              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
-                🔒 1. Proteção de Dados Pessoais
-              </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                Nunca insira nomes completos, CPF, telefones, fotos pessoais ou dados confidenciais de colegas e moradores nos prompts. Trate a IA como um ambiente público.
-              </p>
-            </div>
-
-            <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
-              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
-                ✍️ 2. Autoria & Decisão da Equipe
-              </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                A IA é um copiloto de raciocínio, não a autora do seu projeto. Nenhuma resposta da IA deve entrar no projeto sem a validação crítica da equipe no Checkpoint.
-              </p>
-            </div>
-
-            <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
-              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
-                🔍 3. Verificação de Alucinações
-              </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                Modelos de linguagem podem inventar dados ou dados estatísticos ("alucinações"). Sempre distinga entre fatos observados e suposições da IA.
-              </p>
-            </div>
-
-            <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
-              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
-                🤝 4. Colaboração Transparente
-              </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                Documente de forma transparente quais ferramentas de IA foram utilizadas (por exemplo: ChatGPT, Claude, v0) e para quais finalidades.
-              </p>
-            </div>
-          </div>
+      {activeSubTab === 'ferramentas' && (
+        <div id="subtabpanel-ferramentas" role="tabpanel" aria-labelledby="subtab-ferramentas">
+          <ToolboxTab />
         </div>
       )}
 

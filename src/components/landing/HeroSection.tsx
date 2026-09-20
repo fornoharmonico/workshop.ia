@@ -4,15 +4,12 @@ import { WORKSHOP_METADATA } from '../../data/syllabus';
 import { 
   Building2, 
   BookOpen, 
-  Clock, 
-  Calendar, 
-  ShieldCheck, 
   ArrowRight, 
   Sparkles
 } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
-  const { setCurrentView, setActiveWebappTab } = useApp();
+  const { setCurrentView, setActiveWebappTab, openOnboardingModal } = useApp();
 
   return (
     <section 
@@ -27,7 +24,7 @@ export const HeroSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-3xl mx-auto space-y-6">
           
-          {/* Institutional Badge with explicit image dimensions */}
+          {/* Institutional Badge with explicit image dimensions and V1.4.1 versioning */}
           <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-900 dark:bg-slate-800 text-slate-100 border border-slate-700 text-xs sm:text-sm font-semibold shadow-xs select-none">
             <img
               src="https://i.postimg.cc/RhpFKdKb/LOGO-FORNO-branco-sem-fundo.png"
@@ -40,6 +37,9 @@ export const HeroSection: React.FC = () => {
               className="w-5 h-5 sm:w-6 sm:h-6 object-contain shrink-0"
             />
             <span>Fornologia: A arte e ciência de tirar projetos d&apos;O Forno.</span>
+            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40 text-xs font-black">
+              {WORKSHOP_METADATA.version}
+            </span>
           </div>
 
           {/* Main Title with Guaranteed High-Contrast Fallback */}
@@ -60,24 +60,6 @@ export const HeroSection: React.FC = () => {
             Um workshop prático e imersivo para pessoas que querem aprender a utilizar a IA como parceira no desenvolvimento de um projeto de ponta a ponta, da investigação do problema a construção do protótipo da solução.
           </p>
 
-          {/* Quick Key Badges with High Contrast */}
-          <div className="pt-1 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
-              <Clock className="w-4 h-4 text-amber-700 dark:text-amber-400" />
-              <span>{WORKSHOP_METADATA.totalDuration} (4 x 3h)</span>
-            </div>
-
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
-              <Calendar className="w-4 h-4 text-orange-700 dark:text-orange-400" />
-              <span>4 Encontros Práticos</span>
-            </div>
-
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xs">
-              <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-              <span>Presencial ou Híbrido</span>
-            </div>
-          </div>
-
           {/* Primary B2B Action Buttons */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             {/* Primary B2B Institutional Action */}
@@ -90,30 +72,32 @@ export const HeroSection: React.FC = () => {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
 
-            {/* Secondary Pedagogical Journey Action */}
-            <a
-              href="#jornada"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 font-bold text-base border border-slate-300 dark:border-slate-700 shadow-xs transition-all flex items-center justify-center gap-2"
+            {/* Secondary Action: ACESSAR APP! */}
+            <button
+              id="hero-acessar-app-btn"
+              onClick={() => {
+                setCurrentView('webapp');
+                setActiveWebappTab('jornada');
+                openOnboardingModal();
+              }}
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 font-black text-base border-2 border-amber-500/60 dark:border-amber-500/50 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] cursor-pointer"
             >
-              <BookOpen className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-              <span>Conhecer os 4 Encontros</span>
-            </a>
+              <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <span>ACESSAR APP!</span>
+            </button>
           </div>
 
-          {/* Tertiary Discrete Note for Active Students */}
+          {/* Tertiary Discrete Note for Pedagogical Syllabus */}
           <div className="pt-1">
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Já é estudante ou professor de uma turma em andamento?{' '}
-              <button
-                onClick={() => {
-                  setCurrentView('webapp');
-                  setActiveWebappTab('jornada');
-                }}
+              Quer conhecer a estrutura pedagógica completa?{' '}
+              <a
+                href="#jornada"
                 className="font-bold text-amber-800 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                Acessar o Webapp da Oficina
-              </button>
+                <BookOpen className="w-3.5 h-3.5" />
+                Conhecer os 4 Encontros
+              </a>
             </p>
           </div>
 

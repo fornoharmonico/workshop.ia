@@ -12,15 +12,15 @@ export const ProjectionModal: React.FC = () => {
   // Resolve active activity from pilot chain or syllabus
   const pilotActivity = getPilotActivityById(state.currentPilotActivityId || 'E1-A01');
   const currentEncounter = ENCOUNTERS.find((e) => e.id === state.selectedEncounterId) || ENCOUNTERS[0];
-  const syllabusActivity = currentEncounter.activities.find((a) => a.title === timer.activityTitle) || currentEncounter.activities[0];
+  const syllabusActivity = currentEncounter?.activities?.find((a) => a.title === timer.activityTitle) || currentEncounter?.activities?.[0];
 
-  const title = pilotActivity?.title || syllabusActivity.title;
-  const activityCode = pilotActivity?.id || '';
-  const durationMins = pilotActivity?.durationMinutes || syllabusActivity.durationMinutes || 30;
-  const guidance = pilotActivity?.pedagogicalIntervention?.message || syllabusActivity.socraticQuestions?.[0] || syllabusActivity.whatIsIt;
-  const steps = pilotActivity?.whatToDo || syllabusActivity.howToApply || [];
-  const deliverable = pilotActivity?.expectedVersionName || currentEncounter.deliverable;
-  const encounterTitle = pilotActivity?.youAreHere?.encounterTitle || currentEncounter.title;
+  const title = pilotActivity?.title || syllabusActivity?.title || 'Atividade Geral';
+  const activityCode = pilotActivity?.id || syllabusActivity?.id || '';
+  const durationMins = pilotActivity?.durationMinutes || syllabusActivity?.durationMinutes || 30;
+  const guidance = pilotActivity?.pedagogicalIntervention?.message || syllabusActivity?.socraticQuestions?.[0] || syllabusActivity?.whatIsIt || '';
+  const steps = pilotActivity?.whatToDo || syllabusActivity?.howToApply || [];
+  const deliverable = pilotActivity?.expectedVersionName || currentEncounter?.deliverable || '';
+  const encounterTitle = pilotActivity?.youAreHere?.encounterTitle || currentEncounter?.title || '';
 
   const formatTime = (mins: number, secs: number) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;

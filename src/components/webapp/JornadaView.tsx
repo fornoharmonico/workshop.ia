@@ -5,60 +5,67 @@ import {
   ArrowRight, 
   Layers, 
   Sparkles, 
-  Clock, 
   Coffee, 
   Compass, 
   Calendar, 
   Check, 
   ChevronRight, 
   Play, 
-  Users, 
   FileText, 
   Award,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  FlaskConical,
+  ShieldCheck
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { PILOT_CHAIN_ACTIVITIES, getPilotActivityById } from '../../data/pilotChain';
-import { ENCOUNTERS } from '../../data/syllabus';
-import { ActivityV2 } from '../../types/workshop';
+import { SYLLABUS_V2, SyllabusEncounterV2 } from '../../data/syllabusV2';
+import { 
+  CANONICAL_ACTIVITIES_V2, 
+  CANONICAL_ACTIVITY_LIST_V2, 
+  getCanonicalActivityById,
+  getNextActivityById
+} from '../../data/canonicalJourney';
+import { getArtifactDefinitionById } from '../../data/canonicalArtifacts';
+import { populateArtifactStoreFromLegacy } from '../../utils/artifactStore';
+import { ActivityId } from '../../types/canonicalV2';
 
 interface EncounterBreakInfo {
   encounterId: number;
   breakTitle: string;
   durationMinutes: number;
-  afterActivityIndex: number; // In the pilot sequence or syllabus sequence
+  afterActivityId: ActivityId;
   description: string;
 }
 
-const ENCOUNTER_BREAKS: EncounterBreakInfo[] = [
+const ENCOUNTER_BREAKS_V2: EncounterBreakInfo[] = [
   {
     encounterId: 1,
-    breakTitle: 'Pausa / Lanche Prevista',
+    breakTitle: 'Pausa Programada / Lanche',
     durationMinutes: 15,
-    afterActivityIndex: 0, // After E1-A01 in pilot chain, or after Mapeamento Coletivo in full syllabus
-    description: 'Intervalo programado da Ementa V3 para descanso, alimentação e convivência antes da etapa prática com IA.'
+    afterActivityId: 'A02',
+    description: 'Intervalo para descanso e convivência após o diagnóstico e antes do mapeamento de recursos.'
   },
   {
     encounterId: 2,
-    breakTitle: 'Pausa / Lanche Prevista',
+    breakTitle: 'Pausa Programada / Lanche',
     durationMinutes: 15,
-    afterActivityIndex: 0, // After E2-A01 (Revisão Crítica do Briefing)
-    description: 'Intervalo programado da Ementa V3 para descanso antes da elaboração do PRD e construção do Protótipo V0.'
+    afterActivityId: 'A06',
+    description: 'Intervalo antes da especificação funcional (PRD) e materialização do MVP.'
   },
   {
     encounterId: 3,
-    breakTitle: 'Pausa / Lanche Prevista',
+    breakTitle: 'Pausa Programada / Lanche',
     durationMinutes: 15,
-    afterActivityIndex: 3, // After E3-A04 (Roadmap de Evolução)
-    description: 'Intervalo programado da Ementa V3 para descanso antes do sprint de Prototipação V1.'
+    afterActivityId: 'A09',
+    description: 'Intervalo programado imediatamente após a volta dos testes de campo no mundo real.'
   },
   {
     encounterId: 4,
-    breakTitle: 'Pausa / Lanche Prevista',
+    breakTitle: 'Pausa Programada / Lanche',
     durationMinutes: 15,
-    afterActivityIndex: 1, // After E4-A02 (Apresentação Visual)
-    description: 'Intervalo programado da Ementa V3 para descanso antes da banca simulada e ensaio final.'
+    afterActivityId: 'A12',
+    description: 'Intervalo de alinhamento antes da simulação com banca e celebração final da turma.'
   }
 ];
 
@@ -66,54 +73,87 @@ export const JornadaView: React.FC = () => {
   const { 
     state, 
     setCurrentPilotActivityId, 
-    setActiveWebappTab,
-    toggleActivityCompleted,
+    setActiveWebappTab, 
+    toggleActivityCompleted, 
     startTimer,
-    timer
+    openOnboardingModal 
   } = useApp();
 
-  const [selectedMovementFilter, setSelectedMovementFilter] = useState<string>('all');
   const [selectedTabEncounterId, setSelectedTabEncounterId] = useState<number | 'all'>('all');
 
-  const currentActId = state.currentPilotActivityId || 'E1-A01';
-  const currentActivity = getPilotActivityById(currentActId);
-  
-  const currentIndex = PILOT_CHAIN_ACTIVITIES.findIndex((a) => a.id === currentActId);
-  const nextActivity = currentIndex >= 0 && currentIndex < PILOT_CHAIN_ACTIVITIES.length - 1 
-    ? PILOT_CHAIN_ACTIVITIES[currentIndex + 1] 
-    : null;
+  // Resolve current active activity in canonical V2
+  const rawActId = state.currentPilotActivityId || 'A01';
+  const legacyToCanonicalMap: Record<string, ActivityId> = {
+    'E1-A01': 'A01',
+    'E1-A02': 'A03',
+    'E2-A01': 'A05',
+    'E2-A02': 'A06',
+    'E2-A03': 'A07',
+    'E2-A04': 'A08',
+    'E3-A01': 'A09',
+    'E3-A02': 'A10',
+    'E3-A03': 'A11',
+    'E3-A04': 'A12',
+    'E3-A05': 'A07',
+    'E4-A01': 'A12',
+    'E4-A02': 'A12',
+    'E4-A03': 'A12',
+    'E4-A04': 'A12',
+  };
 
-  // Determine active encounter from current activity
-  const activeEncounterId = currentActivity.encounterId || 1;
-  const currentEncounterData = ENCOUNTERS.find((e) => e.id === activeEncounterId) || ENCOUNTERS[0];
+  const currentActId: ActivityId = (
+    rawActId in CANONICAL_ACTIVITIES_V2 
+      ? (rawActId as ActivityId) 
+      : (legacyToCanonicalMap[rawActId] || 'A01')
+  );
 
-  // Activities filtered by selected tab and movement
-  const displayedEncounters = (selectedTabEncounterId === 'all' 
-    ? ENCOUNTERS 
-    : ENCOUNTERS.filter((e) => e.id === selectedTabEncounterId)
-  ).filter((enc) => {
-    if (selectedMovementFilter === 'all') return true;
-    const encActivities = PILOT_CHAIN_ACTIVITIES.filter((a) => a.encounterId === enc.id);
-    return encActivities.some((a) => a.movementId === selectedMovementFilter);
-  });
+  const currentActivity = CANONICAL_ACTIVITIES_V2[currentActId] || CANONICAL_ACTIVITIES_V2.A01;
+  const nextActivity = getNextActivityById(currentActivity.id);
 
-  // Stats calculation
-  const totalPilotActivities = PILOT_CHAIN_ACTIVITIES.length;
-  const completedPilotCount = PILOT_CHAIN_ACTIVITIES.filter((a) => 
-    (state.completedActivityIds || []).includes(a.id) || 
-    (state.artifactVersions || []).some((v) => v.activityId === a.id && v.status === 'CONSOLIDADO')
-  ).length;
-  const globalProgressPercent = Math.round((completedPilotCount / totalPilotActivities) * 100);
+  // Determine active encounter in V2.2 (A01-A04: 1, A05-A08: 2, A09-A11: 3, A12: 4)
+  const getEncounterForActivity = (actId: ActivityId): number => {
+    const num = parseInt(actId.replace('A', ''), 10);
+    if (num <= 4) return 1;
+    if (num <= 8) return 2;
+    if (num <= 11) return 3;
+    return 4;
+  };
 
-  // Encounter specific stats
-  const getEncounterStats = (encId: number) => {
-    const encActivities = PILOT_CHAIN_ACTIVITIES.filter((a) => a.encounterId === encId);
-    const encCompleted = encActivities.filter((a) => 
-      (state.completedActivityIds || []).includes(a.id) || 
-      (state.artifactVersions || []).some((v) => v.activityId === a.id && v.status === 'CONSOLIDADO')
+  const activeEncounterNum = getEncounterForActivity(currentActivity.id);
+  const currentEncounterData = SYLLABUS_V2.find((e) => e.number === activeEncounterNum) || SYLLABUS_V2.find((e) => e.number === 1)!;
+
+  // Encounters to display
+  const displayedEncounters = selectedTabEncounterId === 'all' 
+    ? SYLLABUS_V2 
+    : SYLLABUS_V2.filter((e) => e.number === selectedTabEncounterId);
+
+  // Global store for artifact inspection
+  const canonicalStore = populateArtifactStoreFromLegacy(
+    state.projectData,
+    state.projectStateV1_4_1?.artifacts
+  );
+
+  // Global Progress strictly over canonical 12 activities
+  const totalActivities = CANONICAL_ACTIVITY_LIST_V2.length; // 12
+  const completedCount = CANONICAL_ACTIVITY_LIST_V2.filter((a) => {
+    const isExplicitlyCompleted = (state.completedActivityIds || []).includes(a.id);
+    const hasArtifactContent = a.outputArtifactId && Boolean(canonicalStore[a.outputArtifactId]?.content && canonicalStore[a.outputArtifactId]!.content.trim().length > 10);
+    return isExplicitlyCompleted || hasArtifactContent;
+  }).length;
+  const globalProgressPercent = Math.round((completedCount / totalActivities) * 100);
+
+  // Encounter stats
+  const getEncounterStats = (encNum: number) => {
+    const encActivities = CANONICAL_ACTIVITY_LIST_V2.filter(
+      (a) => getEncounterForActivity(a.id) === encNum
     );
-    const completedMinutes = encCompleted.reduce((acc, a) => acc + (a.durationMinutes || 0), 0);
-    const totalMinutes = 180; // 3h per encounter in Ementa V3
+    const encCompleted = encActivities.filter((a) => {
+      const isExplicitlyCompleted = (state.completedActivityIds || []).includes(a.id);
+      const hasArtifactContent = a.outputArtifactId && Boolean(canonicalStore[a.outputArtifactId]?.content && canonicalStore[a.outputArtifactId]!.content.trim().length > 10);
+      return isExplicitlyCompleted || hasArtifactContent;
+    });
+    const completedMinutes = encCompleted.reduce((acc, a) => acc + (a.estimatedMinutes || 0), 0);
+    const totalMinutes = 180;
     const percent = encActivities.length > 0 ? Math.round((encCompleted.length / encActivities.length) * 100) : 0;
     return {
       total: encActivities.length,
@@ -128,52 +168,63 @@ export const JornadaView: React.FC = () => {
     startTimer(breakMins, title);
   };
 
-  const handleOpenActivity = (actId: string) => {
+  const handleOpenActivity = (actId: ActivityId) => {
     setCurrentPilotActivityId(actId);
     setActiveWebappTab('atividade');
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-24 px-4 sm:px-6">
+    <div className="max-w-5xl mx-auto space-y-8 pb-28 px-4 sm:px-6">
       
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider">
-              Ementa V3 • 12 Horas
+            <span className="text-2xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 uppercase tracking-wider font-mono">
+              JORNADA DA OFICINA
             </span>
-            <span className="text-xs text-slate-400 font-medium">4 Encontros de 3 Horas</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">4 Encontros • 12 Etapas Práticas</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1">
-            Roadmap da Oficina
+            Jornada do Participante
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
-            Acompanhe o tempo previsto, o progresso de cada encontro, a próxima atividade e as pausas programadas.
+            Acompanhe o progresso de cada encontro, a sua etapa atual e a próxima atividade da oficina.
           </p>
         </div>
 
-        {/* Global Progress Pill */}
-        <div className="p-3.5 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md flex items-center gap-3 shrink-0">
-          <div className="text-right">
-            <span className="text-2xs font-extrabold text-amber-400 uppercase tracking-wider block">Progresso Global</span>
-            <span className="text-sm font-black text-white">{completedPilotCount} de {totalPilotActivities} artefatos</span>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-500 text-slate-950 font-black text-sm flex items-center justify-center shrink-0">
-            {globalProgressPercent}%
+        {/* Global Progress Pill & Onboarding Button */}
+        <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+          <button
+            onClick={openOnboardingModal}
+            className="px-3.5 py-2.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
+            title="Abrir guia de introdução à Fornologia"
+          >
+            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>Guia de Início</span>
+          </button>
+
+          <div className="p-3.5 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-2xs font-extrabold text-amber-400 uppercase tracking-wider block">Progresso Global</span>
+              <span className="text-sm font-black text-white">{completedCount} de {totalActivities} etapas</span>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-amber-500 text-slate-950 font-black text-sm flex items-center justify-center shrink-0">
+              {globalProgressPercent}%
+            </div>
           </div>
         </div>
       </div>
 
       {/* Hero Card: ATIVIDADE ATUAL, TEMPO PREVISTO, PRÓXIMA ATIVIDADE & PAUSA PREVISTA */}
-      <section className="bg-white dark:bg-slate-900 border-2 border-amber-500/40 rounded-3xl p-5 sm:p-6 shadow-sm space-y-5">
+      <section className="bg-white dark:bg-slate-900 border-2 border-amber-500/40 rounded-3xl p-5 sm:p-6 shadow-xs space-y-5">
         
         {/* Top Tag & Encounter Progress Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-              STATUS ATUAL DA OFICINA
+              ETAPA ATUAL
             </span>
             <span className="text-slate-300 dark:text-slate-700">•</span>
             <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -183,16 +234,16 @@ export const JornadaView: React.FC = () => {
 
           <div className="flex items-center gap-3 text-xs">
             <span className="font-bold text-slate-500 dark:text-slate-400">
-              Progresso do Encontro {activeEncounterId}:
+              Progresso do Encontro {activeEncounterNum}:
             </span>
             <div className="w-28 sm:w-36 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-amber-500 rounded-full transition-all duration-500" 
-                style={{ width: `${getEncounterStats(activeEncounterId).percent}%` }}
+                style={{ width: `${getEncounterStats(activeEncounterNum).percent}%` }}
               />
             </div>
             <span className="font-extrabold text-amber-600 dark:text-amber-400 font-mono">
-              {getEncounterStats(activeEncounterId).percent}%
+              {getEncounterStats(activeEncounterNum).percent}%
             </span>
           </div>
         </div>
@@ -205,187 +256,146 @@ export const JornadaView: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-2xs font-black px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 uppercase tracking-wider">
-                  ATIVIDADE ATUAL
-                </span>
-                <span className="text-xs font-bold font-mono text-amber-800 dark:text-amber-300 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  Tempo previsto: {currentActivity.durationMinutes} min
+                  ONDE ESTAMOS AGORA
                 </span>
               </div>
 
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-amber-700 dark:text-amber-400">
-                    {currentActivity.id}
+                    Etapa {currentActivity.order}:
                   </span>
                   <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
                     {currentActivity.title}
                   </h3>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
-                  {currentActivity.whyItMatters}
+                  {currentActivity.whyWeDoThis}
                 </p>
               </div>
 
-              <div className="text-2xs font-semibold text-slate-500 dark:text-slate-400">
-                Artefato esperado: <strong className="text-amber-700 dark:text-amber-300">{currentActivity.expectedVersionName}</strong>
-              </div>
+              {currentActivity.outputArtifactId && getArtifactDefinitionById(currentActivity.outputArtifactId) && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-amber-500/20 text-xs font-bold text-amber-900 dark:text-amber-300">
+                  <FileText className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Registro: {getArtifactDefinitionById(currentActivity.outputArtifactId)?.title.replace(/^AF\d+\s*[—–-]\s*/i, '')}</span>
+                </div>
+              )}
             </div>
 
-            <button
-              onClick={() => handleOpenActivity(currentActivity.id)}
-              className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-98"
-            >
-              <Play className="w-4 h-4 fill-current" />
-              <span>ABRIR NO COPILOTO IA ({currentActivity.durationMinutes} MIN)</span>
-            </button>
+            <div className="pt-2 border-t border-amber-500/20">
+              <button
+                onClick={() => handleOpenActivity(currentActivity.id)}
+                className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer min-h-[44px]"
+              >
+                <span>Entrar nesta etapa</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Box 2: PRÓXIMA ATIVIDADE */}
           <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
-            {nextActivity ? (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-2xs font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      A SEGUIR • PRÓXIMA ETAPA
-                    </span>
-                    <span className="text-xs font-medium font-mono text-slate-500 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {nextActivity.durationMinutes} min
-                    </span>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-500">
-                        {nextActivity.id}
-                      </span>
-                      <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                        {nextActivity.title}
-                      </h4>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                      {nextActivity.whyItMatters}
-                    </p>
-                  </div>
-
-                  <div className="text-2xs font-medium text-slate-400">
-                    Gera: <span className="text-slate-600 dark:text-slate-300">{nextActivity.expectedVersionName}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleOpenActivity(nextActivity.id)}
-                  className="w-full py-2.5 px-4 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>Ver Próxima Atividade</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center p-4">
-                <Award className="w-8 h-8 text-amber-500 mb-2" />
-                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Você está na etapa final da jornada!</h4>
-                <p className="text-xs text-slate-500 mt-1">Conclua o Ensaio do Pitch para finalizar os 4 encontros da Ementa V3.</p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-2xs font-extrabold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  A SEGUIR
+                </span>
               </div>
+
+              {nextActivity ? (
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-slate-500">
+                      {nextActivity.order}ª etapa:
+                    </span>
+                    <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-200">
+                      {nextActivity.title}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                    {nextActivity.whyWeDoThis}
+                  </p>
+                </div>
+              ) : (
+                <div className="py-4 text-center">
+                  <Award className="w-8 h-8 text-amber-500 mx-auto mb-1" />
+                  <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                    Você está na última etapa da oficina! Parabéns!
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {nextActivity && (
+              <button
+                onClick={() => handleOpenActivity(nextActivity.id)}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+              >
+                <span>Ver próxima etapa</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
 
         </div>
-
       </section>
 
-      {/* 4 Pedagogical Movements & Encounter Selector Tabs */}
-      <div className="space-y-3">
-        {/* Movements selector */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <span className="text-2xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Filtrar por Movimento Pedagógico:
-          </span>
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-x-auto no-scrollbar">
-            {[
-              { id: 'all', label: 'Todos os 4 Movimentos' },
-              { id: 'investigar', label: '1. Investigar' },
-              { id: 'definir-materializar', label: '2. Definir & Materializar' },
-              { id: 'validar-evoluir', label: '3. Validar & Evoluir' },
-              { id: 'comunicar-refletir', label: '4. Comunicar & Refletir' },
-            ].map((mov) => (
-              <button
-                key={mov.id}
-                onClick={() => setSelectedMovementFilter(mov.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer ${
-                  selectedMovementFilter === mov.id
-                    ? 'bg-amber-500 text-slate-950 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-                }`}
-              >
-                {mov.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Encounters selector */}
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
+      {/* Filter Tabs for Encounters */}
+      <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => setSelectedTabEncounterId('all')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer min-h-[44px] ${
+              selectedTabEncounterId === 'all'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+            }`}
+          >
+            Todos os 4 Encontros (12 etapas)
+          </button>
+          {[
+            { id: 1, label: 'Encontro 1 • Investigar & Direcionar' },
+            { id: 2, label: 'Encontro 2 • Definir & Materializar' },
+            { id: 3, label: 'Encontro 3 • Validar & Evoluir' },
+            { id: 4, label: 'Encontro 4 • Comunicar & Celebrar' },
+          ].map((enc) => (
             <button
-              onClick={() => setSelectedTabEncounterId('all')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition whitespace-nowrap cursor-pointer ${
-                selectedTabEncounterId === 'all'
-                  ? 'bg-slate-950 text-amber-400 shadow-xs'
+              key={enc.id}
+              type="button"
+              onClick={() => setSelectedTabEncounterId(enc.id as 1 | 2 | 3 | 4)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer min-h-[44px] ${
+                selectedTabEncounterId === enc.id
+                  ? 'bg-amber-500 text-slate-950 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
             >
-              Todos os Encontros (1 a 4)
+              {enc.label}
             </button>
-            {ENCOUNTERS.map((enc) => (
-              <button
-                key={enc.id}
-                onClick={() => setSelectedTabEncounterId(enc.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition whitespace-nowrap cursor-pointer ${
-                  selectedTabEncounterId === enc.id
-                    ? 'bg-slate-950 text-amber-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-                }`}
-              >
-                Encontro {enc.id}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
 
       {/* Encounter Roadmaps Timeline */}
       <div className="space-y-10">
         {displayedEncounters.map((encounter) => {
-          const stats = getEncounterStats(encounter.id);
-          const encounterPilotActs = PILOT_CHAIN_ACTIVITIES.filter((a) => {
-            if (a.encounterId !== encounter.id) return false;
-            if (selectedMovementFilter === 'all') return true;
-            return a.movementId === selectedMovementFilter;
-          });
-          const breakInfo = ENCOUNTER_BREAKS.find((b) => b.encounterId === encounter.id);
+          const stats = getEncounterStats(encounter.number);
+          const encounterActs = CANONICAL_ACTIVITY_LIST_V2.filter(
+            (a) => getEncounterForActivity(a.id) === encounter.number
+          );
+          const breakInfo = ENCOUNTER_BREAKS_V2.find((b) => b.encounterId === encounter.number);
 
           return (
             <div 
-              key={encounter.id} 
+              key={encounter.number} 
               className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6"
             >
-              
               {/* Encounter Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-2xs font-extrabold px-2.5 py-0.5 rounded-md bg-slate-900 text-amber-400 uppercase tracking-wider">
-                      ENCONTRO {encounter.id}
-                    </span>
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-1 font-mono">
-                      <Clock className="w-3.5 h-3.5" />
-                      180 minutos (3 horas)
-                    </span>
-                    <span className="text-2xs font-semibold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                      ☕ Pausa: 15 min incluída
+                      ENCONTRO {encounter.number}
                     </span>
                   </div>
 
@@ -393,7 +403,7 @@ export const JornadaView: React.FC = () => {
                     {encounter.title}
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-                    {encounter.subtitle}
+                    {encounter.theme}
                   </p>
                 </div>
 
@@ -402,7 +412,7 @@ export const JornadaView: React.FC = () => {
                   <div>
                     <span className="text-2xs font-bold text-slate-400 block">Progresso do Encontro</span>
                     <span className="text-xs font-black text-slate-900 dark:text-slate-100">
-                      {stats.completed} de {stats.total} atividades concluídas
+                      {stats.completed} de {stats.total} etapas concluídas
                     </span>
                   </div>
                   <div className="w-16 text-right">
@@ -414,24 +424,24 @@ export const JornadaView: React.FC = () => {
               </div>
 
               {/* Special Problem Map Banner in Encounter 1 (Movement: Investigar) */}
-              {encounter.id === 1 && (selectedMovementFilter === 'all' || selectedMovementFilter === 'investigar') && (
+              {encounter.number === 1 && (
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-2xs font-black px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 uppercase tracking-wider">
-                        PORTA DE ENTRADA • INVESTIGAR
+                        PONTO DE PARTIDA
                       </span>
                       <strong className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                        Mapa de Problemas & Escolha do Desafio
+                        Mapa de Problemas & Escolha do Desafio do Grupo
                       </strong>
                     </div>
                     <p className="text-2xs text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-                      Explore os 24 problemas mapeados, analise perguntas de pesquisa, escalas e categorias para fundamentar o Diagnóstico (E1-A01).
+                      A escolha do problema é 100% humana. Explore os problemas mapeados para fundamentar a escolha e o diagnóstico com observações concretas da sua realidade.
                     </p>
                   </div>
                   <button
                     onClick={() => setActiveWebappTab('mapa-problemas')}
-                    className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition flex items-center gap-2 shrink-0 cursor-pointer shadow-xs"
+                    className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition flex items-center gap-2 shrink-0 cursor-pointer shadow-xs min-h-[44px]"
                   >
                     <span>Abrir Mapa de Problemas</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -439,22 +449,25 @@ export const JornadaView: React.FC = () => {
                 </div>
               )}
 
-              {/* Deliverables Notice */}
+              {/* Main Deliverables of Encounter */}
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800 text-xs flex items-start gap-2.5">
                 <FileText className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-slate-900 dark:text-slate-200">Entregáveis Esperados do Encontro {encounter.id}:</strong>{' '}
-                  <span className="text-slate-600 dark:text-slate-400">{encounter.deliverable}</span>
+                  <strong className="text-slate-900 dark:text-slate-200">Entregáveis Principais do Encontro {encounter.number}:</strong>{' '}
+                  <span className="text-slate-600 dark:text-slate-400">
+                    {encounter.mainDeliverables.map(d => d.replace(/^AF\d+\s*[—–-]\s*/i, '')).join(' • ')}
+                  </span>
                 </div>
               </div>
 
               {/* Activities & Break List */}
               <div className="space-y-3 pt-2">
-                {encounterPilotActs.map((act, index) => {
+                {encounterActs.map((act) => {
                   const isCurrent = act.id === currentActId;
                   const isCompleted = (state.completedActivityIds || []).includes(act.id) || 
-                    (state.artifactVersions || []).some((v) => v.activityId === act.id && v.status === 'CONSOLIDADO');
-                  
+                    (act.outputArtifactId && Boolean(canonicalStore[act.outputArtifactId]?.content && canonicalStore[act.outputArtifactId]!.content.trim().length > 10));
+                  const isBreakAfter = breakInfo && breakInfo.afterActivityId === act.id;
+
                   return (
                     <React.Fragment key={act.id}>
                       <div className={`p-4 rounded-2xl border transition-all ${
@@ -466,11 +479,11 @@ export const JornadaView: React.FC = () => {
                       }`}>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           
-                          {/* Left: Code, Icon, Title & Duration */}
+                          {/* Left: Check, Code, Title, Tags */}
                           <div className="flex items-start gap-3 min-w-0">
                             <button
                               onClick={() => toggleActivityCompleted(act.id)}
-                              className={`p-1.5 rounded-xl mt-0.5 shrink-0 transition cursor-pointer ${
+                              className={`p-2 rounded-xl mt-0.5 shrink-0 transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
                                 isCompleted
                                   ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                                   : isCurrent
@@ -489,19 +502,16 @@ export const JornadaView: React.FC = () => {
                                     ? 'bg-amber-500 text-slate-950 font-black'
                                     : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                                 }`}>
-                                  {act.id}
+                                  Etapa {act.order}
                                 </span>
-                                <span className="text-xs font-bold font-mono text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {act.durationMinutes} min
-                                </span>
+
                                 {isCurrent && (
-                                  <span className="text-2xs font-extrabold px-1.5 py-0.2 rounded bg-amber-500 text-slate-950 uppercase">
+                                  <span className="text-2xs font-extrabold px-2 py-0.5 rounded bg-amber-500 text-slate-950 uppercase">
                                     Em Andamento
                                   </span>
                                 )}
                                 {isCompleted && (
-                                  <span className="text-2xs font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                                  <span className="text-2xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                                     Concluída
                                   </span>
                                 )}
@@ -511,7 +521,7 @@ export const JornadaView: React.FC = () => {
                                 {act.title}
                               </h3>
                               <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                                {act.whyItMatters}
+                                {act.whyWeDoThis}
                               </p>
                             </div>
                           </div>
@@ -519,17 +529,8 @@ export const JornadaView: React.FC = () => {
                           {/* Right: Actions */}
                           <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                             <button
-                              onClick={() => startTimer(act.durationMinutes, `${act.id} — ${act.title}`)}
-                              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-600 dark:text-slate-300 transition text-xs font-bold flex items-center gap-1 cursor-pointer"
-                              title={`Iniciar cronômetro de ${act.durationMinutes} min`}
-                            >
-                              <Clock className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Cronometrar</span>
-                            </button>
-
-                            <button
                               onClick={() => handleOpenActivity(act.id)}
-                              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer ${
+                              className={`px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer min-h-[44px] ${
                                 isCurrent
                                   ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs'
                                   : 'bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-950'
@@ -543,8 +544,8 @@ export const JornadaView: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* INJECT BREAK ITEM AT THE EXACT SPOT PER EMENTA V3 */}
-                      {breakInfo && breakInfo.afterActivityIndex === index && (
+                      {/* Break Item Insertion */}
+                      {isBreakAfter && breakInfo && (
                         <div className="p-4 rounded-2xl bg-amber-500/10 border-2 border-dashed border-amber-500/40 space-y-2 animate-in fade-in">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
@@ -554,10 +555,7 @@ export const JornadaView: React.FC = () => {
                               <div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs font-black text-amber-900 dark:text-amber-200">
-                                    ☕ PAUSA / LANCHE PREVISTA
-                                  </span>
-                                  <span className="text-2xs font-extrabold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 font-mono">
-                                    15 min
+                                    ☕ {breakInfo.breakTitle}
                                   </span>
                                 </div>
                                 <p className="text-xs text-amber-800/90 dark:text-amber-300/90 mt-0.5">
@@ -567,11 +565,11 @@ export const JornadaView: React.FC = () => {
                             </div>
 
                             <button
-                              onClick={() => handleStartBreakTimer(15, `Pausa / Lanche • Encontro ${encounter.id}`)}
-                              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl transition flex items-center gap-2 shadow-xs shrink-0 cursor-pointer"
+                              onClick={() => handleStartBreakTimer(breakInfo.durationMinutes, `Pausa / Lanche • Encontro ${encounter.number}`)}
+                              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl transition flex items-center gap-2 shadow-xs shrink-0 cursor-pointer min-h-[44px]"
                             >
                               <Play className="w-3.5 h-3.5 fill-current" />
-                              <span>INICIAR CRONÔMETRO DA PAUSA (15 MIN)</span>
+                              <span>INICIAR PAUSA / INTERVALO</span>
                             </button>
                           </div>
                         </div>

@@ -33,12 +33,14 @@ import {
   Compass,
   Zap,
   ChevronRight,
-  MoreHorizontal
+  MoreHorizontal,
+  TrendingUp
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { PILOT_CHAIN_ACTIVITIES, getPilotActivityById } from '../../data/pilotChain';
 import { ObservationCategory, FacilitatorObservation } from '../../types/workshop';
 import { TeamsTab } from './TeamsTab';
+import { FacilitatorProgressRadar } from './FacilitatorProgressRadar';
 import { ConfirmModal } from '../ConfirmModal';
 
 interface CategoryOption {
@@ -172,10 +174,11 @@ export const FacilitatorView: React.FC = () => {
     deleteFacilitatorObservation,
     toggleActivityCompleted,
     setCurrentPilotActivityId,
-    setActiveWebappTab
+    setActiveWebappTab,
+    setUserMode
   } = useApp();
 
-  const [activeSubTab, setActiveSubTab] = useState<'conducao' | 'equipes' | 'observacoes'>('conducao');
+  const [activeSubTab, setActiveSubTab] = useState<'radar' | 'conducao' | 'equipes' | 'observacoes'>('radar');
   const [showObsModal, setShowObsModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
@@ -375,7 +378,19 @@ export const FacilitatorView: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => {
+                setUserMode('participante');
+                setActiveWebappTab('jornada');
+              }}
+              className="w-full sm:w-auto px-3.5 py-2.5 bg-white/15 hover:bg-white/25 text-white font-extrabold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shrink-0 border border-white/25"
+              title="Sair do painel e voltar ao modo participante"
+            >
+              <ArrowRight className="w-4 h-4 rotate-180" />
+              <span>Voltar ao Modo Participante</span>
+            </button>
+
             <button
               onClick={() => handleOpenModal()}
               className="w-full sm:w-auto px-4 py-2.5 bg-slate-950 hover:bg-slate-900 text-amber-300 font-extrabold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95 shrink-0 border border-amber-400/30"
@@ -429,6 +444,18 @@ export const FacilitatorView: React.FC = () => {
       {/* Subtab Navigation for Facilitator */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto no-scrollbar">
         <button
+          onClick={() => setActiveSubTab('radar')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeSubTab === 'radar'
+              ? 'bg-amber-500 text-slate-950 shadow-xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>Radar de Progressão Assíncrona</span>
+        </button>
+
+        <button
           onClick={() => setActiveSubTab('conducao')}
           className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition flex items-center gap-2 shrink-0 cursor-pointer ${
             activeSubTab === 'conducao'
@@ -464,6 +491,13 @@ export const FacilitatorView: React.FC = () => {
           <span>Gestão de Equipes ({state.teams?.length || 0})</span>
         </button>
       </div>
+
+      {/* ========================================================= */}
+      {/* SUBTAB 0: RADAR DE PROGRESSÃO ASSÍNCRONA DAS EQUIPES      */}
+      {/* ========================================================= */}
+      {activeSubTab === 'radar' && (
+        <FacilitatorProgressRadar onOpenObservationModal={(actId) => handleOpenModal(actId)} />
+      )}
 
       {/* ========================================================= */}
       {/* SUBTAB 1: CONDUÇÃO, CRONÔMETRO E TRANSIÇÕES                */}
@@ -1089,7 +1123,7 @@ export const FacilitatorView: React.FC = () => {
                       handleSaveObservation(e);
                     }
                   }}
-                  placeholder="Ex: Grupo teve dúvida na formulação do Golden Circle; precisamos dar mais 2 minutos..."
+                  placeholder="Ex: Grupo teve dúvida na formulação do propósito e direção; precisamos dar mais 2 minutos..."
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 font-medium text-slate-900 dark:text-slate-100 min-h-[85px] max-h-[160px] text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none placeholder:text-slate-400"
                   required
                 />

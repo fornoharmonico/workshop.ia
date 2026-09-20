@@ -1,11 +1,48 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { WORKSHOP_METADATA } from '../data/syllabus';
-import { Mail, Phone, ExternalLink, Sparkles, Shield, FileText } from 'lucide-react';
+import { Mail, Phone, ExternalLink, Shield, FileText, Sparkles, Check, Presentation } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { setCurrentView, setActiveWebappTab, openBrandModal, openPrivacyModal } = useApp();
+  const { state, setCurrentView, openPrivacyModal, setUserMode, setActiveWebappTab } = useApp();
   const year = new Date().getFullYear();
+
+  const [clickCount, setClickCount] = useState(0);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleVersionSecretClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setClickCount((prev) => {
+      const nextCount = prev + 1;
+      if (nextCount >= 3) {
+        if (state.userMode === 'facilitador') {
+          setUserMode('participante');
+          if (state.activeWebappTab === 'facilitador') {
+            setActiveWebappTab('jornada');
+          }
+          setToastMessage('Modo Participante ativado.');
+        } else {
+          setUserMode('facilitador');
+          setActiveWebappTab('facilitador');
+          if (state.currentView !== 'webapp') {
+            setCurrentView('webapp');
+          }
+          setToastMessage('Modo Facilitador ativado!');
+        }
+        setTimeout(() => setToastMessage(null), 3000);
+        return 0;
+      }
+      return nextCount;
+    });
+
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+    clickTimeoutRef.current = setTimeout(() => {
+      setClickCount(0);
+    }, 1500);
+  };
 
   return (
     <footer className="bg-slate-950 text-slate-300 border-t border-slate-800 transition-colors">
@@ -94,7 +131,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <a href="#etica-lgpd" className="text-slate-400 hover:text-emerald-400 transition-colors">
-                  LGPD & Privacidade (13-17 anos)
+                  LGPD & Privacidade (12-17 anos)
                 </a>
               </li>
               <li>
@@ -105,32 +142,13 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Webapp & Active Classes (4 Cols) */}
-          <div className="md:col-span-4 space-y-4">
+          {/* Contact Column (4 Cols) */}
+          <div className="md:col-span-4 space-y-3">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">
-              Webapp da Turma & Contato
+              Contato
             </h4>
-            
-            <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-              <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                Ambiente de Aprendizagem Ativo
-              </p>
-              <p className="text-xs text-slate-400">
-                Acesse o cronômetro, a biblioteca de prompts e as telas de trabalho da sua equipe.
-              </p>
-              <button
-                onClick={() => {
-                  setCurrentView('webapp');
-                  setActiveWebappTab('jornada');
-                }}
-                className="w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                <span>Acessar Webapp da Oficina</span>
-              </button>
-            </div>
 
-            <div className="space-y-1.5 text-xs text-slate-400 pt-1">
+            <div className="space-y-2 text-xs text-slate-400">
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <a href={`mailto:${WORKSHOP_METADATA.facilitator.email}`} className="hover:text-white truncate">
@@ -163,8 +181,26 @@ export const Footer: React.FC = () => {
             </button>
             <span>•</span>
             <span>Uso Pedagógico Responsável da IA</span>
+            <span>•</span>
+            <button
+              id="secret-version-trigger"
+              onClick={handleVersionSecretClick}
+              className="font-mono text-2xs text-slate-600 hover:text-slate-400 transition-colors cursor-pointer select-none px-1.5 py-0.5 rounded focus:outline-none"
+              title="Versão do sistema"
+              aria-label="Versão do sistema"
+            >
+              v2.0.2
+            </button>
           </div>
         </div>
+
+        {/* Secret Activation Toast Notification */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-amber-300 border border-amber-500/40 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold animate-in fade-in slide-in-from-bottom-2">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
       </div>
     </footer>
   );

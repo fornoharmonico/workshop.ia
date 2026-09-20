@@ -1,9 +1,37 @@
 import React, { useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Download, Upload, Printer, FileText, CheckCircle2, Loader2, AlertCircle, RotateCcw, ShieldCheck, Save, HardDrive } from 'lucide-react';
+import { 
+  Download, 
+  Upload, 
+  Printer, 
+  FileText, 
+  CheckCircle2, 
+  Loader2, 
+  AlertCircle, 
+  RotateCcw, 
+  ShieldCheck, 
+  Save, 
+  HardDrive,
+  Copy,
+  FileCode,
+  FileSpreadsheet,
+  Layers,
+  Sparkles,
+  FlaskConical,
+  Compass,
+  Presentation
+} from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { ConfirmModal } from '../ConfirmModal';
+import { 
+  generateMasterDocumentMarkdown, 
+  generateMasterDocumentPlainText, 
+  downloadFile,
+  buildExportFileName
+} from '../../utils/exportMasterDocument';
+import { migrateStateToV1_4_1 } from '../../utils/migrationV1_4_1';
+import { resolveAllAuthoritativeArtifacts } from '../../utils/artifactStore';
 
 export const ExportTab: React.FC = () => {
   const { 
@@ -16,7 +44,11 @@ export const ExportTab: React.FC = () => {
     lastManualSaveTime,
     triggerManualSave,
     saveStatus,
-    hasUnsavedChanges
+    hasUnsavedChanges,
+    ensureProjectIdentification,
+    isProjectIdentified,
+    openProjectIdentModal,
+    updateProjectData
   } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const reportRef = useRef<HTMLDivElement>(null);
@@ -24,7 +56,11 @@ export const ExportTab: React.FC = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [pendingImportData, setPendingImportData] = useState<any | null>(null);
+  const [importSummary, setImportSummary] = useState<{ projectName: string; teamName: string; artifactsCount: number } | null>(null);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [isCopiedMd, setIsCopiedMd] = useState(false);
+
+  const canonicalArtifacts = resolveAllAuthoritativeArtifacts(appState.projectData, appState.projectStateV1_4_1);
 
   const handleRestoreSafetyBackup = () => {
     const success = restoreSafetyBackup();
@@ -37,38 +73,123 @@ export const ExportTab: React.FC = () => {
   };
 
   const handleExportJson = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const timestamp = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+    ensureProjectIdentification(() => {
+      const filename = buildExportFileName(
+        'backup',
+        appState.projectData?.projectName,
+        appState.projectData?.teamName,
+        'json'
+      );
+      const jsonStr = JSON.stringify(appState, null, 2);
+      downloadFile(filename, jsonStr, 'application/json');
+      setStatusMessage({ type: 'success', text: `Backup completo (JSON) exportado com sucesso: ${filename}` });
+      setTimeout(() => setStatusMessage(null), 4000);
+    }, 'exportar o backup do projeto (JSON)');
+  };
 
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `oforno_ia_workshop_backup_${timestamp}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+  const handleExportMasterMarkdown = () => {
+    ensureProjectIdentification(() => {
+      const filename = buildExportFileName(
+        'documento_mestre',
+        appState.projectData?.projectName,
+        appState.projectData?.teamName,
+        'md'
+      );
+      const md = generateMasterDocumentMarkdown(appState);
+      downloadFile(filename, md, 'text/markdown');
+      setStatusMessage({ type: 'success', text: `Documento Mestre em Markdown (.md) exportado com sucesso: ${filename}` });
+      setTimeout(() => setStatusMessage(null), 4000);
+    }, 'exportar o Documento Mestre (.md)');
+  };
+
+  const handleExportMasterPlainText = () => {
+    ensureProjectIdentification(() => {
+      const filename = buildExportFileName(
+        'documento_mestre',
+        appState.projectData?.projectName,
+        appState.projectData?.teamName,
+        'txt'
+      );
+      const txt = generateMasterDocumentPlainText(appState);
+      downloadFile(filename, txt, 'text/plain');
+      setStatusMessage({ type: 'success', text: `Documento Mestre em Texto (.txt) exportado com sucesso: ${filename}` });
+      setTimeout(() => setStatusMessage(null), 4000);
+    }, 'exportar o Documento Mestre (.txt)');
+  };
+
+  const handleCopyMasterMarkdown = async () => {
+    ensureProjectIdentification(async () => {
+      try {
+        const md = generateMasterDocumentMarkdown(appState);
+        await navigator.clipboard.writeText(md);
+        setIsCopiedMd(true);
+        setStatusMessage({ type: 'success', text: 'Documento Mestre copiado para a área de transferência!' });
+        setTimeout(() => {
+          setIsCopiedMd(false);
+          setStatusMessage(null);
+        }, 3500);
+      } catch (e) {
+        console.error('Failed to copy Markdown', e);
+        setStatusMessage({ type: 'error', text: 'Não foi possível copiar automaticamente para a área de transferência.' });
+      }
+    }, 'copiar o Documento Mestre');
   };
 
   const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (e.target.files && e.target.files[0]) {
-      fileReader.readAsText(e.target.files[0], "UTF-8");
+      const file = e.target.files[0];
+      fileReader.readAsText(file, "UTF-8");
       fileReader.onload = (event) => {
         try {
           if (event.target?.result) {
             const parsed = JSON.parse(event.target.result as string);
-            if (parsed && typeof parsed === 'object') {
-              setPendingImportData(parsed);
+            
+            // Validation: Ensure parsed item is an object and contains workshop signals
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+              throw new Error('Estrutura de arquivo inválida');
             }
+
+            // Check for plausible workshop signatures (legacy or current)
+            const hasWorkshopSignatures = 
+              parsed.projectStateV1_4_1 !== undefined ||
+              parsed.projectData !== undefined ||
+              parsed.teams !== undefined ||
+              parsed.completedActivityIds !== undefined ||
+              parsed.activityProgress !== undefined;
+
+            if (!hasWorkshopSignatures) {
+              throw new Error('O arquivo JSON não corresponde a um backup do workshop O Forno.');
+            }
+
+            // Normalize through migration to guarantee zero data loss and compatibility
+            const normalized = migrateStateToV1_4_1(parsed);
+            setPendingImportData(normalized);
+
+            const pName = normalized.projectData?.projectName || normalized.projectStateV1_4_1?.projectName || 'Projeto sem nome';
+            const tName = normalized.projectData?.teamName || normalized.projectStateV1_4_1?.teamName || 'Equipe sem nome';
+            
+            // Count filled canonical artifacts
+            const artifactsObj = normalized.projectStateV1_4_1?.artifacts || {};
+            const filledCount = Object.values(artifactsObj).filter((a: any) => {
+              if (a?.content && a.content.trim().length > 0) return true;
+              if (a?.v0Content || a?.v1Content) return true;
+              return false;
+            }).length;
+
+            setImportSummary({
+              projectName: pName,
+              teamName: tName,
+              artifactsCount: filledCount,
+            });
           }
-        } catch (err) {
-          setStatusMessage({ type: 'error', text: "Erro ao carregar e analisar arquivo JSON de backup." });
+        } catch (err: any) {
+          console.error('[Import Error]', err);
+          setStatusMessage({ 
+            type: 'error', 
+            text: `Arquivo de backup inválido ou incompatível. Seu projeto atual permaneceu 100% seguro e intacto.` 
+          });
+          if (fileInputRef.current) fileInputRef.current.value = '';
         }
       };
     }
@@ -78,8 +199,9 @@ export const ExportTab: React.FC = () => {
     if (pendingImportData) {
       setAppState(pendingImportData);
       setPendingImportData(null);
+      setImportSummary(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setStatusMessage({ type: 'success', text: "Dados do backup importados e restaurados com sucesso!" });
+      setStatusMessage({ type: 'success', text: "Dados do backup importados e sincronizados com sucesso!" });
       setTimeout(() => setStatusMessage(null), 4000);
     }
   };
@@ -87,82 +209,90 @@ export const ExportTab: React.FC = () => {
   const confirmResetData = () => {
     resetProjectData();
     setShowResetModal(false);
-    setStatusMessage({ type: 'success', text: "Todos os dados do projeto foram resetados para os padrões iniciais." });
+    setStatusMessage({ type: 'success', text: "Todos os dados do projeto e o Documento Mestre foram resetados com sucesso!" });
     setTimeout(() => setStatusMessage(null), 4000);
   };
 
-  const handleDownloadPdf = async () => {
-    if (!reportRef.current) return;
-    setIsGeneratingPdf(true);
-    setStatusMessage(null);
+  const handleDownloadPdf = () => {
+    ensureProjectIdentification(async () => {
+      if (!reportRef.current) return;
+      setIsGeneratingPdf(true);
+      setStatusMessage(null);
 
-    try {
-      const element = reportRef.current;
+      const pdfFilename = buildExportFileName(
+        'relatorio',
+        appState.projectData?.projectName,
+        appState.projectData?.teamName,
+        'pdf'
+      );
 
-      // Tailwind v4 uses modern CSS color formats (oklch) which html2canvas 1.4.1 doesn't support natively.
-      // We pass an onclone handler that converts modern color functions to standard RGB/hex on the cloned DOM.
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        onclone: (clonedDoc, clonedElement) => {
-          // Remove any dark mode classes from clone so output is pure clean print-ready white
-          clonedElement.classList.remove('dark');
-          
-          // Traverse all elements in the clone to convert any oklch/color values in inline styles
-          const allElements = clonedElement.querySelectorAll('*');
-          allElements.forEach((el) => {
-            const htmlEl = el as HTMLElement;
-            const computed = window.getComputedStyle(el);
+      try {
+        const element = reportRef.current;
+
+        // Tailwind v4 uses modern CSS color formats (oklch) which html2canvas 1.4.1 doesn't support natively.
+        // We pass an onclone handler that converts modern color functions to standard RGB/hex on the cloned DOM.
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          onclone: (clonedDoc, clonedElement) => {
+            // Remove any dark mode classes from clone so output is pure clean print-ready white
+            clonedElement.classList.remove('dark');
             
-            // Force basic styles on cards to avoid modern unsupported CSS functions in canvas parser
-            if (htmlEl.style) {
-              const bg = computed.backgroundColor;
-              const color = computed.color;
-              const border = computed.borderColor;
+            // Traverse all elements in the clone to convert any oklch/color values in inline styles
+            const allElements = clonedElement.querySelectorAll('*');
+            allElements.forEach((el) => {
+              const htmlEl = el as HTMLElement;
+              const computed = window.getComputedStyle(el);
               
-              if (bg && (bg.includes('oklch') || bg.includes('color('))) {
-                htmlEl.style.backgroundColor = '#ffffff';
+              // Force basic styles on cards to avoid modern unsupported CSS functions in canvas parser
+              if (htmlEl.style) {
+                const bg = computed.backgroundColor;
+                const color = computed.color;
+                const border = computed.borderColor;
+                
+                if (bg && (bg.includes('oklch') || bg.includes('color('))) {
+                  htmlEl.style.backgroundColor = '#ffffff';
+                }
+                if (color && (color.includes('oklch') || color.includes('color('))) {
+                  htmlEl.style.color = '#0f172a';
+                }
+                if (border && (border.includes('oklch') || border.includes('color('))) {
+                  htmlEl.style.borderColor = '#e2e8f0';
+                }
               }
-              if (color && (color.includes('oklch') || color.includes('color('))) {
-                htmlEl.style.color = '#0f172a';
-              }
-              if (border && (border.includes('oklch') || border.includes('color('))) {
-                htmlEl.style.borderColor = '#e2e8f0';
-              }
-            }
-          });
-        }
-      });
+            });
+          }
+        });
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+        });
 
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
-      }
 
-      pdf.save(`relatorio_workshop_ia_oforno_${new Date().toISOString().slice(0, 10)}.pdf`);
-      setStatusMessage({ type: 'success', text: "Relatório PDF gerado e baixado com sucesso!" });
-      setTimeout(() => setStatusMessage(null), 5000);
-    } catch (error) {
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save(pdfFilename);
+        setStatusMessage({ type: 'success', text: `Relatório PDF gerado e baixado com sucesso: ${pdfFilename}` });
+        setTimeout(() => setStatusMessage(null), 5000);
+      } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       
       // Fallback: Build a clean printable PDF directly using jsPDF text API
@@ -253,17 +383,17 @@ export const ExportTab: React.FC = () => {
           y += 8;
 
           const artifactsList = [
-            { label: 'Diagnóstico do Problema', val: appState.projectData.v3ProblemDiagnosis || appState.projectData.phdProblems },
-            { label: 'Golden Circle', val: appState.projectData.v3GoldenCircle || appState.projectData.goldenCircleWhy },
-            { label: 'Briefing V0 / V1', val: appState.projectData.v3BriefingV1 || appState.projectData.v3BriefingV0 },
-            { label: 'PRD V0', val: appState.projectData.v3PrdV0 || appState.projectData.prdRequirements },
-            { label: 'Definição do MVP', val: appState.projectData.v3Mvp || appState.projectData.mvpSmallestTestableVersion },
-            { label: 'Protótipo V0', val: appState.projectData.v3PrototypeV0 || appState.projectData.prototypeLinkOrDescription },
-            { label: 'Plano de Teste', val: appState.projectData.v3TestPlan },
+            { label: 'Diagnóstico do Problema', val: canonicalArtifacts.AF02?.content || appState.projectData.v3ProblemDiagnosis || appState.projectData.phdProblems },
+            { label: 'Propósito e Direção', val: canonicalArtifacts.AF04?.content || appState.projectData.v3GoldenCircle || appState.projectData.goldenCircleWhy },
+            { label: 'Briefing V0 / V1', val: canonicalArtifacts.AF06?.content || canonicalArtifacts.AF05?.content || appState.projectData.v3BriefingV1 || appState.projectData.v3BriefingV0 },
+            { label: 'Especificação / PRD', val: canonicalArtifacts.AF07?.content || appState.projectData.v3PrdV0 || appState.projectData.prdRequirements },
+            { label: 'Definição do MVP', val: canonicalArtifacts.AF08?.content || appState.projectData.v3Mvp || appState.projectData.mvpSmallestTestableVersion },
+            { label: 'Protótipo V0', val: canonicalArtifacts.AF08?.content || appState.projectData.v3PrototypeV0 || appState.projectData.prototypeLinkOrDescription },
+            { label: 'Plano de Teste e Aprendizados', val: canonicalArtifacts.AF09?.content || appState.projectData.v3TestPlan },
             { label: 'Evidências Brutas de Teste', val: appState.projectData.v3RawEvidence || appState.projectData.v3RawFeedbacks },
-            { label: 'Síntese de Evidências', val: appState.projectData.v3EvidenceSummary || appState.projectData.v3FeedbackSynthesis },
-            { label: 'Modelo de Sustentabilidade (BMC)', val: appState.projectData.v3Bmc || appState.projectData.bmcValueProposition },
-            { label: 'Roadmap (Agora, Depois, Futuro)', val: appState.projectData.v3Roadmap || appState.projectData.roadmapNow },
+            { label: 'Síntese de Evidências', val: canonicalArtifacts.AF09?.content || appState.projectData.v3EvidenceSummary || appState.projectData.v3FeedbackSynthesis },
+            { label: 'Modelo de Sustentabilidade', val: canonicalArtifacts.AF10?.content || appState.projectData.v3Bmc || appState.projectData.bmcValueProposition },
+            { label: 'Roadmap + Linha do Tempo', val: canonicalArtifacts.AF11?.content || appState.projectData.v3Roadmap || appState.projectData.roadmapNow },
             { label: 'Registro de Evolução V0 → V1', val: appState.projectData.v3EvolutionRecord },
             { label: 'Protótipo V1', val: appState.projectData.v3PrototypeV1 },
             { label: 'Estrutura do Pitch', val: appState.projectData.v3PitchStructure },
@@ -295,8 +425,8 @@ export const ExportTab: React.FC = () => {
           });
         }
 
-        doc.save(`relatorio_workshop_ia_oforno_${new Date().toISOString().slice(0, 10)}.pdf`);
-        setStatusMessage({ type: 'success', text: "Relatório PDF gerado via exportador vetorial com sucesso!" });
+        doc.save(pdfFilename);
+        setStatusMessage({ type: 'success', text: `Relatório PDF gerado via exportador vetorial com sucesso: ${pdfFilename}` });
         setTimeout(() => setStatusMessage(null), 5000);
       } catch (fallbackError) {
         console.error("Erro no fallback de PDF:", fallbackError);
@@ -306,92 +436,95 @@ export const ExportTab: React.FC = () => {
     } finally {
       setIsGeneratingPdf(false);
     }
-  };
+  }, 'gerar e baixar o relatório PDF');
+};
 
   const handlePrintReport = () => {
-    if (!reportRef.current) {
-      window.print();
-      return;
-    }
+    ensureProjectIdentification(() => {
+      if (!reportRef.current) {
+        window.print();
+        return;
+      }
 
-    const reportHtml = reportRef.current.outerHTML;
+      const reportHtml = reportRef.current.outerHTML;
 
-    // Attempt popup print window
-    const printWindow = window.open('', '_blank', 'width=900,height=800');
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-          <head>
-            <title>Relatório Consolidado - Workshop IA O Forno</title>
-            <meta charset="utf-8" />
-            <script src="https://cdn.tailwindcss.com"></script>
-            <style>
-              body { font-family: system-ui, -apple-system, sans-serif; background: #ffffff; color: #0f172a; padding: 24px; }
-              @media print {
-                body { padding: 0; margin: 0; background: white !important; color: black !important; }
-                .no-print { display: none !important; }
-              }
-            </style>
-          </head>
-          <body>
-            <div style="max-width: 900px; margin: 0 auto;">
-              ${reportHtml}
-            </div>
-            <script>
-              window.onload = function() {
-                setTimeout(function() {
-                  window.print();
-                }, 500);
-              };
-            </script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-    } else {
-      // Fallback iframe printing for sandbox environments
-      try {
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'fixed';
-        iframe.style.right = '0';
-        iframe.style.bottom = '0';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        iframe.style.border = '0';
-        document.body.appendChild(iframe);
-
-        const doc = iframe.contentWindow?.document;
-        if (doc && iframe.contentWindow) {
-          doc.open();
-          doc.write(`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>Relatório</title>
-                <script src="https://cdn.tailwindcss.com"></script>
-                <style>
-                  body { font-family: sans-serif; padding: 20px; background: white; color: black; }
-                </style>
-              </head>
-              <body>
+      // Attempt popup print window
+      const printWindow = window.open('', '_blank', 'width=900,height=800');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html lang="pt-BR">
+            <head>
+              <title>Relatório Consolidado - Workshop IA O Forno</title>
+              <meta charset="utf-8" />
+              <script src="https://cdn.tailwindcss.com"></script>
+              <style>
+                body { font-family: system-ui, -apple-system, sans-serif; background: #ffffff; color: #0f172a; padding: 24px; }
+                @media print {
+                  body { padding: 0; margin: 0; background: white !important; color: black !important; }
+                  .no-print { display: none !important; }
+                }
+              </style>
+            </head>
+            <body>
+              <div style="max-width: 900px; margin: 0 auto;">
                 ${reportHtml}
-              </body>
-            </html>
-          `);
-          doc.close();
-          setTimeout(() => {
-            iframe.contentWindow?.focus();
-            iframe.contentWindow?.print();
-            setTimeout(() => iframe.remove(), 3000);
-          }, 500);
-        } else {
+              </div>
+              <script>
+                window.onload = function() {
+                  setTimeout(function() {
+                    window.print();
+                  }, 500);
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      } else {
+        // Fallback iframe printing for sandbox environments
+        try {
+          const iframe = document.createElement('iframe');
+          iframe.style.position = 'fixed';
+          iframe.style.right = '0';
+          iframe.style.bottom = '0';
+          iframe.style.width = '0';
+          iframe.style.height = '0';
+          iframe.style.border = '0';
+          document.body.appendChild(iframe);
+
+          const doc = iframe.contentWindow?.document;
+          if (doc && iframe.contentWindow) {
+            doc.open();
+            doc.write(`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <title>Relatório</title>
+                  <script src="https://cdn.tailwindcss.com"></script>
+                  <style>
+                    body { font-family: sans-serif; padding: 20px; background: white; color: black; }
+                  </style>
+                </head>
+                <body>
+                  ${reportHtml}
+                </body>
+              </html>
+            `);
+            doc.close();
+            setTimeout(() => {
+              iframe.contentWindow?.focus();
+              iframe.contentWindow?.print();
+              setTimeout(() => iframe.remove(), 3000);
+            }, 500);
+          } else {
+            window.print();
+          }
+        } catch (e) {
           window.print();
         }
-      } catch (e) {
-        window.print();
       }
-    }
+    }, 'imprimir o relatório do projeto');
   };
 
   return (
@@ -401,13 +534,18 @@ export const ExportTab: React.FC = () => {
       <ConfirmModal
         isOpen={!!pendingImportData}
         title="Restaurar Dados do Backup?"
-        message="Atenção: A restauração de backup irá substituir todas as equipes, anotações e progresso atuais pelos dados do arquivo. Esta ação não poderá ser desfeita."
+        message={
+          importSummary
+            ? `Deseja restaurar o backup do projeto "${importSummary.projectName}" (Equipe: "${importSummary.teamName}" com ${importSummary.artifactsCount} artefatos preenchidos)? Isso sincronizará todas as notas, equipes e progresso atuais.`
+            : "Atenção: A restauração de backup irá substituir todas as equipes, anotações e progresso atuais pelos dados do arquivo. Esta ação não poderá ser desfeita."
+        }
         confirmLabel="Sim, Restaurar Backup"
         cancelLabel="Cancelar"
         variant="warning"
         onConfirm={confirmImport}
         onCancel={() => {
           setPendingImportData(null);
+          setImportSummary(null);
           if (fileInputRef.current) fileInputRef.current.value = '';
         }}
       />
@@ -416,7 +554,7 @@ export const ExportTab: React.FC = () => {
       <ConfirmModal
         isOpen={showResetModal}
         title="Resetar Todos os Dados do Workshop?"
-        message="Esta é uma ação crítica. Todos os cadastros de equipes, diagnósticos, anotações de facilitação e seleções do mapa de problemas serão apagados permanentemente e restaurados ao estado original do workshop."
+        message="Esta é uma ação crítica. Todos os cadastros de equipes, diagnósticos, artefatos consolidados no Documento Mestre, anotações de facilitação e seleções serão apagados permanentemente e restaurados ao estado inicial. Uma cópia de segurança pré-reset será salva automaticamente."
         confirmLabel="Sim, Resetar Tudo"
         cancelLabel="Cancelar"
         variant="danger"
@@ -449,11 +587,13 @@ export const ExportTab: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                const ok = triggerManualSave();
-                if (ok) {
-                  setStatusMessage({ type: 'success', text: 'Progresso salvo manualmente com sucesso neste navegador!' });
-                  setTimeout(() => setStatusMessage(null), 3500);
-                }
+                ensureProjectIdentification(() => {
+                  const ok = triggerManualSave();
+                  if (ok) {
+                    setStatusMessage({ type: 'success', text: 'Progresso salvo manualmente com sucesso neste navegador!' });
+                    setTimeout(() => setStatusMessage(null), 3500);
+                  }
+                }, 'salvar o projeto manualmente');
               }}
               className={`px-4 py-2 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 saveStatus === 'just_saved'
@@ -513,19 +653,6 @@ export const ExportTab: React.FC = () => {
             </p>
           </div>
         </div>
-
-        {/* Step by Step Guide */}
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-xs text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1 max-w-3xl">
-            <span className="font-extrabold text-amber-300 uppercase tracking-wider text-[11px] block">
-              💡 Guia Rápido de Backup para o Final do Encontro
-            </span>
-            <p className="text-slate-300 leading-relaxed">
-              <strong>1. Exportar:</strong> Ao terminar a oficina do dia, clique em <em>Baixar JSON</em> e guarde o arquivo no seu pendrive ou e-mail. <br />
-              <strong>2. Restaurar:</strong> No próximo encontro ou em outro computador, abra este webapp, venha nesta tela e clique em <em>Carregar Backup</em>.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Feedback status banner */}
@@ -544,128 +671,311 @@ export const ExportTab: React.FC = () => {
         </div>
       )}
 
-      {/* Action Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Export JSON */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 w-fit">
-              <Download className="w-6 h-6" />
+      {/* Requisito Mandatório: Identificação do Projeto para Salvar e Exportar */}
+      {!isProjectIdentified ? (
+        <div className="bg-amber-500/10 dark:bg-amber-500/15 border-2 border-amber-500/50 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0">
+              <AlertCircle className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Exportar Backup</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Baixe equipes, anotações e progresso em formato JSON para backup.
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 rounded-full inline-block">
+                Requisito Obrigatório para Salvar e Exportar
+              </span>
+              <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                Identificação do Projeto Obrigatória
+              </h4>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
+                O preenchimento dos campos <strong>Nome do Projeto</strong> e <strong>Seu Nome ou Nome da Equipe</strong> é obrigatório para salvar ou exportar em qualquer formato (.json, .md, .txt, .pdf). Esses dados serão inseridos no cabeçalho e comporão o nome dos arquivos exportados junto com a data e hora.
               </p>
             </div>
           </div>
-          <button
-            onClick={handleExportJson}
-            className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Download className="w-4 h-4" />
-            <span>Baixar JSON</span>
-          </button>
-        </div>
 
-        {/* Import JSON */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 w-fit">
-              <Upload className="w-6 h-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block mb-1">
+                Nome do Projeto *
+              </label>
+              <input
+                type="text"
+                value={appState.projectData?.projectName || ''}
+                onChange={(e) => updateProjectData({ projectName: e.target.value })}
+                placeholder="Ex: Horta Comunitária Inteligente..."
+                className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Restaurar Backup</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Carregue um arquivo de backup previamente exportado.
+
+            <div className="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block mb-1">
+                Seu Nome ou Nome da Equipe *
+              </label>
+              <input
+                type="text"
+                value={appState.projectData?.teamName || ''}
+                onChange={(e) => updateProjectData({ teamName: e.target.value })}
+                placeholder="Ex: Seu Nome (individual) ou Nome da Equipe..."
+                className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                Válido tanto para o seu próprio nome (trabalho individual) quanto para o nome do grupo/equipe.
               </p>
             </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <div className="text-xs">
+              <span className="text-slate-500 dark:text-slate-400">Identificação ativa: </span>
+              <strong className="text-slate-900 dark:text-white font-bold">{appState.projectData?.projectName}</strong>
+              <span className="text-slate-400 mx-2">•</span>
+              <span className="text-slate-500 dark:text-slate-400">Autor / Equipe: </span>
+              <strong className="text-slate-900 dark:text-white font-bold">{appState.projectData?.teamName}</strong>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => openProjectIdentModal('alterar os dados de identificação')}
+            className="text-2xs font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
+          >
+            Alterar dados de identificação
+          </button>
+        </div>
+      )}
+
+      {/* Primary Exporter Hub: Documento Mestre & Formatos Executivos */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-amber-500" />
+              Formatos de Exportação & Dossiê Executivo
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Baixe o Documento Mestre consolidado com os 14 artefatos e evidências de teste, sem ruídos transitórios.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Documento Mestre Markdown */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between hover:border-amber-500/50 transition-colors">
+            <div className="space-y-3">
+              <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 w-fit">
+                <FileCode className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Documento Mestre (.md)</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Dossiê estruturado em Markdown com os 4 movimentos, 14 artefatos e evidências reais.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleExportMasterMarkdown}
+                className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Baixar Markdown (.md)</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyMasterMarkdown}
+                className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>{isCopiedMd ? 'Copiado!' : 'Copiar Texto'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Documento Mestre TXT */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between hover:border-amber-500/50 transition-colors">
+            <div className="space-y-3">
+              <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 w-fit">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Documento Mestre (.txt)</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Versão em texto puro sem marcações, ideal para envio por e-mail ou leitura rápida.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleExportMasterPlainText}
+              className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Baixar Texto (.txt)</span>
+            </button>
+          </div>
+
+          {/* Relatório PDF & Impressão */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between hover:border-amber-500/50 transition-colors">
+            <div className="space-y-3">
+              <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 w-fit">
+                <Printer className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Relatório / PDF</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Documento formatado para apresentação ou impressão com design limpo A4.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/60 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              >
+                {isGeneratingPdf ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Gerando PDF...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Baixar PDF</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handlePrintReport}
+                className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Imprimir</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Backup Integral JSON */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between hover:border-amber-500/50 transition-colors">
+            <div className="space-y-3">
+              <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 w-fit">
+                <Download className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Backup JSON</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Arquivo completo de restauração com histórico, notas e configurações de todas as equipes.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleExportJson}
+                className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Exportar JSON</span>
+              </button>
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImportJson}
+                  accept=".json"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Restaurar JSON</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Diretrizes de Ética & LGPD • Uso Responsável da IA */}
+      <div id="secao-etica-lgpd" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs">
+        <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black">
+            <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImportJson}
-              accept=".json"
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Upload className="w-4 h-4" />
-              <span>Carregar Backup</span>
-            </button>
+            <h2 className="text-lg font-black text-slate-900 dark:text-slate-100 flex items-center gap-2 flex-wrap">
+              <span>Uso Responsável & Seguro da IA</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] font-black uppercase">
+                Ética & LGPD
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Diretrizes fundamentais para o trabalho de investigação, prototipação e manipulação segura de dados no workshop O FORNO.
+            </p>
           </div>
         </div>
 
-        {/* Print Summary */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 w-fit">
-              <Printer className="w-6 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
+              🔒 1. Proteção de Dados Pessoais (LGPD)
             </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Relatório / PDF</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Gere o PDF ou imprima o relatório consolidado do workshop.
-              </p>
-            </div>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              Nunca insira nomes completos, CPF, telefones, fotos pessoais ou dados confidenciais de colegas e moradores nos prompts. Trate a IA como um ambiente público.
+            </p>
           </div>
-          
-          <div className="space-y-2">
-            <button
-              onClick={handleDownloadPdf}
-              disabled={isGeneratingPdf}
-              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/60 text-slate-950 font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-            >
-              {isGeneratingPdf ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Gerando...</span>
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4" />
-                  <span>Baixar PDF</span>
-                </>
-              )}
-            </button>
 
-            <button
-              onClick={handlePrintReport}
-              className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Imprimir</span>
-            </button>
+          <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
+              ✍️ 2. Autoria & Decisão da Equipe
+            </div>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              A IA é um copiloto de raciocínio, não a autora do seu projeto. Nenhuma resposta da IA deve entrar no projeto sem a validação crítica da equipe no Checkpoint.
+            </p>
+          </div>
+
+          <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
+              🔍 3. Verificação de Alucinações
+            </div>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              Modelos de linguagem podem inventar dados ou dados estatísticos ("alucinações"). Sempre distinga entre fatos observados e suposições da IA.
+            </p>
+          </div>
+
+          <div className="p-5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
+              🤝 4. Colaboração Transparente
+            </div>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              Documente de forma transparente quais ferramentas de IA foram utilizadas (por exemplo: ChatGPT, Claude, v0) e para quais finalidades.
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Reset Workshop Data Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-rose-200 dark:border-rose-950/60 shadow-sm space-y-4 flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="p-3 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 w-fit">
-              <RotateCcw className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Resetar Dados</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Restaura todas as configurações, equipes e notas para o estado inicial.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setShowResetModal(true)}
-            className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer border border-rose-500/20"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Resetar Projeto</span>
-          </button>
+      {/* Action Row: Reset & Safety Snapshot */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <RotateCcw className="w-4 h-4 text-slate-400 shrink-0" />
+          <span>Precisa reiniciar para uma nova turma? O reset limpa o projeto e o Documento Mestre (com cópia de segurança prévia).</span>
         </div>
-
+        <button
+          type="button"
+          onClick={() => setShowResetModal(true)}
+          className="px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs transition-colors flex items-center gap-2 cursor-pointer border border-rose-500/20"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Resetar Dados do Projeto</span>
+        </button>
       </div>
 
       {/* Printable Report Summary Container */}
@@ -677,13 +987,13 @@ export const ExportTab: React.FC = () => {
         <div className="border-b border-slate-200 dark:border-slate-800 pb-6 flex items-center justify-between">
           <div>
             <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
-              RELATÓRIO CONSOLIDADO DO WORKSHOP
+              DOCUMENTO MESTRE • RELATÓRIO CONSOLIDADO V1.4.1
             </span>
             <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-              IA Aplicada: do Problema ao Protótipo
+              {appState.projectData?.projectName || appState.projectStateV1_4_1?.projectName || 'Workshop IA Aplicada'}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Facilitação: Pedro Lago • O Forno
+              Equipe: {appState.projectData?.teamName || appState.projectStateV1_4_1?.teamName || 'Equipe Geral'} • Facilitação: Pedro Lago • O Forno
             </p>
           </div>
           <div className="text-right text-xs text-slate-400 font-medium">
@@ -691,183 +1001,152 @@ export const ExportTab: React.FC = () => {
           </div>
         </div>
 
-        {/* Summary Teams Grid */}
-        <div className="space-y-6">
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-            Resumo das Equipes ({appState.teams.length})
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {appState.teams.map((team, idx) => (
-              <div
-                key={team.id}
-                className="printable-card p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3 text-xs"
-              >
-                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
-                  <span className="font-bold text-amber-600 dark:text-amber-400 uppercase">
-                    EQUIPE {idx + 1}: {team.name}
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 font-bold uppercase text-[10px]">
-                    {team.stage}
-                  </span>
-                </div>
-
-                <div>
-                  <p className="font-bold text-slate-700 dark:text-slate-300">Membros:</p>
-                  <p className="text-slate-600 dark:text-slate-400">
-                    {team.members.filter(Boolean).join(', ') || 'Nenhum participante listado'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="font-bold text-slate-700 dark:text-slate-300">Problema Diagnosticado:</p>
-                  <p className="text-slate-600 dark:text-slate-400">
-                    {team.problemStatement || 'Ainda não preenchido'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="font-bold text-slate-700 dark:text-slate-300">Conceito da Solução:</p>
-                  <p className="text-slate-600 dark:text-slate-400">
-                    {team.solutionConcept || 'Ainda não preenchido'}
-                  </p>
-                </div>
-
-                {team.prototypeUrl && (
-                  <div>
-                    <p className="font-bold text-slate-700 dark:text-slate-300">Link do Protótipo:</p>
-                    <a href={team.prototypeUrl} target="_blank" rel="noreferrer" className="text-amber-600 dark:text-amber-400 font-semibold underline truncate block">
-                      {team.prototypeUrl}
-                    </a>
-                  </div>
-                )}
-              </div>
-            ))}
+        {/* Strategic Overview Pill Matrix */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div className="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 space-y-1">
+            <span className="font-bold text-amber-700 dark:text-amber-300 block uppercase text-[10px]">Problema / Desafio Central</span>
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              {appState.projectStateV1_4_1?.problemSelected || appState.projectData?.collectiveChallenge || appState.projectData?.phdProblems || 'Não definido'}
+            </p>
+          </div>
+          <div className="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 space-y-1">
+            <span className="font-bold text-amber-700 dark:text-amber-300 block uppercase text-[10px]">Público Beneficiário / Alvo</span>
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              {appState.projectStateV1_4_1?.targetAudience || appState.projectData?.solutionTargetAudience || 'Não definido'}
+            </p>
+          </div>
+          <div className="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 space-y-1">
+            <span className="font-bold text-amber-700 dark:text-amber-300 block uppercase text-[10px]">Propósito Central e Direção</span>
+            <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              {canonicalArtifacts.AF04?.content || appState.projectStateV1_4_1?.purpose || 'Não definido'}
+            </p>
           </div>
         </div>
 
-        {/* V3.2 Project Artifacts Section */}
-        {appState.projectData && (
-          <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-              Artefatos do Projeto V3.2: {appState.projectData.projectName || 'Projeto da Equipe'} ({appState.projectData.teamName || 'Equipe'})
-            </h3>
-
+        {/* 12 Canonical Artifacts Dossier (AF01 a AF12) */}
+        <div className="space-y-6">
+          
+          {/* Agrupamento 1: Investigar e Direcionar */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                Agrupamento 1: Investigar e Direcionar (AF01 a AF04)
+              </h3>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              {(appState.projectData.v3ProblemDiagnosis || appState.projectData.phdProblems) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">1. Diagnóstico do Problema</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3ProblemDiagnosis || appState.projectData.phdProblems}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3GoldenCircle || appState.projectData.goldenCircleWhy) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">2. Golden Circle</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3GoldenCircle || `POR QUÊ: ${appState.projectData.goldenCircleWhy}\nCOMO: ${appState.projectData.goldenCircleHow}\nO QUÊ: ${appState.projectData.goldenCircleWhat}`}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3BriefingV1 || appState.projectData.v3BriefingV0) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">3. Briefing V0 / V1</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3BriefingV1 || appState.projectData.v3BriefingV0}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3PrdV0 || appState.projectData.prdRequirements) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">4. PRD V0</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3PrdV0 || appState.projectData.prdRequirements}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3Mvp || appState.projectData.mvpSmallestTestableVersion) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">5. Definição do MVP</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3Mvp || appState.projectData.mvpSmallestTestableVersion}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3PrototypeV0 || appState.projectData.prototypeLinkOrDescription) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">6. Protótipo V0</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3PrototypeV0 || appState.projectData.prototypeLinkOrDescription}</p>
-                </div>
-              )}
-
-              {appState.projectData.v3TestPlan && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">7. Plano de Teste</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3TestPlan}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3RawEvidence || appState.projectData.v3RawFeedbacks) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">8. Evidências Brutas de Teste</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3RawEvidence || appState.projectData.v3RawFeedbacks}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3EvidenceSummary || appState.projectData.v3FeedbackSynthesis) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">9. Síntese de Evidências</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3EvidenceSummary || appState.projectData.v3FeedbackSynthesis}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3Bmc || appState.projectData.bmcValueProposition) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">10. Modelo de Sustentabilidade (BMC)</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3Bmc || appState.projectData.bmcValueProposition}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3Roadmap || appState.projectData.roadmapNow) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">11. Roadmap</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3Roadmap || appState.projectData.roadmapNow}</p>
-                </div>
-              )}
-
-              {appState.projectData.v3EvolutionRecord && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">12. Registro de Evolução V0 → V1</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3EvolutionRecord}</p>
-                </div>
-              )}
-
-              {appState.projectData.v3PrototypeV1 && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">13. Protótipo V1</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3PrototypeV1}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3PitchScript || appState.projectData.pitchScriptText) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">14. Pitch Integral</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3PitchScript || appState.projectData.pitchScriptText}</p>
-                </div>
-              )}
-
-              {appState.projectData.v3PitchPresentation && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">15. Roteiro Visual da Apresentação</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3PitchPresentation}</p>
-                </div>
-              )}
-
-              {(appState.projectData.v3PitchRevised || appState.projectData.v3RehearsalNotes) && (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">16. Pitch Revisado & Síntese Crítica</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">{appState.projectData.v3PitchRevised || appState.projectData.v3RehearsalNotes}</p>
-                </div>
-              )}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF01 • Mapa de Problemas + Problema Escolhido</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF01?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF02 • Diagnóstico do Problema</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF02?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF03 • Mapa de Recursos</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF03?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF04 • Propósito e Direção</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF04?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Agrupamento 2: Definir e Materializar */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                Agrupamento 2: Definir e Materializar (AF05 a AF08)
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF05 • Briefing V0 (Minuta de Trabalho)</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF05?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF06 • Briefing V1 (Versão Autoritativa)</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF06?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF07 • Especificação de Funcionamento / PRD</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF07?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF08 • MVP + Protótipo V0</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF08?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Agrupamento 3: Testar, Aprender e Planejar */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                Agrupamento 3: Testar, Aprender e Planejar (AF09 a AF11)
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF09 • Testes, Aprendizados e Evolução V0→V1</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF09?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF10 • Modelo de Sustentabilidade</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF10?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF11 • Roadmap + Linha do Tempo em 7 Etapas</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF11?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Agrupamento 4: Comunicar e Celebrar */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                Agrupamento 4: Comunicar e Celebrar (AF12)
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-1">
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 block uppercase text-[10px]">AF12 • Kit de Comunicação Final (Pitch V1 + Roteiro Visual + Roteiro de Ensaio/Simulação)</span>
+                <p className="text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap line-clamp-6">
+                  {canonicalArtifacts.AF12?.content || 'Pendente de preenchimento.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
 
       </div>
 

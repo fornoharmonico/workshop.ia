@@ -14,7 +14,7 @@ export const ResultsSection: React.FC = () => {
     {
       icon: Search,
       title: '1. Investigação & Diagnóstico Crítico',
-      description: 'Identificar problemas reais da escola ou comunidade, diagnosticar causas-raiz (PHD e 5 Porquês) e diferenciar fatos comprovados de suposições antes de criar soluções.',
+      description: 'Identificar problemas reais da escola ou comunidade, diagnosticar possíveis causas e diferenciar fatos comprovados de suposições antes de criar soluções.',
       badge: 'Investigação Profunda'
     },
     {
@@ -24,28 +24,28 @@ export const ResultsSection: React.FC = () => {
       badge: 'Parceira Cognitiva'
     },
     {
-      icon: ShieldCheck,
-      title: '3. Proteção de Dados & LGPD (Art. 14)',
-      description: 'Reconhecer situações de risco à privacidade, proteger dados pessoais sensíveis e exercer cidadania digital segura.',
-      badge: 'Conformidade & Ética'
-    },
-    {
       icon: FileCode2,
-      title: '4. Estruturação de Produto (PRD & MVP)',
+      title: '3. Estruturação de Produto (PRD & MVP)',
       description: 'Traduzir ideias abstratas em documentação técnica profissional: Briefing, Documento de Requisitos de Produto (PRD) e especificação de Produto Mínimo Viável (MVP).',
       badge: 'Design de Produto'
     },
     {
       icon: Layers,
-      title: '5. Validação Ágil & Modelo de Sustentabilidade',
-      description: 'Construir protótipos rápidos (V0 e V1), testar com usuários reais, sintetizar feedbacks no Business Model Canvas (BMC) e traçar roadmaps de evolução.',
+      title: '4. Validação Ágil & Modelo de Sustentabilidade',
+      description: 'Construir protótipos rápidos (V0 e V1), testar com usuários reais, sintetizar feedbacks no Modelo de Sustentabilidade e traçar roadmaps de evolução.',
       badge: 'Prototipagem Ágil'
     },
     {
       icon: Presentation,
-      title: '6. Trabalho em Equipe & Pitch de 3 Minutos',
+      title: '5. Trabalho em Equipe & Pitch de 3 Minutos',
       description: 'Colaborar produtivamente em equipes multidisciplinares, estruturar narrativas concisas e defender o projeto com segurança para bancas e públicos avaliadores.',
       badge: 'Comunicação & Síntese'
+    },
+    {
+      icon: ShieldCheck,
+      title: '6. Proteção de Dados & LGPD (Art. 14)',
+      description: 'Reconhecer situações de risco à privacidade, proteger dados pessoais sensíveis e exercer cidadania digital segura.',
+      badge: 'Privacidade & Ética'
     }
   ];
 

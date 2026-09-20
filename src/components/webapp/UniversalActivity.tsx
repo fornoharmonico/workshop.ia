@@ -23,7 +23,8 @@ import {
   X,
   Compass,
   CheckCheck,
-  Info
+  Info,
+  ArrowDown
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ActivityV2, EpistemologicalStatus, ObservationCategory } from '../../types/workshop';
@@ -37,6 +38,8 @@ import {
 } from '../../utils/solutionCategories';
 import { PitchTriadEditor } from './PitchTriadEditor';
 import { BancaSimuladaWorkflow } from './BancaSimuladaWorkflow';
+import { HandoffCompact } from './HandoffCompact';
+import { RealWorldTestSupport } from './RealWorldTestSupport';
 
 interface UniversalActivityProps {
   activity: ActivityV2;
@@ -51,6 +54,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
     state, 
     saveArtifactVersion, 
     saveDraftArtifact, 
+    triggerManualSave,
     addFacilitatorObservation,
     setCurrentPilotActivityId,
     setActiveWebappTab,
@@ -78,8 +82,37 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [srAnnouncement, setSrAnnouncement] = useState<string>('');
 
-  // Ref for auto-scrolling to the next section (Reflexão Metacognitiva / Handoff) upon consolidation
+  // Section refs for guided automatic scrolling between phases
+  const sectionPhase1Ref = useRef<HTMLElement>(null);
+  const sectionPhase2Ref = useRef<HTMLElement>(null);
+  const sectionPhase3Ref = useRef<HTMLElement>(null);
   const handoffSectionRef = useRef<HTMLElement>(null);
+  const consolidationTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Active highlighted target section when auto-scrolling
+  const [highlightedSection, setHighlightedSection] = useState<'phase1' | 'phase2' | 'phase3' | 'phase4' | null>(null);
+
+  const scrollToSection = (section: 'phase1' | 'phase2' | 'phase3' | 'phase4', andFocusTextarea = false) => {
+    let targetEl: HTMLElement | null = null;
+    if (section === 'phase1') targetEl = sectionPhase1Ref.current;
+    else if (section === 'phase2') targetEl = sectionPhase2Ref.current;
+    else if (section === 'phase3') targetEl = sectionPhase3Ref.current;
+    else if (section === 'phase4') targetEl = handoffSectionRef.current;
+
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setHighlightedSection(section);
+      setTimeout(() => {
+        setHighlightedSection(null);
+      }, 2400);
+
+      if (andFocusTextarea) {
+        setTimeout(() => {
+          consolidationTextareaRef.current?.focus();
+        }, 550);
+      }
+    }
+  };
 
   // Facilitator Observation Form State
   const [obsCategory, setObsCategory] = useState<ObservationCategory>('METODOLOGIA');
@@ -175,8 +208,12 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
     try {
       await navigator.clipboard.writeText(fullPromptWithContext);
       setCopiedType('promptContext');
-      showToast('Prompt Completo (+ Contexto) copiado com sucesso!');
-      setTimeout(() => setCopiedType(null), 4000);
+      showToast('Prompt Completo (+ Contexto) copiado! Conduzindo para a Fase 3...');
+      setTimeout(() => setCopiedType(null), 5000);
+      // Discrete automatic smooth scroll to Section 3 / Consolidação to guide the user
+      setTimeout(() => {
+        scrollToSection('phase3', true);
+      }, 450);
     } catch (err) {
       setShowContextModal(true);
       showToast('Selecione e copie o texto no modal abaixo.');
@@ -188,8 +225,11 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
     try {
       await navigator.clipboard.writeText(activity.aiPrompt.templatePrompt);
       setCopiedType('promptOnly');
-      showToast('Prompt Base copiado com sucesso!');
-      setTimeout(() => setCopiedType(null), 4000);
+      showToast('Prompt Base copiado! Conduzindo para a Fase 3...');
+      setTimeout(() => setCopiedType(null), 5000);
+      setTimeout(() => {
+        scrollToSection('phase3', true);
+      }, 450);
     } catch (err) {
       showToast('Erro ao copiar prompt.');
     }
@@ -212,6 +252,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
       false, // Draft / EM_CONSTRUCAO
       'Rascunho salvo pela equipe'
     );
+    triggerManualSave();
     showToast('Rascunho salvo com sucesso!');
   };
 
@@ -237,12 +278,13 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
     if (draftContent.trim()) {
       saveDraftArtifact(activity.id, draftContent);
     }
+    triggerManualSave();
     showToast(`🎉 ${versionName} consolidado com sucesso!`);
 
-    // Automatic smooth scroll downwards to Handoff
+    // Automatic smooth scroll downwards to Handoff (Phase 4)
     setTimeout(() => {
-      handoffSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
+      scrollToSection('phase4');
+    }, 200);
   };
 
   const handleSaveObservation = (e: React.FormEvent) => {
@@ -477,59 +519,73 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
           </div>
         </div>
 
-        {/* Activity Title (H1) & Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+        {/* Activity Title (H1) & Responsive Quick Navigation Bar */}
+        <div className="space-y-3 pt-1">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-snug break-words">
               {activity.title}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {prevActivity && (
-              <button
-                onClick={() => {
+          <div className="flex items-center justify-between gap-2 p-1.5 sm:p-2 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
+            <button
+              disabled={!prevActivity}
+              onClick={() => {
+                if (prevActivity) {
                   setCurrentPilotActivityId(prevActivity.id);
                   if (onNavigateToActivity) onNavigateToActivity(prevActivity.id);
-                }}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer"
-                title={`Ir para ${prevActivity.id}`}
-              >
-                <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
-                <span className="hidden sm:inline">Anterior</span>
-              </button>
-            )}
-
-            <select
-              id="activity-quick-nav"
-              value={activity.id}
-              onChange={(e) => {
-                setCurrentPilotActivityId(e.target.value);
-                if (onNavigateToActivity) onNavigateToActivity(e.target.value);
+                }
               }}
-              className="text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500 cursor-pointer"
-              aria-label="Selecionar atividade"
+              className={`btn-interactive shrink-0 px-3 py-1.5 rounded-xl font-bold text-xs transition flex items-center gap-1.5 border shadow-2xs ${
+                prevActivity
+                  ? 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 cursor-pointer'
+                  : 'bg-slate-100/50 dark:bg-slate-800/30 text-slate-400 dark:text-slate-600 border-transparent cursor-not-allowed opacity-40'
+              }`}
+              title={prevActivity ? `Ir para atividade anterior (${prevActivity.id})` : 'Esta é a primeira atividade'}
+              aria-label={prevActivity ? `Ir para atividade anterior ${prevActivity.id}` : 'Nenhuma atividade anterior'}
             >
-              {PILOT_CHAIN_ACTIVITIES.map((act, idx) => (
-                <option key={act.id} value={act.id}>
-                  {act.id} — {act.title} ({idx + 1}/{PILOT_CHAIN_ACTIVITIES.length})
-                </option>
-              ))}
-            </select>
+              <ArrowLeft className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              <span className="hidden sm:inline">Anterior</span>
+            </button>
 
-            {nextActivity && (
-              <button
-                onClick={() => {
+            <div className="min-w-0 flex-1 flex justify-center px-1">
+              <select
+                id="activity-quick-nav"
+                value={activity.id}
+                onChange={(e) => {
+                  setCurrentPilotActivityId(e.target.value);
+                  if (onNavigateToActivity) onNavigateToActivity(e.target.value);
+                }}
+                className="w-full max-w-md min-w-0 truncate text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 sm:px-3 py-1.5 font-bold text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500 shadow-2xs cursor-pointer text-ellipsis"
+                aria-label="Selecionar atividade"
+              >
+                {PILOT_CHAIN_ACTIVITIES.map((act, idx) => (
+                  <option key={act.id} value={act.id}>
+                    {act.id} — {act.title} ({idx + 1}/{PILOT_CHAIN_ACTIVITIES.length})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              disabled={!nextActivity}
+              onClick={() => {
+                if (nextActivity) {
                   setCurrentPilotActivityId(nextActivity.id);
                   if (onNavigateToActivity) onNavigateToActivity(nextActivity.id);
-                }}
-                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition flex items-center gap-1 shadow-xs cursor-pointer"
-                title={`Ir para ${nextActivity.id}`}
-              >
-                <span className="hidden sm:inline">Próxima</span>
-                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-              </button>
-            )}
+                }
+              }}
+              className={`btn-interactive shrink-0 px-3.5 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-xs border ${
+                nextActivity
+                  ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-600/30 cursor-pointer'
+                  : 'bg-slate-100/50 dark:bg-slate-800/30 text-slate-400 dark:text-slate-600 border-transparent cursor-not-allowed opacity-40'
+              }`}
+              title={nextActivity ? `Ir para próxima atividade (${nextActivity.id})` : 'Esta é a última atividade'}
+              aria-label={nextActivity ? `Ir para próxima atividade ${nextActivity.id}` : 'Nenhuma próxima atividade'}
+            >
+              <span className="hidden sm:inline">Próxima</span>
+              <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+            </button>
           </div>
         </div>
 
@@ -569,11 +625,82 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
         )}
       </section>
 
+      {/* Interactive Step-by-Step Guided Navigation Bar (Mobile-first, touch-friendly) */}
+      <nav 
+        aria-label="Navegação rápida entre fases da atividade" 
+        className="sticky top-28 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-1.5 sm:p-2 rounded-2xl shadow-xs transition-all"
+      >
+        <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto touch-scroll scrollbar-none py-0.5">
+          <button
+            type="button"
+            onClick={() => scrollToSection('phase1')}
+            className={`btn-interactive flex-1 min-h-[44px] px-2.5 sm:px-3 py-2 rounded-xl text-2xs sm:text-xs font-black transition flex items-center justify-center gap-1.5 shrink-0 sm:shrink cursor-pointer touch-manipulation ${
+              highlightedSection === 'phase1'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 text-2xs font-black flex items-center justify-center shrink-0">1</span>
+            <span className="whitespace-nowrap">Contexto</span>
+          </button>
+
+          <span className="text-slate-300 dark:text-slate-700 text-xs shrink-0 select-none">→</span>
+
+          <button
+            type="button"
+            onClick={() => scrollToSection('phase2')}
+            className={`btn-interactive flex-1 min-h-[44px] px-2.5 sm:px-3 py-2 rounded-xl text-2xs sm:text-xs font-black transition flex items-center justify-center gap-1.5 shrink-0 sm:shrink cursor-pointer touch-manipulation ${
+              highlightedSection === 'phase2'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 text-2xs font-black flex items-center justify-center shrink-0">2</span>
+            <span className="whitespace-nowrap">Ação & Prompt</span>
+          </button>
+
+          <span className="text-slate-300 dark:text-slate-700 text-xs shrink-0 select-none">→</span>
+
+          <button
+            type="button"
+            onClick={() => scrollToSection('phase3', true)}
+            className={`btn-interactive flex-1 min-h-[44px] px-2.5 sm:px-3 py-2 rounded-xl text-2xs sm:text-xs font-black transition flex items-center justify-center gap-1.5 shrink-0 sm:shrink cursor-pointer touch-manipulation ${
+              highlightedSection === 'phase3'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 text-2xs font-black flex items-center justify-center shrink-0">3</span>
+            <span className="whitespace-nowrap">Consolidação</span>
+          </button>
+
+          <span className="text-slate-300 dark:text-slate-700 text-xs shrink-0 select-none">→</span>
+
+          <button
+            type="button"
+            onClick={() => scrollToSection('phase4')}
+            className={`btn-interactive flex-1 min-h-[44px] px-2.5 sm:px-3 py-2 rounded-xl text-2xs sm:text-xs font-black transition flex items-center justify-center gap-1.5 shrink-0 sm:shrink cursor-pointer touch-manipulation ${
+              highlightedSection === 'phase4'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 text-2xs font-black flex items-center justify-center shrink-0">4</span>
+            <span className="whitespace-nowrap">Próximo Passo</span>
+          </button>
+        </div>
+      </nav>
+
       {/* ========================================================================= */}
-      {/* FASE 1: CONTEXTO (Perguntas 1, 2 e 3) */}
-      {/* 1. Onde estou? | 2. Por que estou fazendo isso? | 3. De quais artefatos preciso? */}
+      {/* 1. ONDE ESTOU? | 2. O QUE VOU FAZER? | 3. POR QUE ISSO IMPORTA? | 4. O QUE JÁ TEMOS? */}
       {/* ========================================================================= */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-5">
+      <section 
+        ref={sectionPhase1Ref}
+        id="fase-1-contexto"
+        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-5 scroll-mt-32 transition-all duration-300 ${
+          highlightedSection === 'phase1' ? 'section-guided-target ring-2 ring-amber-500/60' : ''
+        }`}
+      >
         
         {/* Phase Header Badge */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -581,21 +708,25 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
             <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 text-xs font-black flex items-center justify-center">1</span>
             <div>
               <span className="text-2xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
-                FASE 1: CONTEXTO
+                FASE 1: CONTEXTO & INSUMOS
               </span>
               <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                Enquadramento e Insumos Necessários
+                Onde estamos, o que faremos e o que já temos
               </h2>
             </div>
           </div>
 
           <span className="text-2xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-            {activity.isPresencial ? 'Dinâmica Presencial' : 'Etapa Digital com IA'}
+            {activity.isPresencial 
+              ? '👥 Dinâmica Presencial' 
+              : activity.id === 'E3-A01' 
+                ? '🔬 Mundo Real (Testes em Campo)' 
+                : '🤖 Etapa Digital com IA'}
           </span>
         </div>
 
-        {/* 1. Onde estou? & 2. Por que estou fazendo isso? */}
-        <div className="grid md:grid-cols-2 gap-4">
+        {/* 1. Onde estou? & 2. O que vou fazer? & 3. Por que isso importa? */}
+        <div className="grid md:grid-cols-3 gap-3">
           <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1.5">
             <div className="flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">
               <Compass className="w-4 h-4" aria-hidden="true" />
@@ -611,8 +742,21 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
 
           <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1.5">
             <div className="flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+              <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+              <span>2. O que vou fazer?</span>
+            </div>
+            <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
+              {activity.title}
+            </p>
+            <p className="text-2xs text-slate-500 dark:text-slate-400 line-clamp-2">
+              {activity.expectedVersionName || 'Consolidação e evolução da etapa'}
+            </p>
+          </div>
+
+          <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">
               <Sparkles className="w-4 h-4" aria-hidden="true" />
-              <span>2. Por que estou fazendo isso?</span>
+              <span>3. Por que isso importa?</span>
             </div>
             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
               {activity.whyItMatters}
@@ -620,12 +764,12 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
           </div>
         </div>
 
-        {/* 3. De quais artefatos/contextos preciso? */}
+        {/* 4. O que já temos? */}
         <div className="space-y-3 pt-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
               <FileText className="w-4 h-4 text-amber-500" aria-hidden="true" />
-              <span>3. De quais artefatos / insumos preciso?</span>
+              <span>4. O que já temos? • Insumos e Contexto Acumulado</span>
             </h3>
 
             {activity.aiPrompt && (
@@ -829,10 +973,15 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* FASE 2: AÇÃO (Perguntas 4 e 5) */}
-      {/* 4. O que faço agora? | 5. Qual prompt utilizo? (com Progressive Disclosure) */}
+      {/* 5. QUAL É A AÇÃO AGORA? */}
       {/* ========================================================================= */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-5">
+      <section 
+        ref={sectionPhase2Ref}
+        id="fase-2-execucao"
+        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-5 scroll-mt-32 transition-all duration-300 ${
+          highlightedSection === 'phase2' ? 'section-guided-target ring-2 ring-amber-500/60' : ''
+        }`}
+      >
         
         {/* Phase Header Badge */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -840,20 +989,20 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
             <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 text-xs font-black flex items-center justify-center">2</span>
             <div>
               <span className="text-2xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
-                FASE 2: AÇÃO
+                FASE 2: EXECUÇÃO PRÁTICA
               </span>
               <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                Execução Passo a Passo e Interação com a IA
+                5. Qual é a ação agora?
               </h2>
             </div>
           </div>
         </div>
 
-        {/* 4. O que faço agora? */}
+        {/* Roteiro de Ação da Equipe */}
         <div className="space-y-3">
           <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 text-2xs font-black flex items-center justify-center">✓</span>
-            <span>4. O que faço agora?</span>
+            <span>Roteiro de Ação da Equipe:</span>
           </h3>
 
           <div className="grid sm:grid-cols-2 gap-3">
@@ -866,6 +1015,17 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
           </div>
         </div>
 
+        {/* Real World Test Execution Support in E3-A01 / Field Tests */}
+        {activity.id === 'E3-A01' && (
+          <div className="pt-2">
+            <RealWorldTestSupport
+              onSyncEvidenceText={(text) => {
+                setDraftContent(text);
+              }}
+            />
+          </div>
+        )}
+
         {/* 5. Qual prompt utilizo? (Seção de Copiloto IA ou Dinâmica Presencial) */}
         {activity.aiPrompt ? (
           <div className="bg-gradient-to-br from-amber-500/5 via-slate-900/5 to-slate-900/0 dark:from-amber-500/10 dark:to-slate-900 border-2 border-amber-500/30 rounded-3xl p-5 sm:p-6 space-y-4">
@@ -873,7 +1033,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-500/20">
               <div>
                 <span className="text-2xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
-                  5. Qual prompt utilizo? • Copiloto de IA
+                  Copiloto de IA • Prompt da Atividade
                 </span>
                 <h4 className="text-base font-black text-slate-900 dark:text-slate-100">
                   {activity.aiPrompt.purpose}
@@ -906,8 +1066,8 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
                 {/* Primary Button: Prompt + Context */}
                 <button
                   onClick={handleCopyPromptWithContext}
-                  className="min-h-[44px] py-2.5 px-4 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
-                  title="Copia o prompt com todas as variáveis e contexto acumulado do projeto"
+                  className="btn-interactive min-h-[44px] py-2.5 px-4 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-xs hover:shadow-md active:shadow-xs transition flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
+                  title="Copia o prompt com todas as variáveis e contexto acumulado do projeto e conduz para a Fase 3"
                 >
                   {copiedType === 'promptContext' ? (
                     <>
@@ -925,13 +1085,13 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
                 {/* Secondary Button: Only Prompt Base */}
                 <button
                   onClick={handleCopyPromptOnly}
-                  className="min-h-[44px] py-2.5 px-3.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm border border-slate-300 dark:border-slate-700 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
+                  className="btn-interactive min-h-[44px] py-2.5 px-3.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:bg-slate-200 dark:active:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm border border-slate-300 dark:border-slate-700 rounded-xl shadow-2xs hover:shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
                   title="Copia somente a estrutura base do prompt"
                 >
                   {copiedType === 'promptOnly' ? (
                     <>
                       <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[3]" aria-hidden="true" />
-                      <span className="text-emerald-700 dark:text-emerald-300">Prompt Base Copiado!</span>
+                      <span className="text-emerald-700 dark:text-emerald-300 font-extrabold">Prompt Base Copiado!</span>
                     </>
                   ) : (
                     <>
@@ -943,19 +1103,30 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
               </div>
             </div>
 
-            {/* Instruction Banner after Copy */}
+            {/* Instruction Banner after Copy with Auto-scroll Shortcut */}
             {copiedType && (
               <div 
                 role="status"
-                className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 p-3 rounded-2xl flex items-start gap-2.5 text-xs text-emerald-950 dark:text-emerald-200 animate-fadeIn"
+                className="bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700 p-3.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-950 dark:text-emerald-100 shadow-xs animate-in fade-in slide-in-from-top-1 duration-200"
               >
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" aria-hidden="true" />
-                <div>
-                  <strong className="font-extrabold">Pronto! Prompt copiado para a área de transferência.</strong>
-                  <p className="mt-0.5 text-emerald-900 dark:text-emerald-300">
-                    Abra sua ferramenta de IA (ChatGPT, Claude ou Gemini), cole com <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 rounded-md border border-emerald-300 dark:border-emerald-700 font-mono text-2xs">Ctrl + V</kbd> / <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 rounded-md border border-emerald-300 dark:border-emerald-700 font-mono text-2xs">Cmd + V</kbd> e envie. Quando chegarem a uma conclusão com a IA, tragam o resultado para a <strong>Fase 3: Consolidação</strong> abaixo.
-                  </p>
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" aria-hidden="true" />
+                  <div>
+                    <strong className="font-extrabold">Prompt copiado para a área de transferência!</strong>
+                    <p className="mt-0.5 text-emerald-900 dark:text-emerald-300 text-2xs sm:text-xs">
+                      Cole no ChatGPT, Claude ou Gemini com <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-900 rounded-md border border-emerald-300 dark:border-emerald-700 font-mono text-2xs">Ctrl + V</kbd>. Em seguida, tragam o resultado refinado para a <strong>Fase 3: Consolidação</strong> abaixo.
+                    </p>
+                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => scrollToSection('phase3', true)}
+                  className="btn-interactive shrink-0 min-h-[44px] px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl text-2xs font-extrabold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer touch-manipulation whitespace-nowrap self-stretch sm:self-auto"
+                >
+                  <span>Ir para Consolidação</span>
+                  <ArrowDown className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
               </div>
             )}
 
@@ -1001,14 +1172,14 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
             <div className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               <span className="text-2xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider">
-                5. Dinâmica de Grupo Presencial
+                Dinâmica de Grupo Presencial
               </span>
             </div>
             <h4 className="text-base font-black text-slate-900 dark:text-slate-100">
               Brainstorm e Decisão Coletiva no Espaço Físico
             </h4>
             <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-              Esta etapa é conduzida presencialmente no espaço com post-its e discussões em grupo. Não é necessário prompt de IA nesta fase inicial — as conclusões da equipe serão registradas abaixo e alimentarão a atividade de <strong>Diagnóstico do Problema</strong>.
+              Esta etapa é conduzida presencialmente no espaço com post-its e discussões em grupo. Não é necessário prompt de IA nesta fase — as decisões da equipe devem ser registradas abaixo e alimentarão as próximas etapas do projeto.
             </p>
           </div>
         )}
@@ -1016,10 +1187,15 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* FASE 3: CONSOLIDAÇÃO (Perguntas 6 e 7) */}
-      {/* 6. O que preciso produzir? | 7. Como reviso e salvo? (Checkpoint de Autoria Humana) */}
+      {/* 6. O QUE VALE REGISTRAR? */}
       {/* ========================================================================= */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-5">
+      <section 
+        ref={sectionPhase3Ref}
+        id="fase-3-consolidacao"
+        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-5 scroll-mt-32 transition-all duration-300 ${
+          highlightedSection === 'phase3' ? 'section-guided-target ring-2 ring-amber-500/60' : ''
+        }`}
+      >
         
         {/* Phase Header Badge */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
@@ -1027,10 +1203,10 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
             <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 text-xs font-black flex items-center justify-center">3</span>
             <div>
               <span className="text-2xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
-                FASE 3: CONSOLIDAÇÃO
+                FASE 3: REVISÃO & CONSOLIDAÇÃO
               </span>
               <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                Registro do Artefato e Checkpoint de Autoria Humana
+                6. O que vale registrar?
               </h2>
             </div>
           </div>
@@ -1043,11 +1219,40 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
           )}
         </div>
 
-        {/* 6. O que preciso produzir? */}
+        {/* Esteira de Revisão Humana: LER -> QUESTIONAR -> EDITAR -> VALIDAR -> SALVAR */}
+        <div className="bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 rounded-2xl p-4 space-y-2">
+          <span className="text-2xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-wider block">
+            ESTEIRA DE REVISÃO HUMANA:
+          </span>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-2xs">
+            <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-center font-bold text-slate-800 dark:text-slate-200">
+              <span className="block text-amber-600 dark:text-amber-400 font-black">1. LER</span>
+              <span className="text-3xs text-slate-500">Leia criticamente a minuta</span>
+            </div>
+            <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-center font-bold text-slate-800 dark:text-slate-200">
+              <span className="block text-amber-600 dark:text-amber-400 font-black">2. QUESTIONAR</span>
+              <span className="text-3xs text-slate-500">Cheque o que faz sentido</span>
+            </div>
+            <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-center font-bold text-slate-800 dark:text-slate-200">
+              <span className="block text-amber-600 dark:text-amber-400 font-black">3. EDITAR</span>
+              <span className="text-3xs text-slate-500">Ajuste o texto com o grupo</span>
+            </div>
+            <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-center font-bold text-slate-800 dark:text-slate-200">
+              <span className="block text-amber-600 dark:text-amber-400 font-black">4. VALIDAR</span>
+              <span className="text-3xs text-slate-500">Confirme coerência</span>
+            </div>
+            <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-center font-bold text-slate-800 dark:text-slate-200 col-span-2 sm:col-span-1">
+              <span className="block text-amber-600 dark:text-amber-400 font-black">5. SALVAR</span>
+              <span className="text-3xs text-slate-500">Consolide no projeto</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Artefato esperado */}
         <div className="p-3.5 sm:p-4 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 space-y-1">
           <div className="flex items-center gap-2 text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider">
             <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-            <span>6. O que preciso produzir?</span>
+            <span>Artefato / Resultado Esperado:</span>
           </div>
           <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
             {activity.expectedVersionName || activity.title}
@@ -1059,12 +1264,12 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
           </p>
         </div>
 
-        {/* 7. Como reviso e salvo? (Textarea do Artefato) */}
+        {/* Área de Edição da Minuta / Artefato */}
         {activity.id === 'E4-A01' ? (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <label className="block text-xs font-bold text-slate-900 dark:text-slate-100">
-                7. Como reviso e salvo? • Tríade do Pitch (Estrutura, Fala Integral e Síntese):
+                Tríade do Pitch (Estrutura, Fala Integral e Síntese):
               </label>
               <span className="text-2xs text-slate-500 dark:text-slate-400 font-medium">
                 Edite as 3 partes separadamente para alimentar a apresentação e o ensaio da banca.
@@ -1080,7 +1285,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <label className="block text-xs font-bold text-slate-900 dark:text-slate-100">
-                7. Como reviso e salvo? • Banca Simulada & Pitch Revisado V3.2:
+                Banca Simulada & Pitch Revisado V1.4.1:
               </label>
               <span className="text-2xs text-slate-500 dark:text-slate-400 font-medium">
                 Simule as 5 perguntas da banca uma por vez, refine a fala e salve a síntese crítica.
@@ -1100,18 +1305,19 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
                 htmlFor="consolidation-textarea" 
                 className="block text-xs font-bold text-slate-900 dark:text-slate-100"
               >
-                7. Como reviso e salvo? • Conteúdo do {activity.expectedVersionName || 'Artefato'}:
+                Conteúdo da Minuta do {activity.expectedVersionName || 'Artefato'}:
               </label>
               <span className="text-2xs text-slate-500 dark:text-slate-400 font-medium">
                 🔍 <strong>Revisão:</strong> Confirme se este artefato realmente representa o entendimento da equipe.
               </span>
             </div>
             <textarea
+              ref={consolidationTextareaRef}
               id="consolidation-textarea"
               value={draftContent}
               onChange={(e) => setDraftContent(e.target.value)}
               placeholder={`Digite ou cole aqui a minuta revisada do ${activity.expectedVersionName || activity.title}...`}
-              className="w-full h-56 p-4 text-xs font-mono bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-2xl text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 leading-relaxed resize-y"
+              className="w-full h-56 p-4 text-base sm:text-xs font-mono bg-slate-50 dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-800 rounded-2xl text-slate-800 dark:text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 caret-amber-500 leading-relaxed resize-y transition-all duration-200"
             />
           </div>
         )}
@@ -1177,7 +1383,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
                                 },
                               }));
                             }}
-                            className="text-2xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 font-bold text-amber-700 dark:text-amber-300 focus:ring-1 focus:ring-amber-500"
+                            className="text-2xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 font-bold text-amber-700 dark:text-amber-300 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 caret-amber-500"
                           >
                             <option value="DECIDIDO">DECIDIMOS</option>
                             <option value="OBSERVADO">OBSERVAMOS</option>
@@ -1209,7 +1415,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
                         }));
                       }}
                       placeholder={`Escreva em 1 ou 2 frases a síntese de ${mapping.label.toLowerCase()}...`}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"
+                      className="w-full p-2.5 sm:p-3 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-base sm:text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-amber-500/15 focus:border-amber-500 caret-amber-500 transition-all duration-200"
                     />
                   </div>
                 );
@@ -1222,7 +1428,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
           <button
             onClick={handleSaveDraft}
-            className="min-h-[44px] w-full sm:w-auto px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
+            className="btn-interactive min-h-[44px] w-full sm:w-auto px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:bg-slate-300 dark:active:bg-slate-600 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold rounded-xl shadow-2xs hover:shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
           >
             <Save className="w-4 h-4" aria-hidden="true" />
             <span>Salvar Rascunho</span>
@@ -1236,13 +1442,13 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
             <div className="flex items-center gap-2 w-full sm:w-auto justify-stretch sm:justify-end">
               <button
                 onClick={handleSaveDraft}
-                className="min-h-[44px] flex-1 sm:flex-initial px-3 py-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-bold transition text-center cursor-pointer touch-manipulation"
+                className="btn-interactive min-h-[44px] flex-1 sm:flex-initial px-3 py-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-bold transition text-center cursor-pointer touch-manipulation"
               >
                 Ainda revisando
               </button>
               <button
                 onClick={handleConsolidateCheckpoint}
-                className="min-h-[44px] flex-1 sm:flex-initial px-4 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-xs sm:text-sm font-black rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
+                className="btn-interactive min-h-[44px] flex-1 sm:flex-initial px-4 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-xs sm:text-sm font-black rounded-xl shadow-xs hover:shadow-md active:shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
               >
                 <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                 <span>Sim, consolidar artefato</span>
@@ -1265,99 +1471,49 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
       </section>
 
       {/* ========================================================================= */}
-      {/* FASE 4: HANDOFF (Pergunta 8) */}
-      {/* 8. Para que esse resultado será usado depois? • Passagem de bastão */}
+      {/* 7. QUAL É O PRÓXIMO PASSO? */}
       {/* ========================================================================= */}
       <section
         ref={handoffSectionRef}
-        className={`border rounded-3xl p-6 shadow-xs transition-all ${
-        isActivityCompleted 
-          ? 'bg-white dark:bg-slate-900 border-emerald-500/40 dark:border-emerald-500/30' 
-          : 'bg-slate-50/80 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 opacity-95'
-      }`}>
-        
-        {/* Phase Header Badge */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 text-xs font-black flex items-center justify-center">4</span>
-            <div>
-              <span className="text-2xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
-                FASE 4: HANDOFF
-              </span>
-              <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                8. Para que esse resultado será usado depois?
-              </h2>
-            </div>
-          </div>
-
-          {!isActivityCompleted ? (
-            <span className="text-2xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-1 rounded-md border border-amber-300 dark:border-amber-700">
-              Pendente de Consolidação
-            </span>
-          ) : (
-            <span className="text-2xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              <span>Etapa Concluída</span>
-            </span>
-          )}
+        id="fase-4-handoff"
+        className={`space-y-4 scroll-mt-32 transition-all duration-300 ${
+          highlightedSection === 'phase4' ? 'section-guided-target ring-2 ring-amber-500/60 rounded-3xl p-3' : ''
+        }`}
+      >
+        <div className="flex items-center gap-2 px-1">
+          <span className="w-6 h-6 rounded-full bg-amber-500 text-slate-950 text-xs font-black flex items-center justify-center">4</span>
+          <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+            7. Qual é o próximo passo?
+          </h2>
         </div>
-
-        {/* Handoff Quad */}
-        <div className="grid sm:grid-cols-2 gap-4 text-xs">
-          <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200/70 dark:border-slate-800">
-            <span className="text-2xs font-black text-slate-500 uppercase block mb-1">Você Produziu</span>
-            <span className="font-extrabold text-slate-900 dark:text-slate-100">{activity.handoff.producedArtifactName}</span>
-          </div>
-
-          <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200/70 dark:border-slate-800">
-            <span className="text-2xs font-black text-emerald-700 dark:text-emerald-400 uppercase block mb-1">Agora Sabemos</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200">{activity.handoff.nowWeKnow}</span>
-          </div>
-
-          <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200/70 dark:border-slate-800">
-            <span className="text-2xs font-black text-amber-700 dark:text-amber-400 uppercase block mb-1">Ainda Está em Aberto</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200">{activity.handoff.stillOpen}</span>
-          </div>
-
-          <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200/70 dark:border-slate-800">
-            <span className="text-2xs font-black text-amber-600 uppercase block mb-1">A Seguir (Próxima Atividade)</span>
-            <span className="font-extrabold text-slate-900 dark:text-slate-100">{activity.handoff.nextActivityTitle}</span>
-          </div>
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            <strong className="text-slate-800 dark:text-slate-200 font-bold">Aplicação do resultado:</strong> {activity.handoff.nextActivityPurpose}
-          </p>
-
-          {/* Advance Button */}
-          <button
-            onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              if (activity.handoff.nextActivityId === 'END_OF_JOURNEY' || activity.id === 'E4-A03') {
-                setShowJourneyEndModal(true);
-              } else if (PILOT_CHAIN_ACTIVITIES.some(a => a.id === activity.handoff.nextActivityId)) {
-                setCurrentPilotActivityId(activity.handoff.nextActivityId);
-                if (onNavigateToActivity) onNavigateToActivity(activity.handoff.nextActivityId);
-              } else {
-                setShowJourneyEndModal(true);
-              }
-            }}
-            disabled={!isActivityCompleted}
-            className={`w-full sm:w-auto px-6 py-2.5 font-black text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 shrink-0 ${
-              isActivityCompleted
-                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer'
-                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-            }`}
-          >
-            <span>
-              {PILOT_CHAIN_ACTIVITIES.some(a => a.id === activity.handoff.nextActivityId)
-                ? `Avançar para ${activity.handoff.nextActivityTitle}`
-                : 'Encerramento da Jornada V3'}
-            </span>
-            <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </button>
-        </div>
+        <HandoffCompact
+          handoff={{
+            youConcluded: activity.handoff.producedArtifactName || activity.title,
+            whatChanged: activity.handoff.nowWeKnow || '',
+            weProduced: activity.requiresArtifact === false ? undefined : activity.handoff.producedArtifactName,
+            stillOpen: activity.handoff.stillOpen ? [activity.handoff.stillOpen] : undefined,
+            nextStep: activity.handoff.nextActivityTitle || 'Próxima atividade da jornada',
+            nextActivityId: activity.handoff.nextActivityId as any,
+          }}
+          activityTitle={activity.title}
+          isCompleted={isActivityCompleted}
+          onAdvance={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (activity.handoff.nextActivityId === 'END_OF_JOURNEY' || activity.id === 'E4-A03') {
+              setShowJourneyEndModal(true);
+            } else if (PILOT_CHAIN_ACTIVITIES.some(a => a.id === activity.handoff.nextActivityId)) {
+              setCurrentPilotActivityId(activity.handoff.nextActivityId);
+              if (onNavigateToActivity) onNavigateToActivity(activity.handoff.nextActivityId);
+            } else {
+              setShowJourneyEndModal(true);
+            }
+          }}
+          advanceButtonLabel={
+            PILOT_CHAIN_ACTIVITIES.some(a => a.id === activity.handoff.nextActivityId)
+              ? `Avançar para ${activity.handoff.nextActivityTitle}`
+              : 'Encerramento da Jornada'
+          }
+        />
       </section>
 
       {/* CONTEXT PACK TRANSPARENCY MODAL */}
@@ -1418,7 +1574,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
                   showToast('Conteúdo do modal copiado com sucesso!');
                   setShowContextModal(false);
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-xs cursor-pointer"
+                className="btn-interactive min-h-[44px] px-4 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer touch-manipulation"
               >
                 Copiar Texto Completo
               </button>
@@ -1444,7 +1600,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
               <button
                 type="button"
                 onClick={() => setShowObsModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold cursor-pointer"
+                className="btn-interactive min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold cursor-pointer touch-manipulation"
                 aria-label="Fechar"
               >
                 ✕
@@ -1546,13 +1702,13 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
               <button
                 type="button"
                 onClick={() => setShowObsModal(false)}
-                className="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                className="btn-interactive min-h-[44px] px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer touch-manipulation"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl shadow-xs cursor-pointer"
+                className="btn-interactive min-h-[44px] px-4 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 text-xs font-black rounded-xl shadow-xs transition cursor-pointer touch-manipulation"
               >
                 Salvar Observação
               </button>
@@ -1574,7 +1730,7 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
               <CheckCircle2 className="w-10 h-10" aria-hidden="true" />
             </div>
             <h3 id="journey-end-title" className="text-lg font-black text-slate-900 dark:text-slate-100">
-              Jornada V3 Concluída com Sucesso!
+              Jornada V1.4.1 Concluída com Sucesso!
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
               Sua equipe percorreu todas as etapas da cadeia metodológica de investigação, síntese, prototipação e comunicação com IA no workshop <strong>O FORNO</strong>.
@@ -1585,13 +1741,13 @@ export const UniversalActivity: React.FC<UniversalActivityProps> = ({
                   setShowJourneyEndModal(false);
                   onNavigateToActivity?.('E1-A01');
                 }}
-                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer"
+                className="btn-interactive min-h-[44px] w-full py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer touch-manipulation"
               >
                 Revisar Artefatos em Meu Projeto
               </button>
               <button
                 onClick={() => setShowJourneyEndModal(false)}
-                className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                className="btn-interactive min-h-[44px] w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer touch-manipulation"
               >
                 Fechar
               </button>

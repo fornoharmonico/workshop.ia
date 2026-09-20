@@ -1,6 +1,6 @@
 {
-  "name": "v3 IA Aplicada: do Problema ao Protótipo",
-  "description": "Workshop prático e imersivo de 12h de IA Generativa para jovens de 12 a 17 anos (Fundamental II e Médio). Landing page institucional de contratação e webapp operacional da turma.",
+  "name": "v2.0.2 WS IA Aplicada: do Problema ao Protótipo",
+  "description": "Plataforma interativa e webapp do workshop de Inteligência Artificial Aplicada: do Problema ao Protótipo, estruturado na metodologia Fornologia V2.3 (O Forno).",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

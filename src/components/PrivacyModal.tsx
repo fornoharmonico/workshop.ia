@@ -72,7 +72,7 @@ Assinatura do(a) Pai / Mãe ou Responsável Legal`;
             Política de Privacidade & Termo LGPD
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            Diretrizes legais, salvaguarda de dados para o público de 13 a 17 anos e minutas para instituições.
+            Diretrizes legais, salvaguarda de dados para o público de 12 a 17 anos e minutas para instituições.
           </p>
         </div>
 

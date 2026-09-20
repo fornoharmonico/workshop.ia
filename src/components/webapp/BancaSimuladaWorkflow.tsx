@@ -125,7 +125,7 @@ export const BancaSimuladaWorkflow: React.FC<{
           </div>
 
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            Antes de responder à banca simulada, avalie a minuta do pitch da equipe segundo os <strong>5 critérios de clareza da V3.2</strong>:
+            Antes de responder à banca simulada, avalie a minuta do pitch da equipe segundo os <strong>5 critérios de clareza da V1.4.1</strong>:
           </p>
 
           <div className="grid sm:grid-cols-2 gap-3 text-xs">

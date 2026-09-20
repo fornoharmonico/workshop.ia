@@ -1,6 +1,15 @@
-import { Encounter, FAQItem, MethodTool, PromptTemplate } from '../types/workshop';
+import { Activity, Encounter, FAQItem, MethodTool } from '../types/workshop';
+
+/**
+ * EMENTA OFICIAL V2.2 — FORNOLOGIA AUTORAL
+ * Workshop Inteligência Artificial Aplicada: do Problema ao Protótipo
+ * 
+ * Fonte de verdade pedagógica, metodológica e conceitual.
+ * Baseada na Constituição da Fornologia, no Glossário Autoral e na Matriz Canônica V2.2.
+ */
 
 export const WORKSHOP_METADATA = {
+  version: "V2.2",
   title: "Workshop Inteligência Artificial Aplicada",
   subtitle: "do Problema ao Protótipo",
   headlineDescription: "Desenvolvimento de soluções para desafios pessoais, estudantis, profissionais, escolares e comunitários",
@@ -8,373 +17,438 @@ export const WORKSHOP_METADATA = {
   modality: "presencial ou híbrido",
   totalDuration: "12 horas",
   encountersCount: 4,
-  encounterDuration: "três horas por encontro",
-  targetAudience: "jovens e estudantes de 13 a 17 anos (com consentimento parental)",
-  capacity: "até 20 estudantes, organizados em até quatro equipes",
+  encounterDuration: "três horas por encontro (180 minutos cada)",
+  canonicalTriadsCount: 12,
+  canonicalPromptsCount: 12,
+  canonicalArtifactsCount: 12,
+  masterDocumentName: "Documento Mestre do Projeto",
+  targetAudience: "jovens e estudantes de 12 a 17 anos (com consentimento parental)",
+  capacity: "até 20 estudantes, organizados em equipes conforme o contexto da turma",
   
-  objective: "Capacitar os jovens a reconhecer, investigar, planejar, prototipar, testar e comunicar soluções para problemas pessoais, estudantis, profissionais, escolares ou comunitários, utilizando boas práticas e ferramentas de Inteligência Artificial Generativa de maneira criativa, crítica, ética, consciente e responsável.\n\nAo longo da jornada, os participantes deverão aprender não apenas a utilizar ferramentas de IA, mas principalmente a utilizá-las como parceiras cognitivas: recursos capazes de ajudar a perguntar, investigar, organizar, comparar, criar, revisar e ampliar o pensamento, preservando a agência humana e a responsabilidade pelas decisões tomadas.",
+  objective: "Capacitar jovens a reconhecer, investigar, planejar, testar e comunicar soluções para problemas pessoais, estudantis, profissionais, escolares ou comunitários, utilizando Inteligência Artificial Generativa de maneira criativa, crítica, ética, consciente e responsável.",
   
-  justificationText: `A Inteligência Artificial Generativa está se tornando parte da vida cotidiana de jovens e adultos. Na escola, em projetos ou no trabalho, ela já é utilizada para organizar informações, produzir textos, criar imagens e vídeos, planejar atividades, simular conversas, comparar possibilidades e apoiar a solução de problemas. O simples acesso a essas ferramentas, entretanto, não garante uma utilização consciente ou produtiva. Uma resposta bem escrita pode conter informações falsas. Uma recomendação aparentemente segura pode ignorar o contexto do usuário. Uma produção visual pode reproduzir estereótipos. Um estudante pode utilizar a IA para ampliar seu pensamento ou apenas para evitar o esforço de pensar. Por isso, a formação dos jovens não deve se limitar a ensinar comandos ou apresentar ferramentas. É necessário desenvolver a capacidade de:
+  justificationText: `A Inteligência Artificial Generativa já faz parte da vida cotidiana de jovens e adultos. Ela pode organizar informações, produzir textos e imagens, comparar possibilidades, apoiar pesquisas, estruturar projetos e acelerar a criação. O acesso à tecnologia, entretanto, não garante uma utilização consciente ou produtiva.
+
+Uma resposta bem escrita pode conter informação falsa. Uma recomendação aparentemente segura pode ignorar contexto. Um estudante pode utilizar a IA para ampliar seu pensamento ou apenas para evitar o esforço de pensar.
+
+Por isso, a formação não deve se limitar a ensinar comandos ou apresentar ferramentas. É necessário desenvolver capacidades como:
 ● formular boas perguntas;
-● fornecer contexto relevante;
 ● compreender problemas antes de buscar respostas;
 ● distinguir observações, hipóteses e dúvidas;
-● desconfiar de respostas excessivamente simples;
-● reconhecer quando uma informação precisa ser verificada;
-● revisar e corrigir outputs;
-● reconhecer os limites do próprio conhecimento e do conhecimento da IA;
-● proteger dados pessoais e informações sensíveis;
-● compreender o que está sendo delegado à tecnologia;
-● assumir responsabilidade pelas decisões tomadas;
-● utilizar a IA para ampliar, e não substituir, a própria capacidade de pensar;
-● utilizar a tecnologia para criar valor para si e para outras pessoas.`,
+● reconhecer quando não sabemos algo;
+● verificar informações quando necessário;
+● proteger dados pessoais;
+● revisar e questionar outputs da IA;
+● assumir responsabilidade pelas decisões;
+● reconhecer recursos disponíveis e lacunas;
+● planejar a realização de uma solução;
+● testar ideias no mundo real;
+● aprender com evidências;
+● planejar próximos passos;
+● comunicar projetos com clareza.
 
-  cognitivePartnerText: `A proposta deste workshop é apresentar a IA como uma parceira cognitiva, isto é, como um recurso que pode ajudar o estudante a planejar seu futuro, organizar seu presente, validar ideias, enxergar outras perspectivas, investigar possibilidades, revisar produções e construir soluções. A proposta também busca criar condições para que os estudantes não sejam apenas consumidores de tecnologia, mas usuários críticos, criadores responsáveis e participantes ativos das transformações sociais e profissionais. Vamos conduzir os participantes por uma jornada que vai desde o diagnóstico de desafios individuais e coletivos até a prototipação e comunicação de uma solução, fazendo uso consciente e ético da IA, cientes de seus potenciais e limitações.`,
+A proposta apresenta a IA como parceira cognitiva: uma tecnologia que pode ajudar a perguntar, investigar, organizar, comparar, criar, revisar e planejar, sem substituir a agência humana.`,
 
-  methodologyOverview: `Este workshop é uma introdução prática e crítica à Inteligência Artificial Generativa por meio da Aprendizagem Baseada em Problemas. A metodologia é guiada pelo princípio de que 'antes de construir uma solução, precisamos compreender suficientemente o problema'. A IA atua como parceira cognitiva em quatro grandes movimentos: Investigar, Definir e Materializar, Validar e Evoluir, e Comunicar. Nem toda atividade precisa de IA — momentos presenciais de discussão em equipe, observação e desenho são valorizados. As decisões humanas permanecem centrais em cada etapa, com base no Pacto de Revisão e Verificação e no princípio de Delegação Consciente. O fluxo pedagógico segue a estrutura Ensino → Exemplo → Experiência, assegurando protagonismo e prática autônoma dos participantes.`,
+  cognitivePartnerText: `A proposta deste workshop é apresentar a IA como uma parceira cognitiva, isto é, como um recurso que pode ajudar o estudante a planejar seu futuro, organizar seu presente, validar ideias, enxergar outras perspectivas, investigar possibilidades, revisar produções e construir soluções. A proposta também busca criar condições para que os estudantes não sejam apenas consumidores de tecnologia, mas usuários críticos, criadores responsáveis e participantes ativos das transformações sociais e profissionais. Conduzimos os participantes por uma jornada que vai desde o diagnóstico de desafios individuais e coletivos até a prototipação, teste no mundo real e comunicação da solução.`,
+
+  methodologyOverview: `A oficina é uma aplicação da Fornologia, metodologia autoral de investigação, criação, planejamento e desenvolvimento de projetos que articula inteligência humana, inteligência coletiva e, quando pertinente, Inteligência Artificial como parceira cognitiva.
+
+A Fornologia opera por dois princípios centrais:
+● Primazia da Pergunta: primeiro fazer a pergunta que permite ao participante pensar e decidir; somente depois, quando útil, oferecer sugestões.
+● Metabolização Socrática: transformar estruturas conceituais complexas em perguntas simples, progressivas e contextualizadas. O sistema conhece a forma; o participante fornece o conteúdo.
+
+O objetivo não é ensinar uma coleção de frameworks. É conduzir uma experiência única em que as respostas construídas ao longo da jornada se acumulam em artefatos e, juntas, formam o Documento Mestre do Projeto.
+
+A diretriz pedagógica é: experienciar primeiro; explicar somente o que ajudar a agir melhor. A complexidade metodológica permanece nos bastidores (no repertório do facilitador, nos prompts e no sistema). Para o participante, a experiência é simples, conversacional e orientada à ação.`,
+
+  corePrinciples: [
+    {
+      name: "Primazia da pergunta",
+      description: "A jornada pergunta antes de responder. O agente não antecipa decisões que o participante pode construir."
+    },
+    {
+      name: "Metabolização Socrática",
+      description: "Conceitos complexos tornam-se perguntas simples, progressivas e contextualizadas."
+    },
+    {
+      name: "Forma no sistema; conteúdo humano",
+      description: "A Fornologia oferece a estrutura e os critérios; a equipe fornece o conteúdo, a visão e as escolhas."
+    },
+    {
+      name: "Problema antes da solução",
+      description: "Investigar a fundo as causas e evidências antes de correr para prototipar soluções."
+    },
+    {
+      name: "Agência humana",
+      description: "A IA recomenda, compara e provoca; a equipe humana decide com soberania e responsabilidade."
+    },
+    {
+      name: "Hipótese não é fato",
+      description: "O sistema preserva a incerteza. Nenhuma afirmação plausível substitui a comprovação real."
+    },
+    {
+      name: "“Não sei” é válido",
+      description: "Lacunas não devem ser preenchidas com invenções; tornam-se pesquisa, observação, pergunta ou teste."
+    },
+    {
+      name: "Revisão crítica",
+      description: "Outputs da IA não são automaticamente verdadeiros nem finais. Toda entrega passa por crítica humana."
+    },
+    {
+      name: "Experiência antes de teoria extensa",
+      description: "O participante aprende principalmente fazendo, experimentando e interagindo com a realidade."
+    },
+    {
+      name: "Problemas reais",
+      description: "Sempre que possível, trabalhar sobre desafios autênticos da vida dos jovens, da escola ou da comunidade."
+    },
+    {
+      name: "Evidência antes de validação",
+      description: "Teste não realizado não pode ser tratado como validação. O sistema marca explicitamente quando não há evidência externa."
+    },
+    {
+      name: "Progressão flexível",
+      description: "A jornada tem ordem lógica, mas não vínculo computacional rígido com os encontros. Equipes avançam em ritmos próprios."
+    },
+    {
+      name: "Menos burocracia, mais pensamento",
+      description: "Eliminação de taxonomias sobrepostas. Técnicas relacionadas vivem integradas em 12 movimentos canônicos."
+    },
+    {
+      name: "Autoria terminológica",
+      description: "A experiência ativa utiliza exclusivamente a linguagem própria da Fornologia, sem jargões externos."
+    },
+    {
+      name: "Rigor invisível",
+      description: "O sistema organiza informação completa e detalhada sem exigir o preenchimento de formulários pesados."
+    },
+    {
+      name: "Continuidade de contexto",
+      description: "Não perguntar novamente aquilo que a jornada já consolidou. O sistema injeta o contexto autoritativo necessário."
+    }
+  ],
 
   expectedResults: [
-    "Fazer uso consciente da Inteligência Artificial Generativa;",
-    "Compreender a IA como ferramenta e parceira cognitiva, e não como autoridade absoluta;",
-    "Conhecer e aplicar boas práticas de engenharia de prompt;",
-    "Fornecer contexto relevante para melhorar uma interação com IA;",
-    "Reconhecer situações em que não deve compartilhar dados pessoais ou informações sensíveis;",
-    "Analisar, duvidar, questionar e checar respostas produzidas pela IA;",
-    "Revisar, corrigir, aceitar ou rejeitar criticamente outputs;",
-    "Compreender que respostas plausíveis podem conter erros, vieses ou informações inventadas;",
-    "Reconhecer conscientemente quando pode confiar, quando deve verificar e quando precisa procurar outra fonte;",
-    "Reconhecer situações em que pode pedir apoio à IA para tomar decisões e compreender os riscos dessa delegação;",
-    "Assumir responsabilidade pelas decisões realizadas com apoio da tecnologia;",
-    "Identificar problemas e desafios presentes em diferentes escalas da realidade;",
-    "Distinguir observações, hipóteses e dúvidas;",
-    "Investigar possíveis causas sem confundir hipótese com fato;",
-    "Reconhecer quando uma investigação precisa de informações externas antes de continuar;",
-    "Compreender quando é necessário investigar melhor um problema antes de propor uma solução;",
-    "Utilizar PHD e Cinco Porquês como técnicas integradas de diagnóstico;",
-    "Compreender o Golden Circle como ponte entre problema, propósito e direção de solução;",
-    "Compreender a função de um Briefing, de um PRD, de um MVP, de um BMC e de um roadmap;",
-    "Transformar uma investigação em uma proposta estruturada de solução;",
-    "Priorizar funcionalidades e distinguir o essencial do desejável;",
-    "Construir um MVP e um protótipo testável;",
-    "Coletar, organizar e analisar feedback;",
-    "Modificar uma solução com base em evidências produzidas por testes;",
-    "Trabalhar em equipe com colaboração ativa;",
-    "Comunicar um projeto de maneira clara em formato de pitch;",
-    "Utilizar a Inteligência Artificial Generativa de maneira criativa, crítica, ética, consciente e responsável."
+    "Utilizar IA de maneira criativa, crítica, ética, consciente e responsável;",
+    "Reconhecer quando a IA deve perguntar, organizar, criar ou revisar em vez de decidir, assumindo integral responsabilidade pelas escolhas;",
+    "Formular perguntas melhores e oferecer contexto útil;",
+    "Distinguir observação, hipótese e dúvida;",
+    "Investigar causas sem confundir plausibilidade com evidência;",
+    "Mapear recursos tangíveis, intangíveis, monetários e não monetários nas dimensões cultural, social, ambiental e financeira;",
+    "Definir propósito e direção para uma solução;",
+    "Estruturar e revisar criticamente um briefing;",
+    "Diferenciar requisitos essenciais e desejáveis;",
+    "Definir e materializar um MVP testável;",
+    "Organizar quando, o que acontece, onde, quem participa, objetivo, essenciais, expectativas, melhorias, organização, prioridades e riscos de uma realização;",
+    "Planejar e realizar testes sem induzir respostas;",
+    "Analisar evidências sem inventar consenso;",
+    "Propor melhorias fundamentadas para a evolução de V0 para V1;",
+    "Pensar a sustentabilidade em múltiplas dimensões e arranjos de continuidade;",
+    "Organizar prioridades no tempo (Agora, Depois, Futuramente) e linha do tempo em 7 etapas;",
+    "Comunicar problema, solução, testes, aprendizados e próximos passos com clareza e honestidade;",
+    "Trabalhar em equipe com colaboração ativa, protagonismo comunitário e consolidação soberana do Documento Mestre do Projeto."
   ],
 
   facilitator: {
     name: "Pedro Lago",
-    role: "Fundador d'O Forno & Facilitador do Workshop",
-    bio: "Pedro Lago é fundador d'O Forno, escola de planejamento e gestão cultural. Graduado em Comunicação Social na Universidade Federal de São João del-Rei. Possui formação avançada em gestão de projetos com o método TEvEP/HomoSapiens e é membro da Academia Lendária desde 2024, onde iniciou seus estudos sobre a Inteligência Artificial e começou a desenvolver seus primeiros agentes, fluxos e sistemas apoiados por IA generativa. Poeta, músico, compositor e gestor cultural com mais de uma década de atuação, já idealizou, viabilizou e realizou dezenas de projetos artísticos, culturais e comunitários com a ajuda da Fornologia: a metodologia de planejamento e gestão de projetos que criou para ajudar pessoas, empresas e organizações a 'tirar seus projetos d'O Forno'. Para saber mais sobre O Forno, acesse: https://ofornoapp.netlify.app/",
+    role: "Criador da Fornologia & Facilitador do Workshop",
+    bio: "Pedro Lago é criador da Fornologia e fundador d'O Forno, escola de planejamento e gestão de projetos. Graduado em Comunicação Social pela Universidade Federal de São João del-Rei (UFSJ). Poeta, músico, compositor e gestor cultural com mais de uma década de atuação, já idealizou, viabilizou e realizou dezenas de projetos artísticos, educacionais e comunitários com a ajuda da Fornologia: metodologia autoral de investigação, planejamento e criação orientada por perguntas, autonomia e agência humana.",
     fornoUrl: "https://ofornoapp.netlify.app/",
-    email: "emaildopedrolago@gmail.com",
-    phone: "32 99834-4329",
+    email: "fornoharmonico@gmail.com",
+    phone: "+55 32 99834-4329",
     whatsappUrl: "https://wa.me/5532998344329"
   }
 };
 
+/**
+ * 12 ENTREGAS CANÔNICAS (AF01 A AF12) + DOCUMENTO MESTRE
+ */
 export const EXPECTED_DELIVERABLES = [
   {
     encounterId: 1,
-    title: "Encontro 1 — INVESTIGAR",
+    title: "Encontro 1 — INVESTIGAR E DIRECIONAR",
+    subtitle: "Cronograma flexível recomendado: Movimentos A01 a A04",
     deliverables: [
-      "Diagnóstico do Problema (contexto, observações, hipóteses, dúvidas, causas-raiz e lacunas)",
-      "Golden Circle (Por quê? Como? O quê?)"
+      "AF01: Mapa de Problemas + Problema Escolhido",
+      "AF02: Diagnóstico do Problema",
+      "AF03: Mapa de Recursos",
+      "AF04: Propósito e Direção"
     ]
   },
   {
     encounterId: 2,
     title: "Encontro 2 — DEFINIR E MATERIALIZAR",
+    subtitle: "Cronograma flexível recomendado: Movimentos A05 a A08",
     deliverables: [
-      "Briefing V0",
-      "Briefing V1 revisado",
-      "PRD V0",
-      "Definição do MVP",
-      "Protótipo V0 testável"
+      "AF05: Briefing V0 (Primeira formulação estruturada da proposta)",
+      "AF06: Briefing V1 (Versão autoritativa revisada criticamente com decisões humanas)",
+      "AF07: Especificação de Funcionamento / PRD (Essencial agora vs. Desejável depois)",
+      "AF08: MVP + Protótipo V0 (com Plano de Realização completo integrado)"
     ]
   },
   {
     encounterId: 3,
-    title: "Encontro 3 — VALIDAR E EVOLUIR",
+    title: "Encontro 3 — TESTAR, APRENDER E PLANEJAR",
+    subtitle: "Cronograma flexível recomendado: Movimentos A09 a A11",
     deliverables: [
-      "Síntese dos feedbacks coletados",
-      "Business Model Canvas (BMC)",
-      "Roadmap de evolução",
-      "Protótipo V1 aprimorado"
+      "AF09: Testes, Aprendizados e Plano de Evolução V0→V1 (com status de evidências reais)",
+      "AF10: Modelo de Sustentabilidade (Viabilidade, valor gerado e arranjos de continuidade)",
+      "AF11: Roadmap + Linha do Tempo em 7 Etapas (Priorização temporal e marcos de evolução)"
     ]
   },
   {
     encounterId: 4,
-    title: "Encontro 4 — COMUNICAR",
+    title: "Encontro 4 — COMUNICAR E CELEBRAR",
+    subtitle: "Cronograma flexível recomendado: Movimento A12",
     deliverables: [
-      "Roteiro do pitch",
-      "Apresentação visual",
-      "Pitch final (3 minutos)"
+      "AF12: Kit de Comunicação Final (Pitch V1 + Roteiro Visual de até 6 telas + Roteiro de Ensaio/Simulação)",
+      "Documento Mestre do Projeto: Projeção consolidada e unificada da autoria da equipe",
+      "Apresentação Final e Celebração Coletiva da Aprendizagem"
     ]
   }
 ];
 
+/**
+ * AS 12 FERRAMENTAS / MOVIMENTOS DA FORNOLOGIA V2.2
+ * Cada movimento possui uma pergunta socrática orientadora, respeitando a Primazia da Pergunta.
+ */
 export const METHOD_TOOLS: MethodTool[] = [
   {
+    id: "escolha-problema",
+    name: "Escolher o Problema",
+    orientingQuestion: "O que está acontecendo e o que queremos enfrentar?",
+    description: "Inventário de desafios observados na vida pessoal, escolar e comunitária, agrupamento e escolha humana consciente do foco.",
+    iconName: "Search",
+    category: "Investigação"
+  },
+  {
     id: "diagnostico",
-    name: "Diagnóstico do Problema (PHD + 5 Porquês)",
-    orientingQuestion: "O que está acontecendo e por quê?",
-    description: "Integra enquadramento do problema, separação de fatos, hipóteses e dúvidas (PHD) e aprofundamento de causas-raiz (Cinco Porquês).",
-    iconName: "Search"
+    name: "Diagnóstico do Problema",
+    orientingQuestion: "O que observamos, o que supomos e quais são as causas possíveis?",
+    description: "Separação rigorosa entre observações diretas, hipóteses e dúvidas, e aprofundamento investigativo de causas plausíveis.",
+    iconName: "Search",
+    category: "Investigação"
   },
   {
-    id: "ideias",
-    name: "Banco de Ideias de Solução",
-    orientingQuestion: "Quais soluções podem nascer desse diagnóstico?",
-    description: "Espaço para registrar ideias que surgem durante a investigação sem desviar o foco da compreensão do problema.",
-    iconName: "Zap"
+    id: "mapa-recursos",
+    name: "Mapa de Recursos",
+    orientingQuestion: "Quais recursos temos, precisamos e podemos mobilizar nas 4 dimensões?",
+    description: "Mapeamento nas dimensões cultural, social, ambiental e financeira, identificando o que já existe, o que podemos mobilizar e as lacunas.",
+    iconName: "Compass",
+    category: "Sistêmica"
   },
   {
-    id: "golden-circle",
-    name: "Golden Circle (Ponte Problema → Solução)",
-    orientingQuestion: "Por quê? Como? O quê?",
-    description: "Define o propósito essencial do projeto e a direção da solução antes de detalhar o produto final.",
-    iconName: "Target"
+    id: "proposito-direcao",
+    name: "Propósito e Direção",
+    orientingQuestion: "Que transformação queremos provocar e qual caminho escolhemos?",
+    description: "Definição do propósito inegociável, princípios éticos de ação e escolha consciente da direção de solução pela equipe.",
+    iconName: "Target",
+    category: "Propósito"
   },
   {
-    id: "briefing",
-    name: "Briefing",
-    orientingQuestion: "Qual é a síntese da nossa proposta de solução?",
-    description: "Consolida a passagem da investigação para a solução, passando por revisão crítica de pares e IA.",
-    iconName: "FileText"
+    id: "briefing-v0",
+    name: "Briefing V0",
+    orientingQuestion: "Como organizamos a primeira visão do projeto sem inventar fatos?",
+    description: "Consolidação inicial que amarra problema, recursos, público e direção em um documento coeso sem dados forjados.",
+    iconName: "FileText",
+    category: "Estruturação"
   },
   {
-    id: "prd",
-    name: "PRD (Requisitos de Produto)",
-    orientingQuestion: "Como a solução deverá funcionar?",
-    description: "Especifica o funcionamento, priorizando funções essenciais (must have) e acessórias (nice to have).",
-    iconName: "Cpu"
+    id: "briefing-v1",
+    name: "Revisão Crítica do Briefing (V1)",
+    orientingQuestion: "O que a crítica aponta e quais decisões assumimos conscientemente?",
+    description: "Submissão do rascunho à crítica da IA e de pares, devolvendo a soberania de decisão à equipe para consolidar o Briefing V1.",
+    iconName: "ShieldCheck",
+    category: "Revisão"
   },
   {
-    id: "mvp",
-    name: "MVP (Produto Mínimo Viável)",
-    orientingQuestion: "Qual é a menor versão que podemos testar?",
-    description: "Define a menor versão da solução que permite testar se a proposta principal funciona com usuários reais.",
-    iconName: "LayoutGrid"
+    id: "especificacao-prd",
+    name: "Especificação de Funcionamento",
+    orientingQuestion: "Como a solução precisa funcionar e o que é essencial vs. desejável?",
+    description: "Detalhamento da experiência e dos critérios de funcionamento da solução, protegendo o escopo essencial.",
+    iconName: "Cpu",
+    category: "Especificação"
   },
   {
-    id: "bmc",
-    name: "BMC (Modelo de Sustentabilidade)",
-    orientingQuestion: "Como garantimos viabilidade e continuidade?",
-    description: "Mapeia segmentos atendidos, recursos necessários, parcerias comunitárias e sustentabilidade da proposta.",
-    iconName: "BrainCircuit"
+    id: "mvp-prototipo",
+    name: "MVP + Protótipo V0",
+    orientingQuestion: "Qual é a menor versão testável e como realizá-la com qualidade?",
+    description: "Recorte da hipótese principal e Plano de Realização invisível (quando, onde, quem, o que acontece) para materializar o V0.",
+    iconName: "Layers",
+    category: "Materialização"
   },
   {
-    id: "roadmap",
-    name: "Roadmap de Evolução",
-    orientingQuestion: "O que faremos agora, depois e futuramente?",
-    description: "Planeja prioridades em 3 horizontes: ajustes imediatos para a V1, pós-workshop e longo prazo.",
-    iconName: "MapPin"
+    id: "testes-aprendizados",
+    name: "Testes, Aprendizados e Evolução",
+    orientingQuestion: "O que aprendemos com evidências reais e o que manter, corrigir ou melhorar?",
+    description: "Planejamento e acolhimento de evidências do mundo real para orientar a evolução fundamentada do protótipo V0 para V1.",
+    iconName: "FlaskConical",
+    category: "Aprendizagem"
   },
   {
-    id: "pitch",
-    name: "Roteiro e Apresentação de Pitch",
-    orientingQuestion: "Como comunicar nossa trajetória com clareza?",
-    description: "Estrutura o roteiro, suportes visuais e ensaios cronometrados para defender o projeto em 3 minutos.",
-    iconName: "Presentation"
+    id: "sustentabilidade",
+    name: "Modelo de Sustentabilidade",
+    orientingQuestion: "Como a solução gera valor e se sustenta no tempo?",
+    description: "Estruturação de nove componentes autorais examinando público, valor, acesso, atividades, parceiros, esforços e continuidade.",
+    iconName: "BrainCircuit",
+    category: "Sustentabilidade"
+  },
+  {
+    id: "roadmap-linha-tempo",
+    name: "Roadmap + Linha do Tempo em 7 Etapas",
+    orientingQuestion: "O que faremos agora, depois e futuramente em uma sequência de 7 tempos?",
+    description: "Organização temporal de prioridades (Agora, Depois, Futuramente) e desdobramento da jornada em 7 etapas coordenadas.",
+    iconName: "Calendar",
+    category: "Planejamento"
+  },
+  {
+    id: "comunicacao-final",
+    name: "Kit de Comunicação Final",
+    orientingQuestion: "Como comunicar a verdade da nossa trajetória em um pitch de 3 minutos?",
+    description: "Construção e refinamento do Pitch V1, roteiro visual de até 6 telas e roteiro de ensaio/simulação para a banca.",
+    iconName: "Presentation",
+    category: "Comunicação"
   }
 ];
 
+/**
+ * 4 ENCONTROS PEDAGÓGICOS — CRONOGRAMA RECOMENDADO E FLEXÍVEL (12 HORAS TOTAIS)
+ * 
+ * ATENÇÃO METODOLÓGICA (Constituição V2.2):
+ * A distribuição abaixo é uma referência de facilitação pedagógica, não um vínculo rígido.
+ * As 12 atividades canônicas não são computacionalmente atreladas aos encontros.
+ * Equipes avançam em seus próprios ritmos.
+ */
 export const ENCOUNTERS: Encounter[] = [
   {
     id: 1,
-    title: "Encontro 1 — INVESTIGAR",
-    subtitle: "Mapeamento de problemas, diagnóstico de causas-raiz e definição do propósito",
-    objective: "Conhecer os participantes, alinhar expectativas, compreender como eles já utilizam a IA, estimular a observação de desafios individuais e coletivos, escolher um problema relevante, aprender a investigá-lo distinguindo observações, hipóteses e dúvidas, aprofundar suas possíveis causas e definir a direção inicial da solução por meio do Golden Circle.",
+    title: "Encontro 1 — INVESTIGAR E DIRECIONAR",
+    subtitle: "Da Escolha do Problema à Definição de Propósito e Direção",
+    objective: "Criar vínculo, compreender a relação dos participantes com IA, levantar e escolher problemas reais, investigar causas, reconhecer recursos disponíveis e necessários nas 4 dimensões e definir uma direção clara.",
     totalDurationMinutes: 180,
-    deliverable: "Diagnóstico do Problema (contexto, observações, hipóteses, dúvidas, causas-raiz e lacunas) e Golden Circle (Por quê? Como? O quê?).",
-    homeworkMission: "Missão entre encontros: observar o problema escolhido no cotidiano e realizar escuta empática com 2 a 3 pessoas afetadas para testar as hipóteses da equipe.",
+    deliverable: "AF01 (Mapa de Problemas), AF02 (Diagnóstico), AF03 (Mapa de Recursos) e AF04 (Propósito e Direção)",
+    mainDeliverables: [
+      "AF01 — Mapa de Problemas + Problema Escolhido",
+      "AF02 — Diagnóstico do Problema",
+      "AF03 — Mapa de Recursos",
+      "AF04 — Propósito e Direção"
+    ],
+    expectedProgress: "Avanço esperado, mas não obrigatório: concluir os quatro primeiros movimentos da jornada (A01 a A04).",
+    homeworkMission: "Missão opcional entre encontros: observar o problema no cotidiano e ouvir espontaneamente 1 ou 2 pessoas afetadas.",
+    suggestedActivities: ['A01', 'A02', 'A03', 'A04'],
+    suggestedExperience: [
+      "Acolhimento, apresentação, acordos e diagnóstico de familiaridade com IA;",
+      "Mapeamento íntimo opcional e privado;",
+      "Mapeamento coletivo e escolha humana do problema;",
+      "Diagnóstico do problema com investigação de observações, hipóteses, dúvidas e causas;",
+      "Mapa de recursos disponíveis versus necessários nas dimensões cultural, social, ambiental e financeira;",
+      "Definição de propósito e direção de solução;",
+      "Síntese e alinhamento para continuidade."
+    ],
     activities: [
       {
-        id: "e1-a1",
-        title: "Abertura, Acolhimento e Rapport",
-        durationMinutes: 15,
-        description: "Acolhimento da turma, alinhamento inicial e acordos de convivência e aprendizado.",
-        whatIsIt: "Momento de recepção, quebra-gelo e definição de combinados de convivência e aprendizado.",
-        whyDoIt: "Criar um ambiente seguro, colaborativo e com expectativas claras para os 4 encontros.",
+        id: 'A01',
+        code: 'A01',
+        order: 1,
+        title: 'Escolher o problema',
+        durationMinutes: 40,
+        description: 'Transformar observações individuais e coletivas em um mapa simples de desafios e registrar a escolha humana do problema a investigar.',
+        category: 'Investigação',
+        promptId: 'P01',
+        artifactFamilyId: 'AF01',
+        whatIsIt: 'Mapeamento de desafios reais e escolha consciente da equipe sobre qual problema investigar.',
+        whyDoIt: 'Garantir que o projeto nasça de um incômodo autêntico e de relevância humana, sem soluções pré-fabricadas.',
         howToApply: [
-          "Apresente-se com nome e uma expectativa para a oficina.",
-          "Defina os acordos do grupo (escuta ativa, respeito, sigilo das vivências individuais)."
+          'Instrua a turma a observar desafios na vida pessoal, escola, quarteirão ou comunidade.',
+          'Permita o registro livre de problemas percebidos.',
+          'Ajude a agrupar temas próximos e conduza a escolha coletiva com justificativa humana.'
         ],
         socraticQuestions: [
-          "O que torna um ambiente de aprendizado seguro para tentarmos coisas novas?",
-          "Quais atitudes da nossa parte vão garantir que todos participem ativamente?"
+          'Quais situações cotidianas geram incômodo ou frustração recorrente?',
+          'Por que este problema específico mobiliza a equipe a agir?'
         ],
-        facilitatorInstructions: "Acolha a turma de forma calorosa. Projete os combinados e garanta que todos compreendam o ritmo de trabalho do workshop.",
         checklist: [
-          "Abertura e acolhimento realizados",
-          "Acordos de convivência estabelecidos"
+          'Inventário de problemas elaborado',
+          'Problema escolhido registrado com justificativa da equipe'
         ]
       },
       {
-        id: "e1-a2",
-        title: "Apresentação dos Participantes e Diagnóstico de IA",
-        durationMinutes: 25,
-        description: "Diagnóstico inicial sobre como os participantes já utilizam e percebem a Inteligência Artificial.",
-        whatIsIt: "Mapeamento da familiaridade prévia da turma com ferramentas generativas e percepções de uso.",
-        whyDoIt: "Calibrar o nível de aprofundamento e desmistificar o papel da IA desde o início.",
+        id: 'A02',
+        code: 'A02',
+        order: 2,
+        title: 'Entender melhor o problema',
+        durationMinutes: 45,
+        description: 'Diagnosticar o problema separando observações de hipóteses e dúvidas, aprofundando causas plausíveis sem saltar prematuramente para soluções.',
+        category: 'Investigação',
+        promptId: 'P02',
+        artifactFamilyId: 'AF02',
+        whatIsIt: 'Diagnóstico estruturado que enquadra o problema e investiga causas possíveis com critério de parada.',
+        whyDoIt: 'Evitar o erro de criar soluções precipitadas para sintomas superficiais sem compreender a raiz do desafio.',
         howToApply: [
-          "Compartilhe suas experiências prévias com IA (estudos, lazer, criação).",
-          "Reflita sobre os limites do conhecimento próprio vs. da IA."
+          'Enquadre o que acontece, quem é afetado e as consequências observáveis.',
+          'Separe o que é fato observado, o que é suposição e o que não sabemos.',
+          'Aprofunde perguntas de "por que isso acontece?" até o ganho informacional se esgotar.'
         ],
         socraticQuestions: [
-          "Quando você usa IA hoje, você costuma aceitar a primeira resposta ou costuma questionar?",
-          "Quais cuidados devemos ter ao confiar em respostas geradas por IA?"
+          'Isso que listamos é algo que observamos concretamente ou uma explicação que supomos?',
+          'O que ainda precisaríamos descobrir para ter certeza?'
         ],
-        facilitatorInstructions: "Conduza a rodada de apresentações estimulando sinceridade sobre o uso atual de IA.",
         checklist: [
-          "Apresentação de todos os participantes",
-          "Diagnóstico de familiaridade com IA concluído"
+          'Observações, hipóteses e dúvidas separadas',
+          'Causas possíveis investigadas com validação da equipe'
         ]
       },
       {
-        id: "e1-a3",
-        title: "Apresentação da Jornada e Princípios de Uso Consciente",
-        durationMinutes: 20,
-        description: "Apresentação da jornada metodológica, IA como parceira cognitiva, pacto de revisão e delegação consciente.",
-        whatIsIt: "Apresentação conceitual do funcionamento da IA Generativa, seus limites, alucinações, vieses e o uso ético como parceira cognitiva.",
-        whyDoIt: "Evitar o uso ingênuo ou preguiçoso da tecnologia, enfatizando que a IA auxilia, mas não substitui o pensamento crítico.",
-        howToApply: [
-          "Compreenda a IA como Parceira Cognitiva (perguntar, investigar, organizar, comparar, criar, revisar e ampliar).",
-          "Conheça as regras de ouro: não compartilhar dados sensíveis, duvidar de respostas fáceis, checar fatos e assumir responsabilidade."
-        ],
-        socraticQuestions: [
-          "Qual é a diferença entre usar a IA para pensar com você vs. usar a IA para pensar por você?",
-          "Por que uma resposta bem escrita pela IA não é necessariamente verdadeira?"
-        ],
-        facilitatorInstructions: "Apresente exemplos práticos de alucinações e vieses da IA. Destaque enfaticamente a regra de proteção de dados pessoais (LGPD Art. 14).",
-        checklist: [
-          "Princípios de uso consciente e parceira cognitiva apresentados",
-          "Regras de proteção de dados e privacidade reforçadas"
-        ],
-        suggestedPromptIds: ["p-reflexao-socratica", "p-verificacao-fatos"]
-      },
-      {
-        id: "e1-a4",
-        title: "Mapeamento Íntimo dos Desafios",
-        durationMinutes: 10,
-        description: "Exercício individual de reflexão estritamente privado (não recolhido, não avaliado e sem envio para servidores).",
-        whatIsIt: "Exercício individual de reflexão sobre incômodos e desafios que o estudante vivencia diariamente.",
-        whyDoIt: "Conectar o aprendizado com a vida real dos participantes, exercitando a auto-observação com privacidade total.",
-        howToApply: [
-          "Escreva para si mesmo no seu caderno ou no mapa privado do navegador.",
-          "Mapeie desafios pessoais de forma livre, íntima e honesta."
-        ],
-        socraticQuestions: [
-          "Quais pequenas frustrações diárias consomem sua energia ou tempo sem que você perceba?",
-          "O que você gostaria que funcionasse melhor na sua rotina estudantil ou pessoal?"
-        ],
-        facilitatorInstructions: "Reforce enfaticamente: O mapeamento dos desafios individuais é estritamente íntimo e privado. Não será recolhido nem avaliado.",
-        checklist: [
-          "Garantia explícita de privacidade reforçada",
-          "Mapeamento individual íntimo realizado"
-        ]
-      },
-      {
-        id: "e1-a5",
-        title: "Mapeamento Coletivo e Escolha do Problema",
+        id: 'A03',
+        code: 'A03',
+        order: 3,
+        title: 'O que temos e o que precisamos',
         durationMinutes: 30,
-        description: "Movimento de zoom social: indivíduo → família → quarteirão → bairro → escola/comunidade e escolha do desafio da equipe.",
-        whatIsIt: "Levantamento em equipe de problemas compartilhados na escola ou na comunidade com escolha coletiva consciente.",
-        whyDoIt: "Transitar da reflexão individual para o engajamento comunitário e formação das equipes de trabalho.",
+        description: 'Mapear recursos disponíveis versus necessários nas dimensões cultural, social, ambiental e financeira, reconhecendo potenciais e lacunas.',
+        category: 'Sistêmica',
+        promptId: 'P03',
+        artifactFamilyId: 'AF03',
+        whatIsIt: 'Mapa comparativo de recursos (Temos, Precisamos, Podemos mobilizar e Precisamos investigar).',
+        whyDoIt: 'Superar a crença de que projetos só dependem de dinheiro, revelando a força dos saberes, redes e espaços locais.',
         howToApply: [
-          "Reúna-se em equipe (organizados em até quatro equipes de até 5 pessoas).",
-          "Explore problemas em diferentes escalas da realidade.",
-          "Escolha democraticamente o problema que a equipe deseja investigar."
+          'Explore saberes e competências da equipe (Cultural).',
+          'Mapeie pessoas, redes e parceiros mobilizáveis (Social).',
+          'Mapeie espaços, ferramentas e tecnologias disponíveis (Ambiental).',
+          'Identifique custos prováveis e arranjos não monetários de suporte (Financeira).'
         ],
         socraticQuestions: [
-          "Quais problemas afetam não apenas você, mas seus colegas, escola ou vizinhança?",
-          "Quem são as pessoas reais que sofrem diretamente com esse desafio?"
+          'Que conhecimentos ou habilidades vocês já têm que podem ajudar?',
+          'Que pessoas, parcerias ou espaços locais já estão acessíveis?'
         ],
-        facilitatorInstructions: "Ajude na formação de até quatro equipes. Estimule a escolha de desafios reais e comunitários.",
         checklist: [
-          "Até 4 equipes formadas",
-          "Problema de trabalho escolhido pela equipe"
-        ],
-        relatedDocumentStep: "desafioColetivo"
+          '4 dimensões mapeadas com Temos / Precisamos / Podemos mobilizar',
+          'Maiores forças e lacunas identificadas'
+        ]
       },
       {
-        id: "e1-a6",
-        title: "Pausa / Lanche",
-        durationMinutes: 15,
-        description: "Intervalo para descanso, alimentação e convivência entre participantes.",
-        whatIsIt: "Momento de descompressão e troca informal entre os estudantes e o facilitador.",
-        whyDoIt: "Garantir a energia e o foco para a etapa de diagnóstico aprofundado.",
-        howToApply: ["Aproveite para conversar com colegas e recarregar a atenção."],
-        socraticQuestions: ["Como a pausa ajuda a clarear nossas ideias sobre o problema?"],
-        facilitatorInstructions: "Garanta o cumprimento exato do tempo de 15 minutos para retornar ao trabalho.",
-        checklist: ["Pausa para lanche realizada"]
-      },
-      {
-        id: "e1-a7",
-        title: "Diagnóstico do Problema (PHD + Cinco Porquês)",
-        durationMinutes: 35,
-        description: "Integração do enquadramento, exercício PHD (Problemas, Hipóteses, Dúvidas) e técnica dos Cinco Porquês com apoio socrático da IA.",
-        whatIsIt: "Análise profunda para diferenciar fatos observados, hipóteses e dúvidas, descendo até a causa-raiz com apoio da IA.",
-        whyDoIt: "Evitar tentar resolver o problema errado ou atuar apenas nos sintomas superficiais.",
+        id: 'A04',
+        code: 'A04',
+        order: 4,
+        title: 'Que transformação queremos provocar?',
+        durationMinutes: 25,
+        description: 'Definir propósito e direção: fazer a passagem do entendimento do problema e recursos para uma direção de solução escolhida pela equipe.',
+        category: 'Propósito',
+        promptId: 'P04',
+        artifactFamilyId: 'AF04',
+        whatIsIt: 'Definição da transformação desejada, princípios de ação e direção de solução.',
+        whyDoIt: 'Garantir que a equipe saiba por que está agindo antes de escolher formatos tecnológicos específicos.',
         howToApply: [
-          "Preencha o quadro de Diagnóstico integrando contexto, fatos, hipóteses e dúvidas (PHD).",
-          "Aplique os Cinco Porquês para investigar as causas estruturais.",
-          "Registre no Banco de Ideias qualquer solução que surgir espontaneamente, voltando imediatamente ao problema."
+          'Discuta a transformação concreta que a equipe quer provocar.',
+          'Pactue princípios inegociáveis de ação.',
+          'Escolha conscientemente a direção da intervenção.'
         ],
         socraticQuestions: [
-          "Isso que identificamos é um fato comprovado ou uma hipótese que achamos provável?",
-          "Se resolvermos essa causa, o problema diminui ou apenas muda de lugar?"
+          'Se nosso projeto der certo, o que muda na vida das pessoas afetadas?',
+          'Quais princípios éticos guiam nossa atuação?'
         ],
-        facilitatorInstructions: "Oriente as equipes a separarem o que é Fato do que é Hipótese ou Dúvida a checar.",
         checklist: [
-          "Quadro PHD preenchido",
-          "Aprofundamento de causas-raiz (Cinco Porquês) realizado",
-          "Diagnóstico consolidado da equipe"
-        ],
-        suggestedPromptIds: ["p-phd", "p-cinco-porques"],
-        relatedDocumentStep: "phd"
-      },
-      {
-        id: "e1-a8",
-        title: "Golden Circle (Propósito & Direção)",
-        durationMinutes: 20,
-        description: "Ponte entre problema e solução: definição do Por Quê? Como? O Quê?",
-        whatIsIt: "Ferramenta de alinhamento de propósito começando pela motivação fundamental.",
-        whyDoIt: "Unir a equipe em torno do Por Quê antes de definir O Quê construir.",
-        howToApply: [
-          "Defina o POR QUÊ: Por que esse problema precisa ser resolvido?",
-          "Defina o COMO: Quais valores e princípios guiarão nossa atuação?",
-          "Defina o O QUÊ: Qual é a direção inicial da solução?"
-        ],
-        socraticQuestions: [
-          "Por que essa causa importa verdadeiramente para a nossa equipe e comunidade?",
-          "O que muda na vida das pessoas quando esse problema for atacado?"
-        ],
-        facilitatorInstructions: "Mantenha o foco rigorosamente no POR QUÊ antes de avançar para a solução.",
-        checklist: [
-          "Golden Circle preenchido (Por que? Como? O que?)"
-        ],
-        suggestedPromptIds: ["p-golden-circle"],
-        relatedDocumentStep: "goldenCircle"
-      },
-      {
-        id: "e1-a9",
-        title: "Consolidação, Compartilhamento e Missão",
-        durationMinutes: 10,
-        description: "Fechamento do encontro, compartilhamento dos propósitos e orientação para a missão de escuta em campo.",
-        whatIsIt: "Consolidação dos aprendizados do dia e preparação para escuta empática com pessoas reais.",
-        whyDoIt: "Testar hipóteses do diagnóstico com pessoas reais fora da sala de aula antes do Encontro 2.",
-        howToApply: [
-          "Compartilhe o propósito da equipe em 1 minuto.",
-          "Converse informalmente com 2 a 3 pessoas afetadas até o próximo encontro."
-        ],
-        socraticQuestions: ["O que queremos confirmar ao conversar com quem vivencia esse problema?"],
-        facilitatorInstructions: "Oriente que não é um formulário rígido, mas uma conversa acolhedora de escuta.",
-        checklist: [
-          "Compartilhamento dos propósitos concluído",
-          "Missão entre encontros combinada"
+          'Transformação desejada formulada',
+          'Direção da solução escolhida e aprovada pela equipe'
         ]
       }
     ]
@@ -382,706 +456,393 @@ export const ENCOUNTERS: Encounter[] = [
   {
     id: 2,
     title: "Encontro 2 — DEFINIR E MATERIALIZAR",
-    subtitle: "Construção do Briefing, PRD, definição do MVP e início do Protótipo",
-    objective: "Transformar a investigação realizada no primeiro encontro em uma proposta concreta de solução. Por meio da construção e revisão do Briefing, da elaboração de um PRD simplificado, da definição do MVP e da criação do Protótipo, os participantes organizarão o projeto, definirão o que a solução precisa fazer, priorizarão o essencial e materializarão uma primeira versão testável.",
+    subtitle: "Da Estruturação do Briefing ao MVP e Protótipo V0",
+    objective: "Transformar a investigação em uma proposta estruturada (Briefing V0 e V1), definir a especificação de funcionamento, recortar a menor versão testável (MVP com Plano de Realização) e materializar o Protótipo V0.",
     totalDurationMinutes: 180,
-    deliverable: "Briefing, PRD, MVP e Protótipo",
-    homeworkMission: "Missão entre encontros: realizar testes práticos do Protótipo com familiares, amigos e potenciais usuários, coletando percepções e dúvidas reais.",
+    deliverable: "AF05 (Briefing V0), AF06 (Briefing V1), AF07 (Especificação / PRD) e AF08 (MVP + Protótipo V0)",
+    mainDeliverables: [
+      "AF05 — Briefing V0",
+      "AF06 — Briefing V1 (Versão autoritativa revisada)",
+      "AF07 — Especificação de Funcionamento / PRD",
+      "AF08 — MVP + Protótipo V0 (com Plano de Realização)"
+    ],
+    expectedProgress: "Avanço esperado, mas não obrigatório: chegar ao Protótipo V0 (A05 a A08) e, se houver tempo, iniciar planejamento de testes.",
+    homeworkMission: "Missão entre encontros: realizar testes reais com pessoas do público-alvo (sem inventar evidências).",
+    suggestedActivities: ['A05', 'A06', 'A07', 'A08'],
+    suggestedExperience: [
+      "Retrospectiva breve;",
+      "Construção do primeiro briefing (Briefing V0);",
+      "Revisão crítica e consolidação da versão revisada (Briefing V1);",
+      "Definição de como a solução precisa funcionar;",
+      "Definição da hipótese principal e recorte do MVP;",
+      "Planejamento completo da realização do MVP por perguntas simples;",
+      "Materialização do Protótipo V0;",
+      "Início da preparação para o teste no mundo real."
+    ],
     activities: [
       {
-        id: "e2-a1",
-        title: "Retrospectiva Compartilhada",
-        durationMinutes: 15,
-        description: "Abertura com partilha das observações de campo e aprendizados mais marcantes da missão entre encontros.",
-        whatIsIt: "Abertura com partilha do aprendizado do Encontro 1 e relatos da escuta em campo.",
-        whyDoIt: "Reconectar os participantes com o diagnóstico e enriquecer o projeto com dados reais da comunidade.",
-        howToApply: ["Compartilhe em 1 minuto uma observação marcante da missão de escuta."],
-        socraticQuestions: ["O que vocês ouviram das pessoas que alterou ou confirmou sua visão inicial?"],
-        facilitatorInstructions: "Acolha as percepções trazidas da comunidade e conecte com a escrita do Briefing.",
-        checklist: ["Retrospectiva compartilhada realizada"]
-      },
-      {
-        id: "e2-a2",
-        title: "Recapitulação Operacional e Demonstração",
-        durationMinutes: 10,
-        description: "Revisão dos conceitos de Briefing, PRD e MVP com demonstração mínima de apoio da IA.",
-        whatIsIt: "Alinhamento operacional antes da escrita dos documentos técnicos do projeto.",
-        whyDoIt: "Garantir clareza sobre o papel da IA como parceira de estruturação e escrita.",
-        howToApply: ["Revise as ferramentas do app e tire dúvidas residuais."],
-        socraticQuestions: ["Como o Briefing nos ajuda a não perder o foco do problema investigado?"],
-        facilitatorInstructions: "Faça uma demonstração rápida e prática da ferramenta.",
-        checklist: ["Recapitulação operacional concluída"]
-      },
-      {
-        id: "e2-a3",
-        title: "Construção do Briefing V0",
-        durationMinutes: 30,
-        description: "Elaboração do Briefing V0: síntese do problema, público afetado, causas-raiz, propósito e proposta de solução.",
-        whatIsIt: "Construção do Briefing V0 estruturando o problema, contexto, causas-raiz e proposta de solução.",
-        whyDoIt: "Ancorar o projeto em uma descrição clara e fundamentada da intenção da equipe.",
+        id: 'A05',
+        code: 'A05',
+        order: 5,
+        title: 'Organizar a primeira versão do projeto',
+        durationMinutes: 25,
+        description: 'Consolidar problema, recursos, público, propósito e direção em um primeiro rascunho estruturado (Briefing V0), sem inventar informação nova.',
+        category: 'Estruturação',
+        promptId: 'P05',
+        artifactFamilyId: 'AF05',
+        whatIsIt: 'Primeiro briefing organizado da proposta.',
+        whyDoIt: 'Sintetizar as investigações em uma visão coesa antes da revisão crítica.',
         howToApply: [
-          "Preencha os campos do Briefing V0 na Área do Projeto.",
-          "Defina o problema, público, causas-raiz e proposta de solução."
-        ],
-        socraticQuestions: ["Se alguém lesse nosso Briefing agora, entenderia exatamente POR QUÊ a solução existe?"],
-        facilitatorInstructions: "Acompanhe as equipes garantindo objetividade na escrita.",
-        checklist: ["Briefing V0 elaborado pela equipe"],
-        suggestedPromptIds: ["p-briefing"],
-        relatedDocumentStep: "briefing"
-      },
-      {
-        id: "e2-a4",
-        title: "Revisão Crítica e Briefing V1",
-        durationMinutes: 20,
-        description: "Revisão do Briefing: revisão por pares, revisão crítica com IA e consolidação do Briefing V1.",
-        whatIsIt: "Processo estruturado para lapidar a clareza, coerência e qualidade do Briefing.",
-        whyDoIt: "Exercitar a checagem crítica, escuta de pares e o uso da IA para revisão de documentos.",
-        howToApply: [
-          "Troque o Briefing com outra equipe para revisão por pares.",
-          "Submeta ao prompt de revisão da IA para checar ambiguidades e lacunas.",
-          "Consolide o Briefing V1 da equipe."
+          'Injete os dados dos artefatos AF01 a AF04.',
+          'Organize o rascunho sem inventar novos fatos.',
+          'Valide com a equipe se a síntese representa sua visão.'
         ],
         socraticQuestions: [
-          "A crítica do outro grupo fez sentido? O que a IA apontou que nós não tínhamos notado?"
+          'Se alguém ler este rascunho, entenderá com clareza o problema e a direção da solução?'
         ],
-        facilitatorInstructions: "Oriente as etapas de revisão de forma ágil e colaborativa.",
         checklist: [
-          "Revisão por pares concluída",
-          "Revisão com IA concluída",
-          "Briefing V1 consolidado"
-        ],
-        suggestedPromptIds: ["p-verificacao-fatos"]
+          'Briefing V0 consolidado na família AF05'
+        ]
       },
       {
-        id: "e2-a5",
-        title: "Pausa / Lanche",
-        durationMinutes: 15,
-        description: "Intervalo para descanso e recarregamento de energia.",
-        whatIsIt: "Intervalo para lanche e descanso da turma.",
-        whyDoIt: "Manter a energia e o foco intelectual para a fase de especificação do PRD e prototipagem.",
-        howToApply: ["Aproveite o lanche para descansar."],
-        socraticQuestions: ["Como a pausa nos ajuda a olhar nosso texto com distanciamento crítico?"],
-        facilitatorInstructions: "Mantenha o tempo rigoroso de 15 minutos.",
-        checklist: ["Pausa para o lanche realizada"]
-      },
-      {
-        id: "e2-a6",
-        title: "Do Briefing ao PRD (Requisitos de Produto)",
-        durationMinutes: 25,
-        description: "Especificação de funcionamento da solução: separação de requisitos essenciais (must have) e desejáveis (nice to have).",
-        whatIsIt: "Elaboração do PRD V0 especificando o funcionamento e separando requisitos.",
-        whyDoIt: "Especificar o funcionamento prático da solução antes da prototipação.",
+        id: 'A06',
+        code: 'A06',
+        order: 6,
+        title: 'Revisar e melhorar o projeto',
+        durationMinutes: 30,
+        description: 'Submeter o Briefing V0 a crítica da IA e de pares, devolver decisões à equipe e consolidar o Briefing V1 com mudanças conscientemente aprovadas.',
+        category: 'Revisão',
+        promptId: 'P06',
+        artifactFamilyId: 'AF06',
+        whatIsIt: 'Revisão crítica e consolidação da versão autoritativa do briefing.',
+        whyDoIt: 'Exercitar a agência humana, o pacto de revisão e a soberania das decisões da equipe.',
         howToApply: [
-          "Responda: Como a solução deverá funcionar?",
-          "Separe as funções em Must Have (essenciais) e Nice to Have (acessórias)."
+          'Solicite pontos fortes, fragilidades e perguntas provocativas da IA.',
+          'Pactue o que a equipe aceita, rejeita ou quer modificar.',
+          'Gere o Briefing V1 refletindo apenas as decisões aprovadas.'
         ],
-        socraticQuestions: ["Sem qual funcionalidade a nossa solução simplesmente NÃO FUNCIONA?"],
-        facilitatorInstructions: "Ajude as equipes a classificarem rigorosamente o que é indispensável.",
-        checklist: ["PRD V0 construído na Área do Projeto"],
-        suggestedPromptIds: ["p-prd"],
-        relatedDocumentStep: "prd"
-      },
-      {
-        id: "e2-a7",
-        title: "Do PRD ao MVP (Produto Mínimo Viável)",
-        durationMinutes: 15,
-        description: "Definição do escopo do MVP: a menor versão da solução que permite testar a proposta com usuários reais.",
-        whatIsIt: "Definição do escopo enxuto do MVP para teste imediato.",
-        whyDoIt: "Focar em validar o núcleo de valor sem perder tempo em detalhes secundários.",
-        howToApply: [
-          "Responda: Qual é a menor versão que podemos testar?",
-          "Defina os critérios de validação do teste."
+        socraticQuestions: [
+          'Quais críticas apontadas pela IA ou pelos colegas fazem sentido incorporar?',
+          'O que a equipe decide manter deliberadamente com base em seus princípios?'
         ],
-        socraticQuestions: ["O que é o mínimo absoluto necessário para validar se as pessoas querem essa solução?"],
-        facilitatorInstructions: "Estimule o descarte de detalhes secundários para o protótipo inicial.",
-        checklist: ["Definição do MVP registrada"],
-        suggestedPromptIds: ["p-mvp"],
-        relatedDocumentStep: "mvp"
-      },
-      {
-        id: "e2-a8",
-        title: "Sprint de Construção do Protótipo V0",
-        durationMinutes: 45,
-        description: "Construção prática da versão V0 do protótipo (digital no-code, papel, chatbot, telas, roteiro ou fluxo funcional).",
-        whatIsIt: "Mão na massa: construção da versão V0 do protótipo com apoio da IA.",
-        whyDoIt: "Tornar a solução tangível e pronta para ser mostrada a usuários reais.",
-        howToApply: [
-          "Use ferramentas no-code, IA ou materiais visuais para construir o Protótipo V0.",
-          "Garanta que o protótipo permita demonstrar o valor principal em poucos minutos."
-        ],
-        socraticQuestions: ["O protótipo permite que um usuário experimente a ideia sem precisarmos explicar tudo?"],
-        facilitatorInstructions: "Circule pelas mesas dando suporte prático de criação e uso de ferramentas.",
-        checklist: ["Protótipo V0 construído e testável"],
-        suggestedPromptIds: ["p-mvp"],
-        relatedDocumentStep: "prototype"
-      },
-      {
-        id: "e2-a9",
-        title: "Missão entre Encontros: Testar e Colher Feedbacks",
-        durationMinutes: 5,
-        description: "Orientações para aplicação de testes do Protótipo V0 com familiares, amigos e pessoas do público-alvo.",
-        whatIsIt: "Instruções para realizar testes do Protótipo V0 com familiares, amigos e usuários reais.",
-        whyDoIt: "Coletar dados reais de uso para alimentar o ciclo de aprimoramento do Encontro 3.",
-        howToApply: [
-          "Mostre o Protótipo V0 para 2 a 3 pessoas.",
-          "Anote dúvidas, confusões e sugestões sem defender o produto."
-        ],
-        socraticQuestions: ["Por que ouvir onde o usuário se confundiu é mais valioso do que ouvir apenas elogios?"],
-        facilitatorInstructions: "Encoraje os alunos a prestarem atenção no comportamento real do usuário ao testar.",
         checklist: [
-          "Missão de testes e feedbacks explicitada",
-          "Alinhamento para o Encontro 3 concluído"
+          'Crítica analisada conscientemente',
+          'Briefing V1 consolidado como versão autoritativa'
+        ]
+      },
+      {
+        id: 'A07',
+        code: 'A07',
+        order: 7,
+        title: 'Como a solução precisa funcionar?',
+        durationMinutes: 30,
+        description: 'Transformar o Briefing V1 em requisitos claros, distinguindo o essencial agora do desejável depois, sem jargões desnecessários.',
+        category: 'Especificação',
+        promptId: 'P07',
+        artifactFamilyId: 'AF07',
+        whatIsIt: 'Especificação simples do funcionamento da solução (PRD).',
+        whyDoIt: 'Alinhar o funcionamento prático da proposta antes de investir tempo na construção.',
+        howToApply: [
+          'Defina o que o usuário precisa conseguir fazer ou experimentar.',
+          'Separe o que é indispensável agora do que pode esperar.',
+          'Registre limitações e critérios básicos de funcionamento.'
+        ],
+        socraticQuestions: [
+          'Sem o quê a experiência da solução simplesmente não acontece?',
+          'O que podemos deixar deliberadamente para depois sem prejudicar o objetivo?'
+        ],
+        checklist: [
+          'Essencial vs. desejável discriminado',
+          'Artefato AF07 validado pela equipe'
+        ]
+      },
+      {
+        id: 'A08',
+        code: 'A08',
+        order: 8,
+        title: 'Construir a menor versão que podemos testar',
+        durationMinutes: 55,
+        description: 'Definir a hipótese principal, recortar o MVP, estruturar o Plano de Realização completo (quando, o que acontece, onde, quem) e materializar o Protótipo V0.',
+        category: 'Materialização',
+        promptId: 'P08',
+        artifactFamilyId: 'AF08',
+        whatIsIt: 'Definição do MVP, Plano de Realização e materialização do Protótipo V0.',
+        whyDoIt: 'Tirar a ideia do papel com o menor esforço necessário para aprender com o mundo real.',
+        howToApply: [
+          'Formule a hipótese central que precisa ser testada.',
+          'Preencha o Plano de Realização através de perguntas simples.',
+          'Materialize o Protótipo V0 no formato mais adequado (digital, físico, serviço ou experiência).'
+        ],
+        socraticQuestions: [
+          'Qual é a coisa mais importante que precisamos aprender com este protótipo?',
+          'Como alguém do público pode experimentar esta versão em poucos minutos?'
+        ],
+        checklist: [
+          'Hipótese de teste definida',
+          'Plano de Realização completo estruturado',
+          'Protótipo V0 materializado e acessível'
         ]
       }
     ]
   },
   {
     id: 3,
-    title: "Encontro 3 — VALIDAR E EVOLUIR",
-    subtitle: "Análise de feedbacks, Modelo de Sustentabilidade (BMC), Roadmap e Protótipo V1",
-    objective: "Testar criticamente a primeira versão da solução, compreender os feedbacks recebidos, analisar aspectos necessários para sua continuidade e sustentabilidade, planejar sua evolução e desenvolver uma versão aprimorada do protótipo.",
+    title: "Encontro 3 — TESTAR, APRENDER E PLANEJAR",
+    subtitle: "Das Evidências do Mundo Real ao Modelo de Sustentabilidade e Roadmap",
+    objective: "Acolher e analisar evidências de testes no mundo real (ou marcar honestamente como não validado), estruturar o modelo de sustentabilidade e priorizar próximos passos com o Roadmap e a Linha do Tempo em 7 Etapas.",
     totalDurationMinutes: 180,
-    deliverable: "Síntese dos feedbacks coletados; Business Model Canvas (BMC); Roadmap de evolução; Protótipo V1 aprimorado.",
-    homeworkMission: "Missão entre encontros: refletir sobre a trajetória completa do projeto e reunir evidências, imagens e telas para a criação do Pitch no Encontro 4.",
+    deliverable: "AF09 (Testes e Aprendizados), AF10 (Sustentabilidade) e AF11 (Roadmap + 7 Etapas)",
+    mainDeliverables: [
+      "AF09 — Testes, Aprendizados e Plano de Evolução V0→V1",
+      "AF10 — Modelo de Sustentabilidade",
+      "AF11 — Roadmap + Linha do Tempo em 7 Etapas"
+    ],
+    expectedProgress: "Avanço esperado, mas não obrigatório: consolidar aprendizados empíricos, estruturar sustentabilidade e planejar sequência temporal (A09 a A11).",
+    homeworkMission: "Missão entre encontros: ensaiar a fala da apresentação final de 3 minutos.",
+    suggestedActivities: ['A09', 'A10', 'A11'],
+    suggestedExperience: [
+      "Recuperar o plano de teste ou registrar evidências de campo;",
+      "Analisar o que funcionou, dificuldades, padrões e contradições;",
+      "Decidir o que manter, corrigir, melhorar ou simplificar na evolução V0→V1;",
+      "Construir o modelo de sustentabilidade da solução em múltiplas dimensões;",
+      "Criar Roadmap (Agora, Depois, Futuramente) e Linha do Tempo em 7 Etapas;",
+      "Se houver tempo, realizar ajustes prioritários no protótipo."
+    ],
     activities: [
       {
-        id: "e3-a1",
-        title: "Retrospectiva Compartilhada",
-        durationMinutes: 15,
-        description: "Abertura com partilha das experiências de testes e primeiras impressões da missão em campo.",
-        whatIsIt: "Abertura com destaques do processo de testes do Protótipo V0.",
-        whyDoIt: "Reconectar a turma com as evidências empíricas de uso da solução.",
-        howToApply: ["Partilhe a reação mais surpreendente de quem testou seu protótipo."],
-        socraticQuestions: ["O que mudou na percepção da equipe após ver alguém usando o protótipo?"],
-        facilitatorInstructions: "Acolha a turma e prepare o terreno para a análise de dados e BMC.",
-        checklist: ["Retrospectiva compartilhada concluída"]
-      },
-      {
-        id: "e3-a2",
-        title: "Síntese dos Testes e Feedbacks",
-        durationMinutes: 20,
-        description: "Organização estruturada dos feedbacks: o que funcionou bem, pontos de confusão, bugs críticos e sugestões futuras.",
-        whatIsIt: "Compartilhamento e categorização dos resultados dos testes com usuários reais.",
-        whyDoIt: "Basear as decisões de evolução em evidências concretas de uso real.",
+        id: 'A09',
+        code: 'A09',
+        order: 9,
+        title: 'Testar, aprender e decidir o que melhorar',
+        durationMinutes: 50,
+        description: 'Planejar testes, colher evidências reais (ou registrar ausência de teste), analisar aprendizados sem inventar validação e definir evolução V0→V1.',
+        category: 'Aprendizagem',
+        promptId: 'P09',
+        artifactFamilyId: 'AF09',
+        whatIsIt: 'Ciclo completo de teste, aprendizado por evidências e plano de melhorias V0→V1.',
+        whyDoIt: 'Garantir que a evolução do projeto seja guiada por fatos reais observados, e não por especulações.',
         howToApply: [
-          "Organize os feedbacks em: Funcionou Bem, Pontos de Confusão, Erros/Bugs e Sugestões.",
-          "Use a IA para ajudar a identificar padrões nas respostas."
+          'Se houver evidências de teste externo, organize o que funcionou, dificuldades e falas.',
+          'Se não houve teste real, marque explicitamente: STATUS: SEM EVIDÊNCIA EXTERNA / NÃO VALIDADO.',
+          'Classifique o estado da hipótese e defina 3 a 5 prioridades de evolução V0→V1.'
         ],
-        socraticQuestions: ["O que os testes mostraram que a equipe não tinha previsto?"],
-        facilitatorInstructions: "Ajude as equipes a acolherem o feedback com maturidade e sem atitude defensiva.",
-        checklist: ["Síntese de feedbacks estruturada"],
-        suggestedPromptIds: ["p-analise-feedback"],
-        relatedDocumentStep: "feedback"
-      },
-      {
-        id: "e3-a3",
-        title: "Business Model Canvas (BMC - Sustentabilidade)",
-        durationMinutes: 25,
-        description: "Mapeamento do modelo de sustentabilidade: proposta de valor, segmentos, parcerias comunitárias, recursos e viabilidade.",
-        whatIsIt: "Elaboração do BMC mapeando viabilidade, parcerias, recursos e sustentabilidade comunitária.",
-        whyDoIt: "Avaliar e ampliar as condições de viabilidade e permanência da solução.",
-        howToApply: [
-          "Mapeie os segmentos atendidos, recursos necessários e parcerias-chave.",
-          "Defina o modelo de sustentabilidade da proposta."
+        socraticQuestions: [
+          'O que as pessoas realmente fizeram ou disseram ao experimentar o protótipo?',
+          'Quais surpresas nos obrigam a repensar aspectos da solução?'
         ],
-        socraticQuestions: ["Quem são os parceiros na comunidade ou escola que podem ajudar esse projeto a continuar existindo?"],
-        facilitatorInstructions: "Explique que sustentabilidade envolve parcerias, apoio comunitário e recursos locais.",
-        checklist: ["BMC preenchido na Área do Projeto"],
-        suggestedPromptIds: ["p-bmc"],
-        relatedDocumentStep: "bmc"
-      },
-      {
-        id: "e3-a4",
-        title: "Roadmap de Evolução",
-        durationMinutes: 20,
-        description: "Planejamento dos próximos passos em 3 horizontes: Agora (ajustes da V1), Depois (pós-workshop) e Futuramente (longo prazo).",
-        whatIsIt: "Elaboração do Roadmap priorizando tarefas em Agora, Depois e Futuramente.",
-        whyDoIt: "Aprender a priorizar o que ajustar imediatamente vs. o que fica para etapas futuras.",
-        howToApply: [
-          "Classifique as tarefas: Agora (durante a oficina), Depois e Futuramente.",
-          "Defina as correções e melhorias essenciais para a versão V1."
-        ],
-        socraticQuestions: ["O que é prioritário ajustar antes de demonstrar o protótipo no Pitch?"],
-        facilitatorInstructions: "Reforce que a coluna 'Agora' deve conter apenas o que dá para executar na sprint de hoje.",
-        checklist: ["Roadmap de evolução planejado"],
-        suggestedPromptIds: ["p-roadmap"],
-        relatedDocumentStep: "roadmap"
-      },
-      {
-        id: "e3-a5",
-        title: "Pausa / Lanche",
-        durationMinutes: 15,
-        description: "Pausa para descanso e alimentação.",
-        whatIsIt: "Pausa para descanso e alimentação dos jovens.",
-        whyDoIt: "Renovar a concentração para a sprint intensiva de aprimoramento do protótipo.",
-        howToApply: ["Descanse e troque ideias com outras equipes."],
-        socraticQuestions: ["Como o repouso estimula novas conexões para resolver problemas?"],
-        facilitatorInstructions: "Garanta o retorno no horário.",
-        checklist: ["Pausa para o lanche realizada"]
-      },
-      {
-        id: "e3-a6",
-        title: "Sprint de Aprimoramento — Protótipo V1",
-        durationMinutes: 70,
-        description: "Desenvolvimento da versão aprimorada V1 com base nos feedbacks coletados, no BMC e no roadmap.",
-        whatIsIt: "Sessão intensiva de refinamento do protótipo corrigindo erros e elevando o acabamento.",
-        whyDoIt: "Entregar uma versão V1 aprimorada e pronta para demonstração pública no Pitch.",
-        howToApply: [
-          "Aplique os ajustes definidos na coluna 'Agora' do Roadmap.",
-          "Utilize a IA para aprimorar textos, fluxos, interfaces e elementos visuais."
-        ],
-        socraticQuestions: ["Como a versão V1 está mais intuitiva e robusta do que a versão V0?"],
-        facilitatorInstructions: "Passe nas bancadas apoiando a execução das melhorias prioritárias.",
-        checklist: ["Protótipo V1 aprimorado com sucesso"],
-        relatedDocumentStep: "prototype"
-      },
-      {
-        id: "e3-a7",
-        title: "Compartilhamento e Perguntas",
-        durationMinutes: 10,
-        description: "Espaço aberto para partilha rápida dos avanços do Protótipo V1 e esclarecimento de dúvidas.",
-        whatIsIt: "Espaço para esclarecer dúvidas sobre os protótipos, BMC e Roadmap.",
-        whyDoIt: "Garantir que todas as equipes consolidem sua versão V1 sem impedimentos.",
-        howToApply: ["Tire dúvidas pontuais com o facilitador."],
-        socraticQuestions: ["O que ainda precisa de atenção no nosso protótipo V1?"],
-        facilitatorInstructions: "Apoie as equipes com dúvidas pendentes.",
-        checklist: ["Dúvidas esclarecidas"]
-      },
-      {
-        id: "e3-a8",
-        title: "Missão e Alinhamento Final",
-        durationMinutes: 5,
-        description: "Preparação para o encontro final de comunicação, roteiro de pitch e celebração.",
-        whatIsIt: "Instruções de preparação para a escrita do Pitch no Encontro 4.",
-        whyDoIt: "Preparar o espírito da equipe para a comunicação final do projeto.",
-        howToApply: ["Reflita sobre a história do projeto desde a investigação inicial."],
-        socraticQuestions: ["Como resumir a nossa jornada em uma narrativa clara e envolvente?"],
-        facilitatorInstructions: "Inspire os estudantes para o encontro final de comunicação e celebração.",
         checklist: [
-          "Alinhamento para o Encontro 4 concluído"
+          'Status de validação registrado com honestidade empírica',
+          'Prioridades de evolução de V0 para V1 consolidadas'
+        ]
+      },
+      {
+        id: 'A10',
+        code: 'A10',
+        order: 10,
+        title: 'Como essa solução pode se sustentar?',
+        durationMinutes: 40,
+        description: 'Examinar pessoas atendidas, valor gerado, formas de acesso, atividades, recursos, apoios, custos e formas de sustentação sem presumir lucro comercial obrigatório.',
+        category: 'Sustentabilidade',
+        promptId: 'P10',
+        artifactFamilyId: 'AF10',
+        whatIsIt: 'Modelo de sustentabilidade em nove componentes autorais.',
+        whyDoIt: 'Planejar como a iniciativa pode continuar existindo no tempo e gerando impacto sustentável.',
+        howToApply: [
+          'Identifique quem recebe valor e de que forma.',
+          'Mapeie custos, esforços e os recursos necessários.',
+          'Explore formas plurais de sustentação (apoios institucionais, parcerias, voluntariado, trocas, editais, receita).'
+        ],
+        socraticQuestions: [
+          'Além do dinheiro, que apoios e parcerias garantem a vida longa deste projeto?',
+          'Quais são os maiores custos de energia, tempo ou recursos para mantê-lo?'
+        ],
+        checklist: [
+          'Nove componentes de sustentabilidade preenchidos',
+          'Principais hipóteses de sustentabilidade a testar identificadas'
+        ]
+      },
+      {
+        id: 'A11',
+        code: 'A11',
+        order: 11,
+        title: 'O que fazemos agora, depois e futuramente?',
+        durationMinutes: 40,
+        description: 'Transformar prioridades, aprendizados e sustentabilidade em um Roadmap (Agora, Depois, Futuramente) e uma Linha do Tempo em 7 Etapas (verbo + substantivo).',
+        category: 'Planejamento',
+        promptId: 'P11',
+        artifactFamilyId: 'AF11',
+        whatIsIt: 'Roadmap de prioridades e Linha do Tempo em 7 Etapas.',
+        whyDoIt: 'Organizar a evolução do projeto no tempo e ter clareza do que deliberadamente não faremos agora.',
+        howToApply: [
+          'Separe as melhorias em Agora, Depois, Futuramente e Não faremos agora.',
+          'Construa a Linha do Tempo em 7 Etapas nomeadas em formato verbo + substantivo.',
+          'Identifique responsáveis e dependências críticas.'
+        ],
+        socraticQuestions: [
+          'Se tivermos que escolher uma única melhoria para implementar imediatamente, qual seria?',
+          'Quais são os 7 passos lógicos para o projeto avançar no mundo real?'
+        ],
+        checklist: [
+          'Horizontes de prioridade definidos',
+          'Linha do Tempo em 7 Etapas estruturada'
         ]
       }
     ]
   },
   {
     id: 4,
-    title: "Encontro 4 — COMUNICAR",
-    subtitle: "Organização da trajetória, roteiro, ensaios e apresentação do Pitch final",
-    objective: "Aprender a organizar e comunicar a trajetória do projeto, apresentando com clareza o problema, a investigação, a solução, o papel da IA, os resultados dos testes, as mudanças realizadas e os próximos passos.",
+    title: "Encontro 4 — COMUNICAR E CELEBRAR",
+    subtitle: "Do Roteiro Oral e Visual à Simulação com Banca e Celebração Coletiva",
+    objective: "Construir a narrativa autêntica da jornada, produzir o Pitch V1 autoritativo, roteiro visual de apoio, roteiro de ensaio/simulação, apresentar diante da banca e celebrar a agência e o aprendizado.",
     totalDurationMinutes: 180,
-    deliverable: "Roteiro do pitch; Apresentação visual; Pitch final (3 minutos).",
-    homeworkMission: "Celebração do encerramento e continuidade da aplicação consciente e ética da IA na vida estudantil, profissional e comunitária.",
+    deliverable: "AF12 (Kit de Comunicação Final: Pitch V1, Roteiro Visual e Roteiro de Ensaio) e Apresentação Final",
+    mainDeliverables: [
+      "AF12 — Pitch V1 (Versão oral autoritativa de 3 minutos)",
+      "AF12 — Roteiro Visual de Apoio (Até 6 telas)",
+      "AF12 — Roteiro de Ensaio/Simulação para Banca",
+      "Documento Mestre do Projeto (Visão consolidada da autoria)",
+      "Apresentação Final e Celebração"
+    ],
+    expectedProgress: "Concluir a comunicação final (A12), apresentar publicamente o projeto e celebrar a trajetória vivida.",
+    homeworkMission: "Levar a aprendizagem, as perguntas e a agência crítica para a vida, escola e comunidade.",
+    suggestedActivities: ['A12'],
+    suggestedExperience: [
+      "Recuperar a trajetória real do projeto;",
+      "Construir o rascunho de pitch (Pitch V0 transitório);",
+      "Revisar criticamente e consolidar o Pitch V1 como versão autoritativa;",
+      "Organizar o roteiro visual de apoio (até 6 telas);",
+      "Preparar roteiro de ensaio/simulação com perguntas prováveis de banca;",
+      "Ensaiar presencialmente a apresentação cronometrada de 3 minutos;",
+      "Apresentações finais diante de convidados e banca;",
+      "Retrospectiva, depoimentos e celebração da autoria humana."
+    ],
     activities: [
       {
-        id: "e4-a1",
-        title: "Retrospectiva Compartilhada",
-        durationMinutes: 15,
-        description: "Abertura do dia final, celebração da jornada percorrida e sorteio da ordem dos pitches.",
-        whatIsIt: "Abertura do dia final recapitulando a evolução desde a investigação até o Protótipo V1.",
-        whyDoIt: "Criar o clima de celebração e prontidão para a comunicação dos projetos.",
-        howToApply: ["Partilhe o sentimento de chegar ao encontro de apresentações."],
-        socraticQuestions: ["Qual foi a maior transformação do projeto do Encontro 1 até agora?"],
-        facilitatorInstructions: "Acolha a turma e estabeleça o sorteio das apresentações.",
-        checklist: ["Retrospectiva compartilhada concluída"]
-      },
-      {
-        id: "e4-a2",
-        title: "Criação do Roteiro do Pitch",
-        durationMinutes: 30,
-        description: "Estruturação da fala de 3 minutos: problema, diagnóstico, solução, papel da IA, testes, mudanças e próximos passos.",
-        whatIsIt: "Elaboração da fala do Pitch estruturando a narrativa com apoio da ferramenta.",
-        whyDoIt: "Comunicar com clareza o problema, solução, papel da IA e resultados dentro do tempo.",
+        id: 'A12',
+        code: 'A12',
+        order: 12,
+        title: 'Preparar a apresentação final',
+        durationMinutes: 60,
+        description: 'Construir o Pitch V0 transitório, revisar criticamente, consolidar somente o Pitch V1 como versão autoritativa e gerar roteiro visual e roteiro de ensaio/simulação para banca.',
+        category: 'Comunicação',
+        promptId: 'P12',
+        artifactFamilyId: 'AF12',
+        whatIsIt: 'Kit de Comunicação Final: Pitch V1, Roteiro Visual e Roteiro de Ensaio/Simulação.',
+        whyDoIt: 'Aprender a comunicar a verdade do projeto com clareza, honestidade e impacto em 3 minutos.',
         howToApply: [
-          "Preencha a estrutura do Roteiro de Pitch no aplicativo.",
-          "Verifique a clareza e a duração estimada da fala (~3 minutos)."
+          'Conte a história real: problema, pessoas afetadas, descobertas, solução, protótipo, evidências e próximos passos.',
+          'Revise criticamente o rascunho e consolide o Pitch V1 (o V0 é descartado do artefato final).',
+          'Estruture o roteiro visual de até 6 telas para apoiar a fala.',
+          'Prepare a divisão de falas, transições e respostas para até 5 perguntas prováveis de banca.'
         ],
-        socraticQuestions: ["Como prender a atenção do público nos primeiros 20 segundos de apresentação?"],
-        facilitatorInstructions: "Supervisione a clareza da narrativa e o limite de tempo.",
-        checklist: ["Roteiro do pitch finalizado"],
-        suggestedPromptIds: ["p-pitch"],
-        relatedDocumentStep: "pitch"
-      },
-      {
-        id: "e4-a3",
-        title: "Criação da Apresentação do Pitch",
-        durationMinutes: 30,
-        description: "Montagem dos suportes visuais: telas do Protótipo V1, síntese do problema e próximos passos.",
-        whatIsIt: "Montagem dos suportes visuais de apoio para a fala.",
-        whyDoIt: "Oferecer suporte visual impactante para quem assiste ao Pitch.",
-        howToApply: [
-          "Selecione telas ou links do Protótipo V1 para demonstrar.",
-          "Mantenha os slides limpos e focados na solução real."
+        socraticQuestions: [
+          'Nossa narrativa conta a verdade do que foi vivido, sem inventar dados ou certezas?',
+          'Quem fala o quê e como demonstramos o protótipo no tempo exato?'
         ],
-        socraticQuestions: ["Os suportes visuais ajudam a demonstrar o valor do projeto sem poluição visual?"],
-        facilitatorInstructions: "Incentive poucos slides e foco na demonstração real.",
-        checklist: ["Apresentação do pitch montada"]
-      },
-      {
-        id: "e4-a4",
-        title: "Pausa / Lanche",
-        durationMinutes: 15,
-        description: "Intervalo para descanso e concentração antes dos ensaios cronometrados.",
-        whatIsIt: "Intervalo para lanche e concentração das equipes antes dos ensaios.",
-        whyDoIt: "Aliviar o nervosismo e recarregar energias para os ensaios.",
-        howToApply: ["Aproveite para relaxar e beber água."],
-        socraticQuestions: ["Como a respiração ajuda a controlar a ansiedade antes da fala pública?"],
-        facilitatorInstructions: "Retorne pontualmente em 15 minutos.",
-        checklist: ["Pausa para o lanche realizada"]
-      },
-      {
-        id: "e4-a5",
-        title: "Ensaios e Revisão Crítica do Pitch",
-        durationMinutes: 30,
-        description: "Simulações cronometradas de 3 minutos com feedback entre pares e refinamento da oratória.",
-        whatIsIt: "Ensaio geral das equipes com marcação rigorosa de tempo e dicas de oratória.",
-        whyDoIt: "Garantir fluidez, boa postura e respeito ao tempo estipulado.",
-        howToApply: [
-          "Ensaie o pitch utilizando o cronômetro do app.",
-          "Ajuste a divisão de falas entre os integrantes da equipe."
-        ],
-        socraticQuestions: ["A fala coube confortavelmente nos 3 minutos sem precisar correr?"],
-        facilitatorInstructions: "Use o cronômetro oficial do app para marcar o ensaio de cada equipe.",
-        checklist: ["Ensaios com cronômetro realizados"]
-      },
-      {
-        id: "e4-a6",
-        title: "Apresentação dos Pitches",
-        durationMinutes: 30,
-        description: "Apresentação oficial de cada equipe (3 min de pitch + 3 min de comentários/perguntas).",
-        whatIsIt: "Apresentação oficial dos projetos desenvolvidos ao longo das 12 horas.",
-        whyDoIt: "Desenvolver oratória, autoconfiança e valorizar a conquista de cada equipe.",
-        howToApply: [
-          "Apresente o Pitch da equipe com clareza e entusiasmo.",
-          "Demonstre o protótipo V1 e receba os aplausos e feedbacks."
-        ],
-        socraticQuestions: ["Como demonstrar o orgulho da jornada percorrida pela equipe?"],
-        facilitatorInstructions: "Medie as apresentações, mantendo o tempo rigoroso e celebrando cada entrega.",
-        checklist: ["Apresentações dos pitches de todas as equipes realizadas"]
-      },
-      {
-        id: "e4-a7",
-        title: "Retrospectiva Final, Depoimentos e Celebração",
-        durationMinutes: 30,
-        description: "Rodada de reflexão final, depoimentos dos estudantes, foto oficial da turma e celebração.",
-        whatIsIt: "Fechamento festivo da jornada do workshop com depoimentos, registro fotográfico e celebração.",
-        whyDoIt: "Consolidar a experiência, celebrar as conquistas e encerrar o workshop com impacto duradouro.",
-        howToApply: [
-          "Partilhe um depoimento sobre o seu aprendizado e uso consciente da IA.",
-          "Participe da foto oficial da turma e comemore!"
-        ],
-        socraticQuestions: ["Quem era você em relação à tecnologia antes deste workshop e quem é você agora?"],
-        facilitatorInstructions: "Conduza a rodada de depoimentos com afeto, faça a foto oficial da turma e celebre a conclusão!",
         checklist: [
-          "Rodada de depoimentos concluída",
-          "Foto da turma realizada",
-          "Celebração e encerramento do workshop concluídos com sucesso!"
+          'Pitch V1 consolidado como versão autoritativa',
+          'Roteiro visual de até 6 telas estruturado',
+          'Roteiro de ensaio e simulação pronto para prática presencial'
         ]
       }
     ]
   }
 ];
 
-export const PROMPT_TEMPLATES: PromptTemplate[] = [
-  {
-    id: "p-reflexao-socratica",
-    title: "Questionador Socrático de Problemas",
-    purpose: "Provocar reflexão crítica sobre uma ideia sem dar respostas prontas",
-    usageMoment: "Encontro 1 — INVESTIGAR",
-    category: "reflexao",
-    templateText: `Atue como um questionador socrático experiente e acolhedor para jovens de 13 a 17 anos. 
-Nosso grupo identificou o seguinte desafio: "{{DESAFIO}}".
-
-Sua missão:
-1. Faça 3 perguntas instigantes que nos ajudem a questionar nossas suposições sobre esse problema.
-2. Não nos dê respostas diretas nem soluções prontas.
-3. Ajude-nos a diferenciar o que é FATO (comprovado) do que é APENAS HIPÓTESE ou OPINIÃO.
-4. Lembre-nos de verificar a veracidade das informações e proteger nossos dados pessoais.
-Mantenha a linguagem direta, jovem, respeitosa e em português do Brasil.`,
-    variables: [
-      { key: "DESAFIO", label: "Desafio ou Problema Identificado", placeholder: "Ex: Falta de interesse na biblioteca da escola" }
-    ]
-  },
-  {
-    id: "p-verificacao-fatos",
-    title: "Verificador de Vieses e Alucinações",
-    purpose: "Analisar criticamente uma afirmação ou texto produzido pela IA",
-    usageMoment: "Todos os Encontros - Checagem crítica",
-    category: "reflexao",
-    templateText: `Examine o seguinte texto/afirmação gerado sobre o projeto "{{NOME_PROJETO}}":
-"{{TEXTO_A_VERIFICAR}}"
-
-Analise este conteúdo de forma crítica sob 4 aspectos:
-1. INFORMAÇÕES A VERIFICAR: Quais afirmações contêm dados que precisam ser checados em fontes confiáveis?
-2. POSSÍVEIS VIESES: O texto pressupõe algum estereótipo ou simplificação excessiva da realidade?
-3. PONTOS CEGOS: O que este texto ignora sobre o contexto das pessoas reais afetadas?
-4. RISCOS DE PRIVACIDADE: O texto menciona algum dado pessoal sensível que deva ser removido?
-
-Apresente em marcadores curtos e claros em português do Brasil.`,
-    variables: [
-      { key: "NOME_PROJETO", label: "Nome do Projeto", placeholder: "Ex: ConectaBairro" },
-      { key: "TEXTO_A_VERIFICAR", label: "Texto a ser analisado", placeholder: "Cole aqui o texto fornecido pela IA para revisão" }
-    ]
-  },
-  {
-    id: "p-phd",
-    title: "Assistente de Mapeamento PHD (Problemas, Hipóteses, Dúvidas)",
-    purpose: "Organizar percepções sobre um problema coletivo na estrutura PHD",
-    usageMoment: "Encontro 1 — INVESTIGAR",
-    category: "causas",
-    templateText: `Ajude nossa equipe de estudantes a organizar o mapa PHD para o desafio comunitário/escolar: "{{DESAFIO}}".
-
-Com base na nossa descrição inicial: "{{DESCRICAO_INICIAL}}"
-
-Estruture em 3 listas curtas:
-1. PROBLEMAS (O que sabemos que de fato dói ou incomoda as pessoas):
-2. HIPÓTESES (O que ACHAMOS que pode estar causando isso, mas ainda não provamos):
-3. DÚVIDAS (O que precisamos pesquisar ou perguntar a pessoas reais para ter certeza):
-
-Atenção: Não invente dados fictícios ou estatísticas não fornecidas. Use linguagem simples e direta.`,
-    variables: [
-      { key: "DESAFIO", label: "Desafio Coletivo", placeholder: "Ex: Descarte incorreto de lixo no entorno da escola" },
-      { key: "DESCRICAO_INICIAL", label: "Descrição inicial da equipe", placeholder: "Descreva o que a equipe observou no dia a dia" }
-    ]
-  },
-  {
-    id: "p-cinco-porques",
-    title: "Analisador da Causa-Raiz (Cinco Porquês)",
-    purpose: "Guiar o aprofundamento investigativo até a causa-raiz de um problema",
-    usageMoment: "Encontro 1 — INVESTIGAR",
-    category: "causas",
-    templateText: `Siga a técnica dos 5 Porquês para investigar a causa-raiz do seguinte problema escolar/comunitário:
-Problema de Partida: "{{PROBLEMA_INICIAL}}"
-
-Gere uma sequência de 5 perguntas encadeadas ('Por quê isso acontece?'), onde cada pergunta investiga a resposta anterior.
-Para cada nível, indique se a causa sugerida é um FATO conhecido ou uma HIPÓTESE a investigar.
-
-Ao final, destaque qual parece ser a CAUSA-RAIZ PRIORITÁRIA para atuarmos com nosso projeto.`,
-    variables: [
-      { key: "PROBLEMA_INICIAL", label: "Problema de Partida", placeholder: "Ex: Estudantes do 1º ano se sentem isolados no intervalo" }
-    ]
-  },
-  {
-    id: "p-golden-circle",
-    title: "Estruturador de Propósito (Golden Circle)",
-    purpose: "Ajudar a definir o Por que? Como? O que? do projeto",
-    usageMoment: "Encontro 1 — INVESTIGAR",
-    category: "causas",
-    templateText: `Sintonize o projeto da nossa equipe no método Golden Circle (Comece pelo Por Quê).
-Desafio da equipe: "{{DESAFIO}}"
-Intenção da equipe: "{{INTENCAO}}"
-
-Ajude-nos a redigir em poucas frases marcantes:
-1. POR QUÊ (Propósito Essencial): Por que a causa deste projeto importa profundamente para a comunidade?
-2. COMO (Valores e Método): De que maneira ética, humana e colaborativa vamos agir?
-3. O QUÊ (Entregável/Solução): Qual é a manifestação concreta da nossa ideia?`,
-    variables: [
-      { key: "DESAFIO", label: "Desafio", placeholder: "Ex: Dificuldade de aprendizado em matemática" },
-      { key: "INTENCAO", label: "Intenção da Equipe", placeholder: "Ex: Queremos criar um grupo de apoio entre estudantes usando tutoria ativa" }
-    ]
-  },
-  {
-    id: "p-briefing",
-    title: "Gerador de Briefing V0",
-    purpose: "Sintetizar a visão do projeto descrevendo o problema e a solução",
-    usageMoment: "Encontro 2 — DEFINIR E MATERIALIZAR",
-    category: "documentacao",
-    templateText: `Atue como um gestor de projetos educacionais d'O Forno.
-Com base nos dados da equipe:
-- Nome do Projeto: "{{NOME_PROJETO}}"
-- Problema Investigado: "{{PROBLEMA}}"
-- Causas-Raiz: "{{CAUSAS_RAIZ}}"
-- Propósito (Por Quê): "{{PURPOSE}}"
-- Público Impactado: "{{PUBLICO}}"
-
-Elabore um BRIEFING V0 sintético contendo:
-1. O QUE ESTAMOS TENTANDO FAZER: Resumo direto da proposta.
-2. CONTEXTO E POR QUÊ ELE EXISTE: Diagnóstico e causas-raiz identificadas.
-3. PÚBLICO DE INTERESSE: Para quem é essa solução.
-4. PROPOSTA DE SOLUÇÃO (Golden Circle): Por que? Como? O que?
-5. RESULTADOS ESPERADOS: O que esperamos alcançar.
-
-Garanta um tom inspirador, profissional, realista e objetivo.`,
-    variables: [
-      { key: "NOME_PROJETO", label: "Nome do Projeto", placeholder: "Ex: EcoCiclo Escolar" },
-      { key: "PROBLEMA", label: "Problema Principal", placeholder: "Descrição do problema" },
-      { key: "CAUSAS_RAIZ", label: "Causas-Raiz (Cinco Porquês)", placeholder: "Causas investigadas" },
-      { key: "PURPOSE", label: "Propósito (Por Quê)", placeholder: "Por que isso importa" },
-      { key: "PUBLICO", label: "Público Impactado", placeholder: "Estudantes, vizinhos, professores..." }
-    ]
-  },
-  {
-    id: "p-prd",
-    title: "Gerador de PRD V0 (Requisitos de Produto)",
-    purpose: "Especificar o funcionamento da solução: Como a solução deverá funcionar?",
-    usageMoment: "Encontro 2 — DEFINIR E MATERIALIZAR",
-    category: "documentacao",
-    templateText: `Crie a especificação inicial do PRD V0 (Documento de Requisitos de Produto) para o projeto comunitário/estudantil:
-Projeto: "{{NOME_PROJETO}}"
-Objetivo: "{{OBJETIVO}}"
-Público: "{{PUBLICO}}"
-
-Estruture em formato de tópicos diretos:
-1. VISÃO GERAL DE FUNCIONAMENTO (Como a solução deverá funcionar para o usuário?)
-2. FUNÇÕES ESSENCIAIS - MUST HAVE (O que a solução TEM que fazer rigorosamente)
-3. FUNÇÕES ACESSÓRIAS - NICE TO HAVE (O que seria legal ter, mas não é essencial nesta versão)
-4. JORNADA DO USUÁRIO PASSO A PASSO (Etapas do primeiro contato ao uso diário)
-5. REGRAS DE PRIVACIDADE E SEGURANÇA (Como proteger dados dos participantes)`,
-    variables: [
-      { key: "NOME_PROJETO", label: "Nome do Projeto", placeholder: "Ex: Horta Comunitária Inteligente" },
-      { key: "OBJETIVO", label: "Objetivo Principal", placeholder: "Objetivo do produto" },
-      { key: "PUBLICO", label: "Público Alvo", placeholder: "Usuários da solução" }
-    ]
-  },
-  {
-    id: "p-mvp",
-    title: "Definidor de Produto Mínimo Viável (MVP)",
-    purpose: "Recortar o protótipo: Qual é a menor versão que podemos testar?",
-    usageMoment: "Encontro 2 — DEFINIR E MATERIALIZAR",
-    category: "prototipo",
-    templateText: `Atue como um mentor de inovação enxuta.
-A equipe formulou o projeto "{{NOME_PROJETO}}" com as seguintes ideias do PRD:
-"{{IDEIAS_COMPLETAS}}"
-
-Responda à pergunta: Qual é a menor versão que podemos testar neste workshop?
-1. NÚCLEO INVIOLÁVEL DO MVP (A menor versão que permite testar se a ideia principal funciona):
-2. O QUE FICARÁ DE FORA DO TESTE V0 (Funcionalidades a adiar para o futuro):
-3. CRITÉRIOS DE SUCESSO (Como saberemos se a ideia principal funcionou no teste?):
-4. FORMATO DO PROTÓTIPO V0 (Físico, digital no-code, guia estruturado, telas ou simulação):`,
-    variables: [
-      { key: "NOME_PROJETO", label: "Nome do Projeto", placeholder: "Ex: App de Doação de Libros Escalares" },
-      { key: "IDEIAS_COMPLETAS", label: "Ideias completas do PRD", placeholder: "Liste os requisitos do PRD" }
-    ]
-  },
-  {
-    id: "p-bmc",
-    title: "Gerador de Business Model Canvas (BMC - Modelo de Sustentabilidade)",
-    purpose: "Mapear sustentabilidade: Para quem, com quais recursos e como isso se sustenta?",
-    usageMoment: "Encontro 3 — VALIDAR E EVOLUIR",
-    category: "documentacao",
-    templateText: `Elabore a estrutura do Business Model Canvas (BMC) focado em sustentabilidade comunitária e viabilidade do projeto:
-Projeto: "{{NOME_PROJETO}}"
-Proposta de Valor: "{{PROPOSTA_VALOR}}"
-
-Preencha os blocos para mapear a sustentabilidade da proposta:
-1. Proposta de Valor (Benefício real entregue)
-2. Segmentos Atendidos (Para quem estamos criando valor?)
-3. Canais de Acesso e Divulgação (Como chega às pessoas?)
-4. Relacionamento e Acolhimento (Como mantemos o engajamento?)
-5. Recursos Necessários (Ferramentas, locais ou materiais essenciais)
-6. Parcerias Estratégicas (Quem na escola ou comunidade pode apoiar?)
-7. Atividades-Chave (Ações indispensáveis para funcionar)
-8. Custos e Necessidades Básicas (Recursos exigidos)
-9. Sustentabilidade da Proposta (Como o projeto se mantém e expande seu impacto?)`,
-    variables: [
-      { key: "NOME_PROJETO", label: "Nome do Projeto", placeholder: "Ex: Guia de Estudos Colaborativo" },
-      { key: "PROPOSTA_VALOR", label: "Proposta de Valor", placeholder: "O valor gerado pela solução" }
-    ]
-  },
-  {
-    id: "p-analise-feedback",
-    title: "Sintetizador e Analisador de Feedbacks",
-    purpose: "Transformar opiniões dos usuários em decisões de produto",
-    usageMoment: "Encontro 3 — VALIDAR E EVOLUIR",
-    category: "prototipo",
-    templateText: `Sintetize os feedbacks coletados nos testes do protótipo V0 do projeto "{{NOME_PROJETO}}".
-
-Anotações brutas dos testes com usuários reais:
-"{{FEEDBACKS_BRUTOS}}"
-
-Organize em 4 categorias de ação para o aprimoramento V1:
-1. O QUE FUNCIONOU BEM (Manter e valorizar):
-2. PONTOS DE CONFUSÃO (Ajustar clareza ou instrução):
-3. BUGS OU ERROS CRÍTICOS (Corrigir na coluna 'Agora' do Roadmap):
-4. SUGESTÕES PARA O FUTURO (Guardar nas colunas 'Depois' ou 'Futuramente'):`,
-    variables: [
-      { key: "NOME_PROJETO", label: "Nome do Projeto", placeholder: "Ex: Rede de Apoio Estudantil" },
-      { key: "FEEDBACKS_BRUTOS", label: "Anotações dos testes", placeholder: "Cole aqui as opiniões e comentários dos usuários" }
-    ]
-  },
-  {
-    id: "p-roadmap",
-    title: "Gerador de Roadmap de Evolução",
-    purpose: "Organizar tarefas em Agora, Depois e Futuramente",
-    usageMoment: "Encontro 3 — VALIDAR E EVOLUIR",
-    category: "prototipo",
-    templateText: `Crie um Roadmap claro para a evolução do projeto "{{NOME_PROJETO}}" respondendo: O que faremos primeiro, depois e futuramente?
-
-Necessidades e feedbacks identificados: "{{MELHORIAS_DESEJADAS}}"
-
-Estruture em 3 colunas prioritárias:
-1. AGORA (Ajustes indispensáveis para o protótipo V1 no Encontro 3):
-2. DEPOIS (Melhorias necessárias para as próximas semanas pós-workshop):
-3. FUTURAMENTE (Simplificação ou criação de novas funcionalidades de longo prazo):`,
-    variables: [
-      { key: "NOME_PROJETO", label: "Nome do Projeto", placeholder: "Ex: ReciclaEscola" },
-      { key: "MELHORIAS_DESEJADAS", label: "Melhorias e correções desejadas", placeholder: "Liste as correções e melhorias identificadas" }
-    ]
-  },
-  {
-    id: "p-pitch",
-    title: "Construtor de Roteiro de Pitch",
-    purpose: "Estruturar a apresentação do Pitch final",
-    usageMoment: "Encontro 4 — COMUNICAR",
-    category: "pitch",
-    templateText: `Escreva o Roteiro do Pitch para a equipe do projeto "{{NOME_PROJETO}}".
-
-Informações da trajetória:
-- Problema e Diagnóstico: "{{PROBLEMA}}"
-- Solução e Protótipo (V1): "{{SOLUCAO}}"
-- Uso da IA como Parceira Cognitiva: "{{PAPEL_IA}}"
-- Resultados dos Testes: "{{TESTES}}"
-- Próximos Passos (Roadmap): "{{PROXIMO_PASSO}}"
-
-Estruture o roteiro com clareza em 5 blocos:
-1. O PROBLEMA E O DIAGNÓSTICO (O desafio real investigado)
-2. A SOLUÇÃO E O PROTÓTIPO V1 (Como funciona e o valor gerado)
-3. O USO DA IA E BOAS PRÁTICAS (Como a IA ajudou como parceira de reflexão)
-4. RESULTADOS DOS TESTES (O que aprendemos com os usuários)
-5. PRÓXIMOS PASSOS E ENCERRAMENTO (O roadmap e mensagem final)
-
-Mantenha a contagem de palavras ajustada para uma apresentação clara e pausada (~350 palavras).`,
-    variables: [
-      { key: "NOME_PROJETO", label: "Nome do Projeto", placeholder: "Ex: ConectaJovem" },
-      { key: "PROBLEMA", label: "Problema e Diagnóstico", placeholder: "Breve descrição do problema" },
-      { key: "SOLUCAO", label: "Solução e Protótipo", placeholder: "O que a equipe construiu" },
-      { key: "PAPEL_IA", label: "Papel da IA", placeholder: "Como a IA auxiliou na jornada" },
-      { key: "TESTES", label: "Resultado dos Testes", placeholder: "Principais aprendizados dos testes" },
-      { key: "PROXIMO_PASSO", label: "Próximos Passos", placeholder: "Roadmap e futuro do projeto" }
-    ]
-  }
-];
-
+/**
+ * FAQ OFICIAL DA EMENTA V2.2
+ */
 export const FAQ_ITEMS: FAQItem[] = [
   {
-    question: "Para quem é o workshop?",
-    answer: "O workshop é destinado a jovens e estudantes de 13 a 17 anos."
+    question: "O que é a Fornologia V2.2?",
+    answer: "A Fornologia é uma metodologia autoral de investigação, criação, planejamento, experimentação, aprendizagem e comunicação de projetos. Ela não oferece respostas prontas; ela faz as perguntas certas, na ordem certa, para que equipes construam suas próprias soluções com autonomia e com apoio da IA como parceira cognitiva."
   },
   {
-    question: "É preciso saber programar para participar?",
-    answer: "Não! O foco do workshop é a introdução prática e crítica à IA Generativa, formulação de boas perguntas, investigação de problemas e prototipação acessível com apoio da IA."
+    question: "Para quem é indicado o workshop?",
+    answer: "O workshop é voltado para jovens e estudantes de 12 a 17 anos (Ensino Fundamental II e Ensino Médio), sob autorização parental. É aplicável em escolas, organizações sociais e centros de inovação pedagógica."
   },
   {
-    question: "Quantos encontros e qual é a carga horária total?",
-    answer: "São 12 horas totais, distribuídas em quatro encontros de três horas (presencial ou híbrido)."
+    question: "É preciso saber programar ou dominar informática avançada?",
+    answer: "Não. Não há pré-requisito de programação. O foco é metodológico, crítico e socrático: aprender a formular boas perguntas, investigar causas-raiz, reconhecer recursos e prototipar com ética e autonomia."
   },
   {
-    question: "Quantos participantes e como são organizados?",
-    answer: "A oficina acolhe até 20 estudantes, organizados em até quatro equipes."
+    question: "Quantos encontros e qual é a carga horária?",
+    answer: "A carga horária padrão é de 12 horas, distribuídas em 4 encontros práticos de 3 horas (180 minutos cada). Essa divisão de tempo é uma referência de facilitação flexível; as 12 atividades da jornada possuem progressão lógica independente dos encontros."
   },
   {
-    question: "O workshop ensina apenas a usar ferramentas de IA?",
-    answer: "Não. A formação não se limita a ensinar comandos. Desenvolvemos o pensamento crítico: formular boas perguntas, compreender problemas antes de buscar respostas, desconfiar de respostas simples, verificar informações, proteger dados pessoais e assumir responsabilidade pelas decisões."
+    question: "Qual é a relação entre atividades, prompts e artefatos na V2.2?",
+    answer: "A Fornologia V2.2 possui uma estrutura rigorosa de 12 tríades canônicas: cada atividade canônica (A01 a A12) possui um prompt de condução (P01 a P12) e consolida um artefato correspondente (AF01 a AF12). A visão unificada de todos os artefatos compõe o Documento Mestre do Projeto."
   },
   {
-    question: "Como é tratado o mapeamento individual de desafios?",
-    answer: "O mapeamento dos desafios individuais é realizado de forma privada e não será recolhido ou avaliado, e os participantes não serão obrigados a compartilhar seu conteúdo."
+    question: "O que é o Documento Mestre do Projeto?",
+    answer: "É uma projeção dinâmica e consolidada de todo o conhecimento construído pela equipe ao longo da jornada (AF01 a AF12). Ele não é uma entidade separada nem armazena versões obsoletas; ele reflete o estado autoritativo mais recente do projeto."
   },
   {
-    question: "Quais são os documentos produzidos ao longo dos 4 encontros?",
-    answer: "As equipes produzem com apoio da IA: Briefing V0, PRD V0, definição do MVP, Protótipo V0, Business Model Canvas (BMC), Roadmap de evolução, Protótipo V1 e Roteiro de Pitch."
+    question: "O que significa 'Metabolização Socrática' e 'Primazia da Pergunta'?",
+    answer: "Primazia da Pergunta significa que o sistema sempre pergunta antes de sugerir, estimulando a reflexão humana. Metabolização Socrática é o princípio pelo qual conceitos complexos são traduzidos em perguntas simples e cotidianas: o sistema conhece a estrutura, mas o participante é quem fornece o conteúdo."
+  },
+  {
+    question: "Como o workshop protege os dados dos jovens e cumpre a LGPD?",
+    answer: "Em estrita conformidade com o Art. 14 da LGPD, os desafios individuais são privados (armazenados localmente no navegador, sem recolhimento nem envio a servidores). Os estudantes são orientados a jamais inserir dados pessoais ou sensíveis nos prompts de IA."
+  },
+  {
+    question: "O que acontece se a equipe não conseguir testar o protótipo no mundo real?",
+    answer: "A Fornologia opera sob o Princípio da Evidência antes da Afirmação: se não houve teste externo, o projeto é registrado de forma honesta e transparente com o status 'SEM EVIDÊNCIA EXTERNA / NÃO VALIDADO'. Nenhuma hipótese é forjada pela IA como se fosse validação."
   },
   {
     question: "Quem é o facilitador do workshop?",
-    answer: "Pedro Lago, fundador d'O Forno, gestor cultural, especialista no método TEvEP/HomoSapiens e criador da Fornologia."
+    answer: "Pedro Lago, criador da Fornologia e fundador d'O Forno, escola de planejamento e gestão de projetos."
+  }
+];
+
+/**
+ * CHECKLIST DO PACTO DE REVISÃO CRÍTICA (V2.2)
+ */
+export const CRITICAL_REVISION_CHECKLIST = [
+  {
+    id: "rev-1",
+    title: "Checagem de Fatos vs. Hipóteses",
+    description: "Verifique se suposições, hipóteses ou ideias não foram registradas como verdades comprovadas sem evidência real."
+  },
+  {
+    id: "rev-2",
+    title: "Alucinações e Dados Não Verificados",
+    description: "Confira referências, números e sugestões da IA para assegurar que nada foi forjado pelo modelo de linguagem."
+  },
+  {
+    id: "rev-3",
+    title: "Vieses, Generalizações e Estereótipos",
+    description: "Analise criticamente se as formulações não contêm preconceitos ou visões simplistas sobre o problema e as pessoas afetadas."
+  },
+  {
+    id: "rev-4",
+    title: "Agência e Voz Autoral da Equipe",
+    description: "Garanta que o artefato final represente o que a equipe realmente pensou, decidiu e aceitou, com suas próprias palavras."
+  }
+];
+
+/**
+ * CHECKLIST DE ÉTICA, PRIVACIDADE E PROTEÇÃO DE DADOS (LGPD / V2.2)
+ */
+export const AI_ETHICS_CHECKLIST = [
+  {
+    id: "eth-1",
+    title: "Proteção Estrita de Dados Pessoais (Art. 14 da LGPD)",
+    description: "Nunca digite nomes completos, documentos, endereços, contatos ou informações íntimas nos prompts de Inteligência Artificial."
+  },
+  {
+    id: "eth-2",
+    title: "Privacidade do Mapeamento Individual",
+    description: "O diagnóstico de desafios íntimos pertence unicamente ao estudante; não é avaliado, recolhido ou compartilhado sem sua autorização."
+  },
+  {
+    id: "eth-3",
+    title: "Delegação Consciente e Soberania Decisória",
+    description: "A IA pode sugerir, organizar e comparar, mas a decisão final é humana e inegociável."
+  },
+  {
+    id: "eth-4",
+    title: "Responsabilidade Social e Comunitária",
+    description: "A equipe é integralmente responsável pelo impacto, ética e comunicação das soluções que desenvolve."
   }
 ];

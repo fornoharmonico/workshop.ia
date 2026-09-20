@@ -3,6 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { LandingPage } from './components/landing/LandingPage';
+import { FakeLoginScreen } from './components/auth/FakeLoginScreen';
 import { Loader2 } from 'lucide-react';
 
 // Code-splitting: Lazy load heavy webapp workspace and secondary overlays
@@ -11,6 +12,8 @@ const TimerControl = lazy(() => import('./components/TimerControl').then(m => ({
 const ProjectionModal = lazy(() => import('./components/ProjectionModal').then(m => ({ default: m.ProjectionModal })));
 const BrandPreviewModal = lazy(() => import('./components/BrandPreviewModal').then(m => ({ default: m.BrandPreviewModal })));
 const PrivacyModal = lazy(() => import('./components/PrivacyModal').then(m => ({ default: m.PrivacyModal })));
+const OnboardingModal = lazy(() => import('./components/OnboardingModal').then(m => ({ default: m.OnboardingModal })));
+const ProjectIdentificationModal = lazy(() => import('./components/ProjectIdentificationModal').then(m => ({ default: m.ProjectIdentificationModal })));
 
 const WebappLoadingFallback: React.FC = () => (
   <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 py-20 px-4 text-center">
@@ -29,30 +32,36 @@ const WebappLoadingFallback: React.FC = () => (
 );
 
 const MainAppContent: React.FC = () => {
-  const { appState } = useApp();
+  const { appState, isWebappAuthenticated } = useApp();
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       <Navbar />
       
-      <div className="flex-1">
+      <main id="main-content" className="flex-1">
         {appState.currentView === 'landing' ? (
           <LandingPage />
+        ) : !isWebappAuthenticated ? (
+          <FakeLoginScreen />
         ) : (
           <Suspense fallback={<WebappLoadingFallback />}>
             <WebappLayout />
           </Suspense>
         )}
-      </div>
+      </main>
 
-      <Footer />
+      {appState.currentView === 'landing' && <Footer />}
 
-      <Suspense fallback={null}>
-        <TimerControl />
-        <ProjectionModal />
-        <BrandPreviewModal />
-        <PrivacyModal />
-      </Suspense>
+      {isWebappAuthenticated && (
+        <Suspense fallback={null}>
+          <TimerControl />
+          <ProjectionModal />
+          <BrandPreviewModal />
+          <PrivacyModal />
+          <OnboardingModal />
+          <ProjectIdentificationModal />
+        </Suspense>
+      )}
     </div>
   );
 };

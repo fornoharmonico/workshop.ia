@@ -28,8 +28,98 @@ import {
   ChevronRight,
   Target,
   Plus,
-  Trash2
+  Trash2,
+  Copy,
+  Check
 } from 'lucide-react';
+
+// Helper to format complete text of problem card for clipboard
+const formatProblemText = (p: MappedProblem): string => {
+  const cats = p.categories
+    .map(cId => PROBLEM_CATEGORIES.find(c => c.id === cId)?.name)
+    .filter(Boolean)
+    .join(', ');
+
+  const scalesStr = p.scales
+    .map(s => {
+      const scaleObj = PROBLEM_SCALES.find(sc => sc.id === s);
+      return scaleObj ? `${scaleObj.icon} ${scaleObj.label}` : s;
+    })
+    .join(', ');
+
+  const sections: string[] = [
+    `=== DESAFIO #${p.id}: ${p.title.toUpperCase()} ===`,
+    `\n❓ PERGUNTA / QUESTÃO CENTRAL:`,
+    `"${p.question}"`,
+  ];
+
+  if (cats) {
+    sections.push(`\n📂 CATEGORIAS: ${cats}`);
+  }
+  if (scalesStr) {
+    sections.push(`🌐 ESCALAS: ${scalesStr}`);
+  }
+
+  if (p.includes && p.includes.length > 0) {
+    sections.push(`\n📌 O QUE ESTE DESAFIO ABRANGE E INCLUI:`);
+    p.includes.forEach(inc => {
+      sections.push(`  • ${inc}`);
+    });
+  }
+
+  if (p.groupQuestions && p.groupQuestions.length > 0) {
+    sections.push(`\n🔍 QUESTÕES LEVANTADAS PELO GRUPO PARA INVESTIGAÇÃO:`);
+    p.groupQuestions.forEach(q => {
+      sections.push(`  ? ${q}`);
+    });
+  }
+
+  if (p.importantNote) {
+    sections.push(`\n⚠️ NOTA ÉTICA / PRINCÍPIO DE ABORDAGEM SOCIAL:`);
+    sections.push(`  ${p.importantNote}`);
+  }
+
+  if (p.hypotheses && p.hypotheses.length > 0) {
+    sections.push(`\n💡 HIPÓTESES DE SOLUÇÃO LEVANTADAS:`);
+    p.hypotheses.forEach(h => {
+      sections.push(`  • ${h}`);
+    });
+  }
+
+  if (p.tags && p.tags.length > 0) {
+    sections.push(`\n🏷️ TAGS: ${p.tags.join(' ')}`);
+  }
+
+  return sections.join('\n');
+};
+
+const copyTextToClipboard = async (text: string): Promise<boolean> => {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fallback to execCommand below
+  }
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '-9999px';
+    textarea.setAttribute('readonly', '');
+    document.body.appendChild(textarea);
+    textarea.select();
+    const success = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return success;
+  } catch (err) {
+    console.error('Failed to copy to clipboard:', err);
+    return false;
+  }
+};
 
 export const ProblemMapTab: React.FC = () => {
   const { appState, setAppState, setActiveWebappTab } = useApp();
@@ -100,6 +190,21 @@ export const ProblemMapTab: React.FC = () => {
         collectiveChallenge: prev.projectData?.collectiveChallenge || problem.title + ": " + problem.question,
       } as any
     }));
+  };
+
+  // State for copied context popup
+  const [copiedModalProblem, setCopiedModalProblem] = useState<MappedProblem | null>(null);
+  const [copiedProblemText, setCopiedProblemText] = useState<string>('');
+  const [isJustCopied, setIsJustCopied] = useState<boolean>(true);
+
+  // Triggered when user clicks "INVESTIGAR" on any card
+  const handleInvestigateProblem = async (problem: MappedProblem) => {
+    handleSelectProblem(problem);
+    const text = formatProblemText(problem);
+    setCopiedProblemText(text);
+    setIsJustCopied(true);
+    await copyTextToClipboard(text);
+    setCopiedModalProblem(problem);
   };
 
   // Add custom problem card handler
@@ -554,21 +659,23 @@ export const ProblemMapTab: React.FC = () => {
                       </button>
 
                       <button
-                        onClick={() => handleSelectProblem(problem)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                        onClick={() => handleInvestigateProblem(problem)}
+                        className={`btn-interactive px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
                           isChosen
-                            ? 'bg-amber-500 text-slate-950 font-black shadow-md'
-                            : 'bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-800 dark:text-slate-200'
+                            ? 'bg-amber-500 text-slate-950 font-black ring-2 ring-amber-400/50 shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60'
                         }`}
+                        title={isChosen ? "Desafio selecionado (clique para copiar o contexto novamente)" : "Investigar este desafio e copiar todo o contexto"}
+                        aria-label={isChosen ? `Desafio #${problem.id} selecionado` : `Investigar desafio #${problem.id}`}
                       >
                         {isChosen ? (
                           <>
-                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                             <span>Selecionado</span>
                           </>
                         ) : (
                           <>
-                            <Bookmark className="w-3.5 h-3.5" />
+                            <Bookmark className="w-3.5 h-3.5 shrink-0" />
                             <span>Investigar</span>
                           </>
                         )}
@@ -841,15 +948,139 @@ export const ProblemMapTab: React.FC = () => {
 
               <button
                 onClick={() => {
-                  handleSelectProblem(activeModalProblem);
+                  const prob = activeModalProblem;
                   setActiveModalProblem(null);
-                  setActiveWebappTab('jornada');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  handleInvestigateProblem(prob);
                 }}
                 className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Escolher este Desafio para Minha Equipe e Ir para a Jornada</span>
+                <span>Escolher este Desafio e Copiar Contexto</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* POPUP / MODAL: CONTEXTO COPIADO PARA ÁREA DE TRANSFERÊNCIA */}
+      {copiedModalProblem && (
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="copied-modal-title"
+        >
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            
+            {/* Close button */}
+            <button
+              onClick={() => setCopiedModalProblem(null)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              aria-label="Fechar popup"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Header Badge & Title */}
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 text-xs font-black shadow-2xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>CONTEXTO COPIADO PARA ÁREA DE TRANSFERÊNCIA</span>
+              </div>
+
+              <h3 id="copied-modal-title" className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+                Desafio #{copiedModalProblem.id} Selecionado com Sucesso!
+              </h3>
+
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Todo o conteúdo textual e diretrizes deste card foram transferidos para a sua área de transferência (como se tivesse pressionado <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono text-2xs font-bold text-slate-800 dark:text-slate-200">Ctrl + C</kbd>). Você pode colá-lo em anotações da equipe, documentos ou prompts de IA.
+              </p>
+            </div>
+
+            {/* Card Content Preview Box */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1 min-w-0">
+                  <span className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider block">
+                    Título do Desafio:
+                  </span>
+                  <h4 className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug break-words">
+                    {copiedModalProblem.title}
+                  </h4>
+                </div>
+                <button
+                  onClick={async () => {
+                    await copyTextToClipboard(copiedProblemText);
+                    setIsJustCopied(true);
+                    setTimeout(() => setIsJustCopied(false), 2000);
+                  }}
+                  className="shrink-0 px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                  title="Copiar novamente o texto completo"
+                >
+                  {isJustCopied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-600 dark:text-emerald-400 text-xs">Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copiar de novo</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-600 dark:text-slate-300 italic font-medium leading-relaxed bg-white dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                "{copiedModalProblem.question}"
+              </p>
+
+              {copiedModalProblem.tags && copiedModalProblem.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {copiedModalProblem.tags.slice(0, 4).map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-300"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Invitation to proceed to "2. ATIVIDADE ATUAL" */}
+            <div className="p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-wide">
+                <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>Próxima Etapa da Oficina</span>
+              </div>
+              <p className="text-xs text-amber-950 dark:text-amber-100 leading-relaxed font-medium">
+                Siga agora para a seção <strong>"2. ATIVIDADE ATUAL"</strong> para aplicar este contexto investigativo no roteiro prático da sua equipe.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setCopiedModalProblem(null)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Permanecer no Mapa
+              </button>
+
+              <button
+                id="btn-confirm-go-to-activity"
+                onClick={() => {
+                  setCopiedModalProblem(null);
+                  setActiveWebappTab('atividade');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="btn-interactive w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Seguir para 2. ATIVIDADE ATUAL</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
             </div>
 

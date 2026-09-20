@@ -1,296 +1,232 @@
+/**
+ * GRAFO CANÔNICO DE CONTEXTO, DEPENDÊNCIAS, ESTADOS E HANDOFFS — FORNOLOGIA V2.2
+ * Workshop Inteligência Artificial Aplicada: do Problema ao Protótipo
+ * 
+ * PRINCÍPIOS FUNDAMENTAIS V2.2:
+ * 1. Contexto disponível → use.
+ * 2. Contexto ausente → pergunte socrática e progressivamente.
+ * 3. Primazia da Pergunta: O participante não deve reconstruir o que o sistema já sabe.
+ * 4. Agência Humana Absoluta: A IA não toma decisões de projeto silenciosamente.
+ * 5. Hierarquia Epistemológica de Autoridade:
+ *    - 1º: Decisão humana explícita mais recente da equipe.
+ *    - 2º: Artefatos canônicos consolidados (AF01 a AF12).
+ *    - 3º: Evidências reais observadas diretamente em testes de campo.
+ *    - 4º: Hipóteses em aberto (nunca promova hipótese a fato sem teste).
+ *    - 5º: Recomendações e provocações da IA.
+ * 
+ * MATRIZ DE DEPENDÊNCIAS DOS 12 PROMPTS CANÔNICOS (P01 A P12):
+ * P01 (A01 ↔ AF01): Problema e Desafios.
+ * P02 (A02 ↔ AF02): AF01 (Problema Escolhido).
+ * P03 (A03 ↔ AF03): AF01, AF02.
+ * P04 (A04 ↔ AF04): AF01, AF02, AF03.
+ * P05 (A05 ↔ AF05): AF01, AF02, AF03, AF04.
+ * P06 (A06 ↔ AF06): AF05 (Briefing V0).
+ * P07 (A07 ↔ AF07): AF06 (Briefing V1).
+ * P08 (A08 ↔ AF08): AF06 (Briefing V1), AF07 (Especificação / PRD).
+ * P09 (A09 ↔ AF09): AF08 (MVP + Protótipo V0 + Plano de Realização).
+ * P10 (A10 ↔ AF10): AF06, AF08, AF09.
+ * P11 (A11 ↔ AF11): AF06, AF09, AF10.
+ * P12 (A12 ↔ AF12): AF01 a AF11 (Contexto Integral do Projeto).
+ */
+
+import { PromptId, ActivityId } from '../types/canonicalV2';
+import { EncounterId } from '../types/canonical';
 import { ArtifactVersion, ContextPackConfig, ProjectStateV2 } from '../types/workshop';
 
-export interface BuiltContextPack {
-  formattedText: string;
-  snapshotsIncluded: { key: string; label: string; value: string; status: string }[];
-  artifactsIncluded: { artifactId: string; versionName: string; versionId: string; isRequired: boolean }[];
-  authorityInstruction?: string;
-  hasMissingRequiredArtifacts: boolean;
-  missingArtifactIds: string[];
-}
-
-export interface PromptDependencyV3 {
-  promptNumber: number;
-  promptId: string;
+export interface CanonicalPromptDependency {
+  promptId: PromptId;
+  order: number;
   title: string;
-  encounterId: 1 | 2 | 3 | 4;
-  encounterTitle: string;
-  movement?: string;
-  inputPrincipalDescription: string;
+  activityId: ActivityId;
+  encounterId: EncounterId;
+  movement: string;
   requiredArtifacts: string[];
   optionalArtifacts: string[];
   globalVariables: string[];
   outputArtifact: string;
+  requiresRealEvidence?: boolean;
 }
 
-// Canonical V3.2 Prompt Dependency Matrix (Contexto Mínimo Suficiente)
-export const V3_PROMPT_DEPENDENCIES: Record<number, PromptDependencyV3> = {
-  1: {
-    promptNumber: 1,
-    promptId: 'prompt-01',
-    title: 'Diagnóstico do Problema',
+export const CANONICAL_DEPENDENCY_MATRIX: Record<PromptId, CanonicalPromptDependency> = {
+  P01: {
+    promptId: 'P01',
+    order: 1,
+    title: 'Mapear e Escolher o Problema',
+    activityId: 'A01',
     encounterId: 1,
-    encounterTitle: 'Encontro 1 — INVESTIGAR',
-    movement: 'INVESTIGAR',
-    inputPrincipalDescription: 'Problema escolhido humanamente pela equipe no Brainstorm inicial ({PROBLEMA})',
+    movement: 'INVESTIGAR E DIRECIONAR',
     requiredArtifacts: [],
     optionalArtifacts: ['BANCO_DE_IDEIAS'],
-    globalVariables: ['PROBLEMA', 'NOME_DO_PROJETO', 'PUBLICO_ALVO'],
-    outputArtifact: 'DIAGNOSTICO_DO_PROBLEMA',
+    globalVariables: ['PROBLEMA', 'NOME_DO_PROJETO', 'CONTEXTO_DA_TURMA'],
+    outputArtifact: 'AF01',
   },
-  2: {
-    promptNumber: 2,
-    promptId: 'prompt-02',
-    title: 'Círculo Dourado (Golden Circle) — Por quê? Como? O quê?',
+  P02: {
+    promptId: 'P02',
+    order: 2,
+    title: 'Diagnosticar o Problema',
+    activityId: 'A02',
     encounterId: 1,
-    encounterTitle: 'Encontro 1 — INVESTIGAR',
-    movement: 'INVESTIGAR → DIREÇÃO DE SOLUÇÃO',
-    inputPrincipalDescription: 'Diagnóstico do Problema ({DIAGNOSTICO_DO_PROBLEMA})',
-    requiredArtifacts: ['DIAGNOSTICO_DO_PROBLEMA'],
+    movement: 'INVESTIGAR E DIRECIONAR',
+    requiredArtifacts: ['AF01'],
     optionalArtifacts: ['BANCO_DE_IDEIAS'],
     globalVariables: ['NOME_DO_PROJETO'],
-    outputArtifact: 'GOLDEN_CIRCLE',
+    outputArtifact: 'AF02',
   },
-  3: {
-    promptNumber: 3,
-    promptId: 'prompt-03',
-    title: 'Construção do Briefing V0',
+  P03: {
+    promptId: 'P03',
+    order: 3,
+    title: 'Mapear Recursos Disponíveis e Necessários',
+    activityId: 'A03',
+    encounterId: 1,
+    movement: 'INVESTIGAR E DIRECIONAR',
+    requiredArtifacts: ['AF01', 'AF02'],
+    optionalArtifacts: ['BANCO_DE_IDEIAS'],
+    globalVariables: ['NOME_DO_PROJETO'],
+    outputArtifact: 'AF03',
+  },
+  P04: {
+    promptId: 'P04',
+    order: 4,
+    title: 'Definir Propósito e Direção',
+    activityId: 'A04',
+    encounterId: 1,
+    movement: 'INVESTIGAR E DIRECIONAR',
+    requiredArtifacts: ['AF01', 'AF02', 'AF03'],
+    optionalArtifacts: [],
+    globalVariables: ['NOME_DO_PROJETO'],
+    outputArtifact: 'AF04',
+  },
+  P05: {
+    promptId: 'P05',
+    order: 5,
+    title: 'Construir Briefing V0',
+    activityId: 'A05',
     encounterId: 2,
-    encounterTitle: 'Encontro 2 — DEFINIR E MATERIALIZAR',
     movement: 'DEFINIR E MATERIALIZAR',
-    inputPrincipalDescription: 'Diagnóstico do Problema + Círculo Dourado',
-    requiredArtifacts: ['DIAGNOSTICO_DO_PROBLEMA', 'GOLDEN_CIRCLE'],
+    requiredArtifacts: ['AF01', 'AF02', 'AF03', 'AF04'],
     optionalArtifacts: [],
-    globalVariables: [],
-    outputArtifact: 'BRIEFING_V0',
+    globalVariables: ['NOME_DO_PROJETO'],
+    outputArtifact: 'AF05',
   },
-  4: {
-    promptNumber: 4,
-    promptId: 'prompt-04',
-    title: 'Revisão Crítica e Briefing V1',
+  P06: {
+    promptId: 'P06',
+    order: 6,
+    title: 'Revisar Criticamente (Briefing V1)',
+    activityId: 'A06',
     encounterId: 2,
-    encounterTitle: 'Encontro 2 — DEFINIR E MATERIALIZAR',
     movement: 'DEFINIR E MATERIALIZAR',
-    inputPrincipalDescription: 'Briefing V0 ({BRIEFING_V0})',
-    requiredArtifacts: ['BRIEFING_V0'],
+    requiredArtifacts: ['AF05'],
     optionalArtifacts: [],
     globalVariables: [],
-    outputArtifact: 'BRIEFING_V1',
+    outputArtifact: 'AF06',
   },
-  5: {
-    promptNumber: 5,
-    promptId: 'prompt-05',
-    title: 'PRD V0 — Como a Solução Precisa Funcionar',
+  P07: {
+    promptId: 'P07',
+    order: 7,
+    title: 'Definir Como a Solução Precisa Funcionar (Especificação / PRD)',
+    activityId: 'A07',
     encounterId: 2,
-    encounterTitle: 'Encontro 2 — DEFINIR E MATERIALIZAR',
     movement: 'DEFINIR E MATERIALIZAR',
-    inputPrincipalDescription: 'Briefing V1 ({BRIEFING_V1})',
-    requiredArtifacts: ['BRIEFING_V1'],
+    requiredArtifacts: ['AF06'],
     optionalArtifacts: [],
     globalVariables: [],
-    outputArtifact: 'PRD_V0',
+    outputArtifact: 'AF07',
   },
-  6: {
-    promptNumber: 6,
-    promptId: 'prompt-06',
-    title: 'Definição do MVP',
+  P08: {
+    promptId: 'P08',
+    order: 8,
+    title: 'Projetar e Materializar o MVP (MVP + Protótipo V0)',
+    activityId: 'A08',
     encounterId: 2,
-    encounterTitle: 'Encontro 2 — DEFINIR E MATERIALIZAR',
     movement: 'DEFINIR E MATERIALIZAR',
-    inputPrincipalDescription: 'Briefing V1 + PRD V0',
-    requiredArtifacts: ['BRIEFING_V1', 'PRD_V0'],
+    requiredArtifacts: ['AF06', 'AF07'],
     optionalArtifacts: [],
     globalVariables: [],
-    outputArtifact: 'MVP',
+    outputArtifact: 'AF08',
   },
-  7: {
-    promptNumber: 7,
-    promptId: 'prompt-07',
-    title: 'Do MVP ao Protótipo V0',
-    encounterId: 2,
-    encounterTitle: 'Encontro 2 — DEFINIR E MATERIALIZAR',
-    movement: 'DEFINIR E MATERIALIZAR',
-    inputPrincipalDescription: 'MVP + PRD V0',
-    requiredArtifacts: ['MVP', 'PRD_V0'],
-    optionalArtifacts: [],
-    globalVariables: [],
-    outputArtifact: 'PROTOTIPO_V0',
-  },
-  8: {
-    promptNumber: 8,
-    promptId: 'prompt-08',
-    title: 'Planejamento do Teste e Coleta de Evidências',
-    encounterId: 2,
-    encounterTitle: 'Encontro 2 — DEFINIR E MATERIALIZAR',
-    movement: 'DEFINIR E MATERIALIZAR → VALIDAR',
-    inputPrincipalDescription: 'MVP + Protótipo V0',
-    requiredArtifacts: ['MVP', 'PROTOTIPO_V0'],
-    optionalArtifacts: [],
-    globalVariables: [],
-    outputArtifact: 'PLANO_DE_TESTE',
-  },
-  9: {
-    promptNumber: 9,
-    promptId: 'prompt-09',
-    title: 'Síntese de Evidências',
+  P09: {
+    promptId: 'P09',
+    order: 9,
+    title: 'Testar, Aprender e Definir Evolução V0→V1',
+    activityId: 'A09',
     encounterId: 3,
-    encounterTitle: 'Encontro 3 — VALIDAR E EVOLUIR',
     movement: 'VALIDAR E EVOLUIR',
-    inputPrincipalDescription: 'Protótipo V0 + Plano de Teste + Evidências Brutas',
-    requiredArtifacts: ['PROTOTIPO_V0', 'PLANO_DE_TESTE', 'EVIDENCIAS_BRUTAS'],
+    requiredArtifacts: ['AF08'],
     optionalArtifacts: [],
     globalVariables: [],
-    outputArtifact: 'SINTESE_DE_EVIDENCIAS',
+    outputArtifact: 'AF09',
+    requiresRealEvidence: true,
   },
-  10: {
-    promptNumber: 10,
-    promptId: 'prompt-10',
-    title: 'Modelo de Sustentabilidade — Business Model Canvas (BMC)',
+  P10: {
+    promptId: 'P10',
+    order: 10,
+    title: 'Modelar Sustentabilidade',
+    activityId: 'A10',
     encounterId: 3,
-    encounterTitle: 'Encontro 3 — VALIDAR E EVOLUIR',
     movement: 'VALIDAR E EVOLUIR',
-    inputPrincipalDescription: 'Briefing V1 + MVP',
-    requiredArtifacts: ['BRIEFING_V1', 'MVP'],
-    optionalArtifacts: ['SINTESE_DE_EVIDENCIAS'],
+    requiredArtifacts: ['AF06', 'AF08', 'AF09'],
+    optionalArtifacts: [],
     globalVariables: [],
-    outputArtifact: 'BMC',
+    outputArtifact: 'AF10',
   },
-  11: {
-    promptNumber: 11,
-    promptId: 'prompt-11',
-    title: 'Roadmap: Agora, Depois e Futuramente',
+  P11: {
+    promptId: 'P11',
+    order: 11,
+    title: 'Planejar Evolução (Roadmap + Linha do Tempo em 7 Etapas)',
+    activityId: 'A11',
     encounterId: 3,
-    encounterTitle: 'Encontro 3 — VALIDAR E EVOLUIR',
     movement: 'VALIDAR E EVOLUIR',
-    inputPrincipalDescription: 'MVP + Protótipo V0 + BMC',
-    requiredArtifacts: ['MVP', 'PROTOTIPO_V0', 'BMC'],
-    optionalArtifacts: ['SINTESE_DE_EVIDENCIAS'],
+    requiredArtifacts: ['AF06', 'AF09', 'AF10'],
+    optionalArtifacts: [],
     globalVariables: [],
-    outputArtifact: 'ROADMAP',
+    outputArtifact: 'AF11',
   },
-  12: {
-    promptNumber: 12,
-    promptId: 'prompt-12',
-    title: 'Evolução do Protótipo: V0 → V1',
-    encounterId: 3,
-    encounterTitle: 'Encontro 3 — VALIDAR E EVOLUIR',
-    movement: 'VALIDAR E EVOLUIR',
-    inputPrincipalDescription: 'MVP + Protótipo V0 + Roadmap',
-    requiredArtifacts: ['MVP', 'PROTOTIPO_V0', 'ROADMAP'],
-    optionalArtifacts: ['SINTESE_DE_EVIDENCIAS'],
-    globalVariables: [],
-    outputArtifact: 'PROTOTIPO_V1',
-  },
-  13: {
-    promptNumber: 13,
-    promptId: 'prompt-13',
-    title: 'Construção do Pitch',
+  P12: {
+    promptId: 'P12',
+    order: 12,
+    title: 'Comunicação Final (Pitch V1 + Roteiro Visual + Roteiro de Ensaio/Simulação)',
+    activityId: 'A12',
     encounterId: 4,
-    encounterTitle: 'Encontro 4 — COMUNICAR E REFLETIR',
-    movement: 'COMUNICAR E REFLETIR',
-    inputPrincipalDescription: 'Briefing V1 + MVP + Protótipo V1 + Roadmap',
-    requiredArtifacts: ['BRIEFING_V1', 'MVP', 'PROTOTIPO_V1', 'ROADMAP'],
-    optionalArtifacts: ['SINTESE_DE_EVIDENCIAS', 'BMC'],
-    globalVariables: [],
-    outputArtifact: 'ESTRUTURA_DO_PITCH',
-  },
-  14: {
-    promptNumber: 14,
-    promptId: 'prompt-14',
-    title: 'Roteiro Visual da Apresentação',
-    encounterId: 4,
-    encounterTitle: 'Encontro 4 — COMUNICAR E REFLETIR',
-    movement: 'COMUNICAR E REFLETIR',
-    inputPrincipalDescription: 'Pitch Integral + Estrutura do Pitch',
-    requiredArtifacts: ['PITCH_INTEGRAL', 'ESTRUTURA_DO_PITCH'],
-    optionalArtifacts: ['PROTOTIPO_V1'],
-    globalVariables: [],
-    outputArtifact: 'ROTEIRO_VISUAL',
-  },
-  15: {
-    promptNumber: 15,
-    promptId: 'prompt-15',
-    title: 'Ensaio e Refinamento do Pitch',
-    encounterId: 4,
-    encounterTitle: 'Encontro 4 — COMUNICAR E REFLETIR',
-    movement: 'COMUNICAR E REFLETIR',
-    inputPrincipalDescription: 'Pitch Integral + Síntese do Pitch',
-    requiredArtifacts: ['PITCH_INTEGRAL', 'SINTESE_DO_PITCH'],
-    optionalArtifacts: ['ROTEIRO_VISUAL'],
-    globalVariables: [],
-    outputArtifact: 'PITCH_REVISADO',
+    movement: 'COMUNICAR E CELEBRAR',
+    requiredArtifacts: ['AF01', 'AF02', 'AF03', 'AF04', 'AF06', 'AF07', 'AF08', 'AF09', 'AF10', 'AF11'],
+    optionalArtifacts: [],
+    globalVariables: ['NOME_DO_PROJETO'],
+    outputArtifact: 'AF12',
   },
 };
 
-const ARTIFACT_DISPLAY_NAMES: Record<string, string> = {
-  DIAGNOSTICO_DO_PROBLEMA: 'Diagnóstico do Problema',
-  diagnostico: 'Diagnóstico do Problema',
-  GOLDEN_CIRCLE: 'Círculo Dourado (Golden Circle)',
-  'golden-circle': 'Círculo Dourado (Golden Circle)',
+export const ARTIFACT_CANONICAL_NAMES: Record<string, string> = {
+  PROBLEMA: 'Problema Inicial Definido',
+  NOME_DO_PROJETO: 'Nome do Projeto',
+  PUBLICO_ALVO: 'Público-Alvo / Pessoas Afetadas',
   BANCO_DE_IDEIAS: 'Banco de Ideias',
-  BRIEFING_V0: 'Briefing V0',
-  briefing: 'Briefing do Projeto',
-  REVISAO_DO_BRIEFING: 'Revisão Crítica do Briefing',
-  BRIEFING_V1: 'Briefing V1',
-  PRD_V0: 'PRD V0 (Requisitos da Solução)',
-  prd: 'PRD V0 (Requisitos da Solução)',
-  MVP: 'Definição do MVP',
-  SINTESE_DO_MVP: 'Síntese do MVP',
-  mvp: 'Definição do MVP',
-  PROTOTIPO_V0: 'Protótipo V0',
-  prototipo: 'Protótipo Atual',
-  PLANO_DE_TESTE: 'Plano de Teste e Coleta de Evidências',
-  'user-tests': 'Plano de Teste e Coleta de Evidências',
-  EVIDENCIAS_BRUTAS: 'Evidências Brutas de Teste',
-  FEEDBACKS_BRUTOS: 'Evidências Brutas de Teste',
-  SINTESE_DE_EVIDENCIAS: 'Síntese de Evidências',
-  SINTESE_DOS_FEEDBACKS: 'Síntese de Evidências',
-  'evidence-summary': 'Síntese de Evidências',
-  BMC: 'Modelo de Sustentabilidade (BMC)',
-  bmc: 'Modelo de Sustentabilidade (BMC)',
-  ROADMAP: 'Roadmap de Evolução',
-  roadmap: 'Roadmap de Evolução',
-  REGISTRO_DE_EVOLUCAO: 'Registro de Evolução V0 → V1',
-  PROTOTIPO_V1: 'Protótipo V1',
-  ESTRUTURA_DO_PITCH: 'Estrutura do Pitch',
-  PITCH_INTEGRAL: 'Pitch Integral',
-  SINTESE_DO_PITCH: 'Síntese do Pitch',
-  ROTEIRO_DO_PITCH: 'Pitch Integral',
-  pitch: 'Pitch Integral',
-  ROTEIRO_VISUAL: 'Roteiro Visual da Apresentação',
-  APRESENTACAO_DO_PITCH: 'Roteiro Visual da Apresentação',
-  presentation: 'Roteiro Visual da Apresentação',
-  PITCH_REVISADO: 'Pitch Revisado',
-  SINTESE_CRITICA_DO_PITCH: 'Síntese Crítica do Pitch',
-  PREPARACAO_FINAL_DO_PITCH: 'Pitch Revisado + Síntese Crítica'
+  AF01: 'AF01 — Mapa de Problemas + Problema Escolhido',
+  AF02: 'AF02 — Diagnóstico do Problema',
+  AF03: 'AF03 — Mapa de Recursos',
+  AF04: 'AF04 — Propósito e Direção',
+  AF05: 'AF05 — Briefing V0',
+  AF06: 'AF06 — Briefing V1',
+  AF07: 'AF07 — Especificação de Funcionamento / PRD',
+  AF08: 'AF08 — MVP + Protótipo V0',
+  AF09: 'AF09 — Testes, Aprendizados e Plano de Evolução V0→V1',
+  AF10: 'AF10 — Modelo de Sustentabilidade',
+  AF11: 'AF11 — Roadmap + Linha do Tempo em 7 Etapas',
+  AF12: 'AF12 — Pitch V1 + Roteiro Visual + Roteiro de Ensaio/Simulação',
+  // Aliases transitórios para robustez
+  DIAGNOSTICO_DO_PROBLEMA: 'AF02 — Diagnóstico do Problema',
+  MAPA_RECURSOS: 'AF03 — Mapa de Recursos',
+  PROPOSITO_DIRECAO: 'AF04 — Propósito e Direção',
+  BRIEFING_V0: 'AF05 — Briefing V0',
+  BRIEFING_V1: 'AF06 — Briefing V1',
+  PRD_V0: 'AF07 — Especificação de Funcionamento / PRD',
+  MVP: 'AF08 — MVP + Protótipo V0',
+  PLANO_REALIZACAO: 'AF08 — Plano de Realização',
+  TESTES_EVIDENCIAS: 'AF09 — Testes e Aprendizados',
+  SUSTENTABILIDADE: 'AF10 — Modelo de Sustentabilidade',
+  ROADMAP: 'AF11 — Roadmap + Linha do Tempo em 7 Etapas',
+  PITCH_FINAL: 'AF12 — Pitch V1 + Kit de Comunicação',
 };
 
-const FIELD_LABELS: Record<string, string> = {
-  problem: 'PROBLEMA',
-  audience: 'PÚBLICO-ALVO / USUÁRIOS',
-  purpose: 'PROPÓSITO / OBJETIVO CENTRAL',
-  solution: 'CONCEITO DA SOLUÇÃO',
-  centralHypothesis: 'HIPÓTESE CENTRAL A TESTAR',
-  requirements: 'REQUISITOS ESSENCIAIS',
-  mvp: 'DEFINIÇÃO DE MVP',
-  currentPrototype: 'PROTÓTIPO ATUAL',
-  evidenceSummary: 'SÍNTESE DE EVIDÊNCIAS',
-  sustainabilityModel: 'MODELO DE SUSTENTABILIDADE',
-  roadmap: 'PRIORIDADES DO ROADMAP',
-  pitch: 'NARRATIVA DO PITCH',
-  diagnosisReviewSummary: 'RESUMO PARA REVISÃO DO DIAGNÓSTICO',
-  mvpSummary: 'SÍNTESE DO MVP',
-  rawEvidence: 'EVIDÊNCIAS BRUTAS DE TESTE',
-  evolutionRecord: 'REGISTRO DE EVOLUÇÃO V0 → V1',
-  pitchStructure: 'ESTRUTURA DO PITCH',
-  pitchSummary: 'SÍNTESE DO PITCH',
-  pitchRevised: 'PITCH REVISADO',
-  pitchCriticalSynthesis: 'SÍNTESE CRÍTICA DO PITCH',
-};
-
-/**
- * Cleanly formats the separation between PROMPT and CONTEXTO DO PROJETO.
- */
 export function formatPromptWithSeparation(promptText: string, contextPackText: string): string {
   const cleanPrompt = promptText.trim();
   const cleanContext = contextPackText.trim();
@@ -308,23 +244,15 @@ ${cleanPrompt}
 ${cleanContext}`;
 }
 
-/**
- * Builds the deterministic context text for any of the 15 V3.2 Prompts
- * using strictly the Contexto Mínimo Suficiente per the V3.2 Matrix.
- * 
- * Rules:
- * 1. Inject ONLY the inputs required by the V3.2 Matrix.
- * 2. Optional inputs are added ONLY if they exist and are non-empty.
- * 3. Never repeat previous artifacts already consolidated inside a newer artifact.
- * 4. Never inject drafts or superseded versions.
- * 5. If an input is absent, do not hallucinate; mark clearly as absent/pending so the IA asks for only what is missing.
- * 6. Never include intimate challenge mapping.
- */
-export function buildV3PromptContext(
-  promptNumber: number,
+export function buildCanonicalPromptContext(
+  promptId: PromptId,
   localContext: Record<string, string>
-): { formattedContext: string; includedArtifacts: string[]; missingArtifacts: string[] } {
-  const dep = V3_PROMPT_DEPENDENCIES[promptNumber];
+): {
+  formattedContext: string;
+  includedArtifacts: string[];
+  missingArtifacts: string[];
+} {
+  const dep = CANONICAL_DEPENDENCY_MATRIX[promptId];
   if (!dep) {
     return { formattedContext: '', includedArtifacts: [], missingArtifacts: [] };
   }
@@ -333,7 +261,7 @@ export function buildV3PromptContext(
   const includedArtifacts: string[] = [];
   const missingArtifacts: string[] = [];
 
-  // 1. Global Project Variables (ONLY if explicitly in globalVariables for this prompt, e.g., P01, P02)
+  // 1. Variáveis Globais
   if (dep.globalVariables && dep.globalVariables.length > 0) {
     const globalLines: string[] = [];
     dep.globalVariables.forEach((gKey) => {
@@ -348,62 +276,50 @@ export function buildV3PromptContext(
     }
   }
 
-  // 2. Required Artifacts (Minimal inputs required by V3.2)
+  // 2. Artefatos de Entrada Obrigatórios
   if (dep.requiredArtifacts && dep.requiredArtifacts.length > 0) {
     const reqLines: string[] = [];
     dep.requiredArtifacts.forEach((artKey) => {
       let val = localContext[artKey]?.trim();
-      // Legacy compatibility fallbacks
-      if (!val && artKey === 'SINTESE_DE_EVIDENCIAS') {
-        val = localContext['SINTESE_DOS_FEEDBACKS']?.trim();
-      }
-      if (!val && artKey === 'EVIDENCIAS_BRUTAS') {
-        val = localContext['FEEDBACKS_BRUTOS']?.trim();
-      }
-      if (!val && artKey === 'PITCH_INTEGRAL') {
-        val = localContext['ROTEIRO_DO_PITCH']?.trim();
-      }
-      if (!val && artKey === 'ROTEIRO_VISUAL') {
-        val = localContext['APRESENTACAO_DO_PITCH']?.trim();
+
+      // Mapeamentos de fallback para chaves com ou sem prefixo
+      if (!val) {
+        if (artKey === 'AF01') val = localContext['PROBLEMA_ESCOLHIDO']?.trim() || localContext['PROBLEMA']?.trim();
+        if (artKey === 'AF02') val = localContext['DIAGNOSTICO_DO_PROBLEMA']?.trim() || localContext['DIAGNOSTICO']?.trim();
+        if (artKey === 'AF03') val = localContext['MAPA_RECURSOS']?.trim() || localContext['MAPA_4D']?.trim();
+        if (artKey === 'AF04') val = localContext['PROPOSITO']?.trim() || localContext['GOLDEN_CIRCLE']?.trim();
+        if (artKey === 'AF05') val = localContext['BRIEFING_V0']?.trim();
+        if (artKey === 'AF06') val = localContext['BRIEFING_V1']?.trim();
+        if (artKey === 'AF07') val = localContext['PRD']?.trim() || localContext['PRD_V0']?.trim();
+        if (artKey === 'AF08') val = localContext['MVP']?.trim() || localContext['PROTOTIPO_V0']?.trim();
+        if (artKey === 'AF09') val = localContext['SINTESE_DE_EVIDENCIAS']?.trim() || localContext['APRENDIZADOS']?.trim();
+        if (artKey === 'AF10') val = localContext['BMC']?.trim() || localContext['SUSTENTABILIDADE']?.trim();
+        if (artKey === 'AF11') val = localContext['ROADMAP']?.trim();
       }
 
-      const displayName = ARTIFACT_DISPLAY_NAMES[artKey] || artKey;
+      const displayName = ARTIFACT_CANONICAL_NAMES[artKey] || artKey;
       if (val) {
         reqLines.push(`[ARTEFATO CONSOLIDADO: ${displayName.toUpperCase()}]\n${val}\n`);
         includedArtifacts.push(displayName);
       } else {
         missingArtifacts.push(displayName);
-        reqLines.push(`[ARTEFATO OBRIGATÓRIO: ${displayName.toUpperCase()}]\n(Não informado / Pendente de consolidação pela equipe. Solicite este insumo ou prossiga com perguntas focadas apenas nesta lacuna.)\n`);
+        reqLines.push(
+          `[ARTEFATO DE ENTRADA: ${displayName.toUpperCase()}]\n(Pendente de consolidação. Prossiga solicitando apenas o contexto mínimo ausente sem preencher decisões pela equipe.)\n`
+        );
       }
     });
-    sections.push('--- ARTEFATOS DE ENTRADA OBRIGATÓRIOS (V3.2) ---\n' + reqLines.join('\n'));
+    sections.push('--- ARTEFATOS DE ENTRADA OBRIGATÓRIOS (V2.2) ---\n' + reqLines.join('\n'));
   }
 
-  // 3. Optional Artifacts (Included ONLY if present and explicitly useful according to V3.2)
-  if (dep.optionalArtifacts && dep.optionalArtifacts.length > 0) {
-    const optLines: string[] = [];
-    dep.optionalArtifacts.forEach((artKey) => {
-      let val = localContext[artKey]?.trim();
-      if (!val && artKey === 'SINTESE_DE_EVIDENCIAS') {
-        val = localContext['SINTESE_DOS_FEEDBACKS']?.trim();
-      }
-      const displayName = ARTIFACT_DISPLAY_NAMES[artKey] || artKey;
-      if (val) {
-        optLines.push(`[ARTEFATO COMPLEMENTAR: ${displayName.toUpperCase()}]\n${val}\n`);
-        includedArtifacts.push(displayName);
-      }
-    });
-    if (optLines.length > 0) {
-      sections.push('--- ARTEFATOS COMPLEMENTARES ---\n' + optLines.join('\n'));
-    }
-  }
-
-  // 4. Compact Authority Guardrail (Prevents hallucination without token bloat)
+  // 3. Cláusula de Autoridade e Agência Humana (V2.2)
   sections.push(
-    '--- REGRAS DE AUTORIDADE DO CONTEXTO (V3.2) ---\n' +
-    '1. As informações acima foram decididas e consolidadas humanamente pela equipe.\n' +
-    '2. Não invente evidências, usuários, números, testes ou resultados adicionais.\n' +
-    '3. Respeite as fronteiras entre o que foi observado/decidido e o que ainda é hipótese em aberto.'
+    '--- HIERARQUIA EPISTEMOLÓGICA E REGRAS DE CONDUTA (V2.2) ---\n' +
+    '1. 1º NÍVEL (Máxima Autoridade): Decisão humana explícita mais recente da equipe.\n' +
+    '2. 2º NÍVEL: Artefatos canônicos consolidados (AF01 a AF12).\n' +
+    '3. 3º NÍVEL: Evidências reais observadas diretamente em testes com pessoas reais.\n' +
+    '4. 4º NÍVEL: Hipóteses em aberto (trate como hipótese, nunca como fato comprovado).\n' +
+    '5. 5º NÍVEL: Recomendações, sugestões e provocações socráticas da IA.\n' +
+    '⚠️ REGRA DE AGÊNCIA: A IA sugere e organiza; a equipe humana decide. É proibido inventar dados ou validações sem evidência externa.'
   );
 
   return {
@@ -413,10 +329,43 @@ export function buildV3PromptContext(
   };
 }
 
-/**
- * Builds the workshop activity context pack (deterministic mapping from ArtifactVersion[] and ProjectStateV2).
- * Follows Contexto Mínimo Suficiente (no duplicate representations, no obsolete versions, no bloated snapshots).
- */
+export function buildV3PromptContext(
+  promptNumber: number,
+  localContext: Record<string, string>
+): { formattedContext: string; includedArtifacts: string[]; missingArtifacts: string[] } {
+  const promptId = `P${promptNumber.toString().padStart(2, '0')}` as PromptId;
+  return buildCanonicalPromptContext(promptId, localContext);
+}
+
+export const V3_PROMPT_DEPENDENCIES = Object.values(CANONICAL_DEPENDENCY_MATRIX).reduce(
+  (acc, dep) => {
+    acc[dep.order] = {
+      promptNumber: dep.order,
+      promptId: dep.promptId,
+      title: dep.title,
+      encounterId: dep.encounterId as 1 | 2 | 3 | 4,
+      encounterTitle: `Encontro ${dep.encounterId}`,
+      movement: dep.movement,
+      inputPrincipalDescription: dep.requiredArtifacts.join(' + ') || 'Variáveis do projeto',
+      requiredArtifacts: dep.requiredArtifacts,
+      optionalArtifacts: dep.optionalArtifacts,
+      globalVariables: dep.globalVariables,
+      outputArtifact: dep.outputArtifact,
+    };
+    return acc;
+  },
+  {} as Record<number, any>
+);
+
+export interface BuiltContextPack {
+  formattedText: string;
+  snapshotsIncluded: { key: string; label: string; value: string; status: string }[];
+  artifactsIncluded: { artifactId: string; versionName: string; versionId: string; isRequired: boolean }[];
+  authorityInstruction?: string;
+  hasMissingRequiredArtifacts: boolean;
+  missingArtifactIds: string[];
+}
+
 export function buildContextPack(
   config: ContextPackConfig | undefined,
   artifactVersions: ArtifactVersion[],
@@ -437,20 +386,18 @@ export function buildContextPack(
   const artifactsIncluded: { artifactId: string; versionName: string; versionId: string; isRequired: boolean }[] = [];
   const missingArtifactIds: string[] = [];
 
-  // Helper to find latest consolidated artifact version by artifactId
   const findLatestConsolidatedArtifact = (artId: string): ArtifactVersion | undefined => {
     return artifactVersions
       .filter((v) => (v.artifactId === artId || v.id === artId) && v.status === 'CONSOLIDADO')
       .sort((a, b) => b.versionNumber - a.versionNumber)[0];
   };
 
-  // 1. Required Artifacts (Minimal official inputs)
   if (config.requiredArtifacts && config.requiredArtifacts.length > 0) {
     const reqLines: string[] = [];
-    reqLines.push('--- ARTEFATOS OBRIGATÓRIOS CONSOLIDADOS ---');
+    reqLines.push('--- ARTEFATOS OBRIGATÓRIOS CONSOLIDADOS (V2.2) ---');
     for (const artId of config.requiredArtifacts) {
       const version = findLatestConsolidatedArtifact(artId);
-      const displayName = ARTIFACT_DISPLAY_NAMES[artId] || artId;
+      const displayName = ARTIFACT_CANONICAL_NAMES[artId] || artId;
       if (version) {
         reqLines.push(`[ARTEFATO: ${version.versionName.toUpperCase()}]`);
         reqLines.push(version.content);
@@ -463,72 +410,20 @@ export function buildContextPack(
         });
       } else {
         missingArtifactIds.push(artId);
-        reqLines.push(`[ATENÇÃO: Artefato obrigatório "${displayName}" ainda não foi consolidado pela equipe. Prossiga solicitando apenas o contexto mínimo ausente sem inventar dados.]`);
+        reqLines.push(`[ATENÇÃO: Artefato obrigatório "${displayName}" pendente de consolidação pela equipe. Prossiga sem inventar dados.]`);
       }
     }
     sections.push(reqLines.join('\n'));
   }
 
-  // 2. Optional Artifacts (Only if existing and non-redundant)
-  if (config.optionalArtifacts && config.optionalArtifacts.length > 0) {
-    const optLines: string[] = [];
-    for (const artId of config.optionalArtifacts) {
-      const version = findLatestConsolidatedArtifact(artId);
-      if (version) {
-        optLines.push(`[ARTEFATO COMPLEMENTAR: ${version.versionName.toUpperCase()}]`);
-        optLines.push(version.content);
-        optLines.push('');
-        artifactsIncluded.push({
-          artifactId: artId,
-          versionName: version.versionName,
-          versionId: version.id,
-          isRequired: false,
-        });
-      }
-    }
-    if (optLines.length > 0) {
-      sections.push('--- ARTEFATOS COMPLEMENTARES ---\n' + optLines.join('\n'));
-    }
-  }
-
-  // 3. Compact Snapshot (Only included if no required artifacts are present or explicitly requested for early activities)
-  const hasArtifacts = artifactsIncluded.length > 0;
-  if (config.snapshotFields && config.snapshotFields.length > 0 && (!hasArtifacts || config.snapshotFields.length <= 3)) {
-    const snapshotLines: string[] = [];
-
-    for (const fieldKey of config.snapshotFields) {
-      const claim = (projectState as Record<string, any>)[fieldKey];
-      const label = FIELD_LABELS[fieldKey] || fieldKey.toUpperCase();
-
-      if (claim && claim.value && claim.value.trim() !== '') {
-        const statusTag = claim.epistemologicalStatus ? `[${claim.epistemologicalStatus}]` : '[REGISTRADO]';
-        snapshotLines.push(`• ${label} ${statusTag}: ${claim.value.trim()}`);
-
-        snapshotsIncluded.push({
-          key: fieldKey,
-          label,
-          value: claim.value.trim(),
-          status: claim.epistemologicalStatus || 'REGISTRADO',
-        });
-      }
-    }
-
-    if (snapshotLines.length > 0) {
-      sections.push('--- ESTADO PONTUAL DO PROJETO ---\n' + snapshotLines.join('\n'));
-    }
-  }
-
-  // 4. Epistemological Authority Hierarchy Instructions (V3.2 Compact)
   sections.push(
-    '--- REGRAS DE AUTORIDADE E CONFIANÇA DO CONTEXTO (V3.2) ---\n' +
-    '1. MAIOR AUTORIDADE: Artefatos explicitamente consolidados pela equipe.\n' +
-    '2. REGRA DE PREVALÊNCIA: Versões consolidadas mais recentes prevalecem sobre resumos antigos.\n' +
-    '3. REGRA ANTI-ALUCINAÇÃO: Não invente dados, números ou feedbacks. Não promova hipóteses a fatos sem validação humana.'
+    '--- REGRAS DE AUTORIDADE E CONFIANÇA DO CONTEXTO (V2.2) ---\n' +
+    '1. 1º Nível: Decisão humana explícita mais recente.\n' +
+    '2. 2º Nível: Versões consolidadas dos artefatos canônicos.\n' +
+    '3. 3º Nível: Evidências reais observadas em campo.\n' +
+    '4. 4º Nível: Hipóteses em validação (nunca promova hipótese a fato).\n' +
+    '5. Regra anti-alucinação: Não invente feedbacks ou validações externas.'
   );
-
-  if (config.authorityInstructions) {
-    sections.push(config.authorityInstructions);
-  }
 
   return {
     formattedText: sections.join('\n\n'),

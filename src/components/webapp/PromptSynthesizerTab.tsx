@@ -3,7 +3,7 @@ import {
   Sparkles, Copy, Check, Search, ChevronDown, ChevronUp, 
   Bot, Sliders, CheckCircle2, Lightbulb, ArrowRight, Layers, FileText
 } from 'lucide-react';
-import { OFFICIAL_PROMPTS, OfficialPrompt } from '../../data/officialPrompts';
+import { OFFICIAL_PROMPTS_V3 as OFFICIAL_PROMPTS, OfficialPromptV3 as OfficialPrompt } from '../../data/officialPrompts';
 import { useApp } from '../../context/AppContext';
 import { 
   V3_PROMPT_DEPENDENCIES, 
@@ -15,53 +15,46 @@ export const PromptSynthesizerTab: React.FC = () => {
   const { state, updateProjectData, setActiveWebappTab } = useApp();
   const projectData = state.projectData || {};
 
-  // Local state for context variables and artifacts V3.2
+  // Local state for context variables and artifacts V2.2
   const [localContext, setLocalContext] = useState<Record<string, string>>({
     // Variáveis Globais
     NOME_DO_PROJETO: projectData.projectName || '',
     PROBLEMA: projectData.collectiveChallenge || projectData.solutionProblemSummary || '',
     PUBLICO_ALVO: projectData.solutionTargetAudience || projectData.bmcCustomerSegments || '',
     BANCO_DE_IDEIAS: projectData.collectiveBrainstormNotes || projectData.parkingLotNotes || '',
+    CONTEXTO_DA_TURMA: '',
 
-    // Artefatos V3.2 (nunca vinculados ao Mapeamento Íntimo)
-    DIAGNOSTICO_DO_PROBLEMA: projectData.v3ProblemDiagnosis || (projectData.phdProblems 
-      ? `PROBLEMAS:\n${projectData.phdProblems}\n\nHIPÓTESES:\n${projectData.phdHypotheses || ''}\n\nDÚVIDAS:\n${projectData.phdDoubts || ''}\n\nCAUSA-RAIZ:\n${projectData.rootCause || ''}` 
-      : ''),
-    GOLDEN_CIRCLE: projectData.v3GoldenCircle || (projectData.goldenCircleWhy 
-      ? `POR QUÊ: ${projectData.goldenCircleWhy}\nCOMO: ${projectData.goldenCircleHow || ''}\nO QUÊ: ${projectData.goldenCircleWhat || ''}` 
-      : ''),
-    BRIEFING_V0: projectData.v3BriefingV0 || (projectData.briefingWhatWeAreTryingToDo 
-      ? `O que estamos tentando fazer: ${projectData.briefingWhatWeAreTryingToDo}\nContexto: ${projectData.briefingContext || ''}` 
-      : ''),
-    REVISAO_DO_BRIEFING: projectData.v3BriefingReview || '',
-    BRIEFING_V1: projectData.v3BriefingV1 || (projectData.briefingWhatWeAreTryingToDo 
-      ? `Briefing V1 Consolidado:\n${projectData.briefingWhatWeAreTryingToDo}\nContexto: ${projectData.briefingContext || ''}` 
-      : ''),
-    PRD_V0: projectData.v3PrdV0 || (projectData.prdHowItShouldWork 
-      ? `Funcionamento: ${projectData.prdHowItShouldWork}\nRequisitos: ${projectData.prdRequirements || ''}` 
-      : ''),
-    MVP: projectData.v3Mvp || (projectData.mvpSmallestTestableVersion 
-      ? `MVP: ${projectData.mvpSmallestTestableVersion}\nRecursos: ${projectData.mvpCoreFeatures || ''}` 
-      : ''),
-    SINTESE_DO_MVP: '',
-    PROTOTIPO_V0: projectData.v3PrototypeV0 || projectData.prototypeLinkOrDescription || '',
+    // Artefatos Canônicos AF01 a AF12 (V2.2)
+    AF01: projectData.collectiveChallenge || projectData.solutionProblemSummary || '',
+    AF02: projectData.v3ProblemDiagnosis || '',
+    AF03: projectData.v3Mapa4D || '',
+    AF04: projectData.v3GoldenCircle || '',
+    AF05: projectData.v3BriefingV0 || '',
+    AF06: projectData.v3BriefingV1 || '',
+    AF07: projectData.v3PrdV0 || '',
+    AF08: projectData.v3Mvp || projectData.v3PrototypeV0 || '',
+    AF09: projectData.v3EvidenceSummary || projectData.v3RawFeedbacks || '',
+    AF10: projectData.v3Bmc || '',
+    AF11: projectData.v3Roadmap || '',
+    AF12: projectData.v3PitchScript || '',
+
+    // Aliases para preenchimento legado/amigável
+    DIAGNOSTICO_DO_PROBLEMA: projectData.v3ProblemDiagnosis || '',
+    MAPA_4D: projectData.v3Mapa4D || '',
+    GOLDEN_CIRCLE: projectData.v3GoldenCircle || '',
+    BRIEFING_V0: projectData.v3BriefingV0 || '',
+    BRIEFING_V1: projectData.v3BriefingV1 || '',
+    PRD_V0: projectData.v3PrdV0 || '',
+    MVP: projectData.v3Mvp || '',
+    PROTOTIPO_V0: projectData.v3PrototypeV0 || '',
     PLANO_DE_TESTE: projectData.v3TestPlan || '',
-    EVIDENCIAS_BRUTAS: projectData.v3RawFeedbacks || projectData.prototypeUserFeedback || projectData.bugsAndFixes || '',
-    SINTESE_DE_EVIDENCIAS: projectData.v3EvidenceSummary || projectData.v3FeedbackSynthesis || projectData.prototypeUserFeedback || '',
-    BMC: projectData.v3Bmc || (projectData.bmcValueProposition 
-      ? `Proposta de Valor: ${projectData.bmcValueProposition}\nSustentabilidade: ${projectData.bmcSustainability || ''}` 
-      : ''),
-    ROADMAP: projectData.v3Roadmap || (projectData.roadmapNow 
-      ? `AGORA: ${projectData.roadmapNow}\nDEPOIS: ${projectData.roadmapNext || ''}\nFUTURAMENTE: ${projectData.roadmapFuture || ''}` 
-      : ''),
-    REGISTRO_DE_EVOLUCAO: '',
-    PROTOTIPO_V1: projectData.v3PrototypeV1 || projectData.prototypeLinkOrDescription || '',
-    ESTRUTURA_DO_PITCH: '',
-    PITCH_INTEGRAL: projectData.v3PitchScript || projectData.pitchScriptText || '',
-    SINTESE_DO_PITCH: '',
+    EVIDENCIAS_BRUTAS: projectData.v3RawFeedbacks || '',
+    SINTESE_DE_EVIDENCIAS: projectData.v3EvidenceSummary || '',
+    BMC: projectData.v3Bmc || '',
+    ROADMAP: projectData.v3Roadmap || '',
+    PROTOTIPO_V1: projectData.v3PrototypeV1 || '',
+    PITCH_INTEGRAL: projectData.v3PitchScript || '',
     ROTEIRO_VISUAL: projectData.v3PitchPresentation || '',
-    PITCH_REVISADO: projectData.v3RehearsalNotes || '',
-    SINTESE_CRITICA_DO_PITCH: ''
   });
 
   // UI States
@@ -69,6 +62,7 @@ export const PromptSynthesizerTab: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [useInterpolatedValues, setUseInterpolatedValues] = useState(true);
   const [activeContextTab, setActiveContextTab] = useState<'global' | 'enc1' | 'enc2' | 'enc3' | 'enc4'>('global');
+  const [isContextPanelExpanded, setIsContextPanelExpanded] = useState(false);
   const [copiedState, setCopiedState] = useState<{ id: string; type: 'promptOnly' | 'promptContext' } | null>(null);
   const [expandedPromptIds, setExpandedPromptIds] = useState<Record<string, boolean>>({});
 
@@ -135,78 +129,134 @@ export const PromptSynthesizerTab: React.FC = () => {
     .filter(k => !!localContext[k]?.trim()).length;
   
   const artifactsFilledCount = [
-    'DIAGNOSTICO_DO_PROBLEMA', 'GOLDEN_CIRCLE', 'BRIEFING_V0', 'BRIEFING_V1',
-    'PRD_V0', 'MVP', 'PROTOTIPO_V0', 'PLANO_DE_TESTE', 'EVIDENCIAS_BRUTAS',
-    'SINTESE_DE_EVIDENCIAS', 'BMC', 'ROADMAP', 'PROTOTIPO_V1',
-    'PITCH_INTEGRAL', 'ROTEIRO_VISUAL'
+    'AF01', 'AF02', 'AF03', 'AF04', 'AF05', 'AF06',
+    'AF07', 'AF08', 'AF09', 'AF10', 'AF11', 'AF12'
   ].filter(k => !!localContext[k]?.trim()).length;
 
   return (
     <div className="space-y-8 pb-16">
       
-      {/* Page Header */}
-      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/20 text-slate-950 font-black text-xs">
-            <Sparkles className="w-4 h-4" />
-            <span>BIBLIOTECA DE PROMPTS V3.2</span>
-          </div>
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-950 text-amber-400">
-            15 Prompts Oficiais • 4 Movimentos
-          </span>
-        </div>
+      {/* Page Header / Hero Banner */}
+      <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute -right-16 -top-16 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Gerador de Comandos Estruturados para IAs Generativas
-          </h2>
-          <p className="text-slate-950/85 text-sm sm:text-base font-semibold max-w-4xl">
-            Acompanha os participantes em uma progressão contínua: Problema → Investigação → Direção de Solução → Definição → MVP → Protótipo → Teste → Evidência → Aprendizado → Evolução → Comunicação → Reflexão.
-          </p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative z-10">
+          {/* Column 1: Title and Canonical Metadata */}
+          <div className="lg:col-span-7 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold text-xs uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>BIBLIOTECA DE PROMPTS V2.2 CANÔNICA</span>
+              </div>
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                12 Prompts Canônicos (P01 a P12) • 4 Encontros
+              </span>
+            </div>
 
-        {/* Pedagogical Principle */}
-        <div className="bg-slate-950/15 border border-slate-950/20 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-slate-950">
-          <div className="flex items-start gap-3">
-            <Lightbulb className="w-5 h-5 text-amber-950 shrink-0 mt-0.5" />
-            <div className="text-xs sm:text-sm">
-              <strong className="font-extrabold uppercase tracking-wide block mb-0.5">Contexto Mínimo Suficiente:</strong>
-              <span><strong>Copiar Prompt</strong> (apenas o comando puro) ou <strong>Copiar Prompt + Contexto</strong> (injeta determinística e cirurgicamente apenas os insumos necessários para a atividade).</span>
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Gerador de Comandos Estruturados para IAs Generativas
+            </h2>
+
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-2xl">
+              Comandos projetados para orientar sua equipe com rigor pedagógico. Conduza cada etapa da esteira do método Fornologia com suporte socrático e determinístico.
+            </p>
+
+            {/* Stepper visual compacto */}
+            <div className="pt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+              <span className="text-amber-400 font-bold">Esteira:</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-slate-300">Problema</span>
+              <span>→</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-slate-300">Investigação</span>
+              <span>→</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-slate-300">Briefing & PRD</span>
+              <span>→</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-slate-300">MVP & Protótipo</span>
+              <span>→</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-slate-300">Validação</span>
+              <span>→</span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-slate-300">Pitch</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/20 text-2xs font-bold shrink-0">
-            <span>🔒 <strong>Privacidade:</strong> Não inclua dados pessoais ou íntimos ao preencher o contexto.</span>
+
+          {/* Column 2: Minimal Sufficient Context Guide */}
+          <div className="lg:col-span-5 bg-slate-950/70 border border-slate-800/90 rounded-2xl p-4 sm:p-5 space-y-3 text-slate-200">
+            <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+              <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Princípio do Contexto Mínimo Suficiente</span>
+            </div>
+
+            <div className="space-y-2 text-xs leading-relaxed text-slate-300">
+              <p>
+                <strong className="text-white font-bold">1. Copiar Prompt:</strong> Copia apenas as instruções e regras para colar em qualquer IA.
+              </p>
+              <p>
+                <strong className="text-amber-300 font-bold">2. Copiar Prompt + Contexto:</strong> Injeta de forma cirúrgica os artefatos preenchidos pela sua equipe para gerar respostas altamente personalizadas.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+              <span className="flex items-center gap-1.5 font-medium">
+                <span>🔒</span>
+                <span>Armazenamento local seguro. Sem envio a servidores externos.</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Context & Artifacts Manager Panel */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
-        <div className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div 
+          onClick={() => setIsContextPanelExpanded(prev => !prev)}
+          className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
+        >
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
               <Sliders className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>Painel de Contexto & Artefatos V3.2</span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {globalVarsFilledCount}/4 variáveis globais • {artifactsFilledCount}/15 artefatos sincronizados
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+                  Painel de Contexto & Artefatos V2.2
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                  {globalVarsFilledCount}/4 variáveis • {artifactsFilledCount}/12 artefatos
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {isContextPanelExpanded 
+                  ? 'Clique para recolher os campos de edição e focar na biblioteca de prompts.' 
+                  : 'Clique para visualizar ou editar os dados sincronizados do projeto que alimentam os comandos.'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
+          <div className="flex items-center gap-2.5 self-end sm:self-center">
+            <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Sincronizado com o Projeto</span>
+              <span>Sincronizado</span>
             </div>
+
+            <button
+              type="button"
+              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>{isContextPanelExpanded ? 'Recolher' : 'Editar Dados'}</span>
+              {isContextPanelExpanded ? (
+                <ChevronUp className="w-4 h-4 text-slate-500" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Tab Navigation for Context Fields */}
-        <div className="flex overflow-x-auto border-t border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-1.5 gap-1.5 text-xs font-extrabold">
+        {/* Tab Navigation & Editor shown only when expanded */}
+        {isContextPanelExpanded && (
+          <div className="border-t border-slate-100 dark:border-slate-800">
+            {/* Tab Navigation for Context Fields */}
+            <div className="flex overflow-x-auto bg-slate-50/50 dark:bg-slate-900/50 p-1.5 gap-1.5 text-xs font-extrabold scrollbar-none">
           <button
             onClick={() => setActiveContextTab('global')}
             className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap ${
@@ -323,26 +373,52 @@ export const PromptSynthesizerTab: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Diagnóstico do Problema {'{DIAGNOSTICO_DO_PROBLEMA}'}
+                  AF01 — Mapa de Problemas + Problema Escolhido {'{AF01}'}
                 </label>
                 <textarea
                   rows={4}
-                  value={localContext.DIAGNOSTICO_DO_PROBLEMA}
-                  onChange={(e) => handleContextChange('DIAGNOSTICO_DO_PROBLEMA', e.target.value)}
-                  placeholder="Problema, hipóteses, dúvidas, 5 Porquês e Resumo para Revisão..."
+                  value={localContext.AF01}
+                  onChange={(e) => handleContextChange('AF01', e.target.value)}
+                  placeholder="Problema escolhido com dores observadas, relevância local e recorte nítido..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Círculo Dourado (Golden Circle) {'{GOLDEN_CIRCLE}'}
+                  AF02 — Diagnóstico do Problema {'{AF02}'}
                 </label>
                 <textarea
                   rows={4}
-                  value={localContext.GOLDEN_CIRCLE}
-                  onChange={(e) => handleContextChange('GOLDEN_CIRCLE', e.target.value)}
-                  placeholder="Por quê (transformação), Como (princípios), O quê (solução)..."
+                  value={localContext.AF02}
+                  onChange={(e) => handleContextChange('AF02', e.target.value)}
+                  placeholder="Observações factuais, hipóteses em validação, dúvidas críticas e causas raízes..."
+                  className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  AF03 — Mapa de Recursos {'{AF03}'}
+                </label>
+                <textarea
+                  rows={4}
+                  value={localContext.AF03}
+                  onChange={(e) => handleContextChange('AF03', e.target.value)}
+                  placeholder="Dimensões Cultural, Social, Ambiental e Financeira..."
+                  className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  AF04 — Propósito e Direção {'{AF04}'}
+                </label>
+                <textarea
+                  rows={4}
+                  value={localContext.AF04}
+                  onChange={(e) => handleContextChange('AF04', e.target.value)}
+                  placeholder="Transformação pretendida, motivação essencial, princípios inegociáveis e direção..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
@@ -354,78 +430,52 @@ export const PromptSynthesizerTab: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Briefing V0 {'{BRIEFING_V0}'}
+                  AF05 — Briefing V0 {'{AF05}'}
                 </label>
                 <textarea
                   rows={3}
-                  value={localContext.BRIEFING_V0}
-                  onChange={(e) => handleContextChange('BRIEFING_V0', e.target.value)}
-                  placeholder="Briefing inicial consolidado..."
+                  value={localContext.AF05}
+                  onChange={(e) => handleContextChange('AF05', e.target.value)}
+                  placeholder="Briefing inicial consolidado da solução..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Briefing V1 {'{BRIEFING_V1}'}
+                  AF06 — Briefing V1 (Versão Autoritativa) {'{AF06}'}
                 </label>
                 <textarea
                   rows={3}
-                  value={localContext.BRIEFING_V1}
-                  onChange={(e) => handleContextChange('BRIEFING_V1', e.target.value)}
-                  placeholder="Briefing revisado criticamente pela equipe..."
+                  value={localContext.AF06}
+                  onChange={(e) => handleContextChange('AF06', e.target.value)}
+                  placeholder="Briefing revisado criticamente com decisões explícitas da equipe..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  PRD V0 {'{PRD_V0}'}
+                  AF07 — Especificação de Funcionamento (PRD) {'{AF07}'}
                 </label>
                 <textarea
                   rows={3}
-                  value={localContext.PRD_V0}
-                  onChange={(e) => handleContextChange('PRD_V0', e.target.value)}
-                  placeholder="Requisitos funcionais, Must Have, Nice to Have..."
+                  value={localContext.AF07}
+                  onChange={(e) => handleContextChange('AF07', e.target.value)}
+                  placeholder="Jornada do usuário, o que a solução faz/não faz, essencial vs. desejável..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Definição do MVP {'{MVP}'}
+                  AF08 — MVP e Protótipo V0 com Plano de Realização {'{AF08}'}
                 </label>
                 <textarea
                   rows={3}
-                  value={localContext.MVP}
-                  onChange={(e) => handleContextChange('MVP', e.target.value)}
-                  placeholder="Menor versão testável focada na hipótese principal..."
-                  className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Protótipo V0 {'{PROTOTIPO_V0}'}
-                </label>
-                <textarea
-                  rows={3}
-                  value={localContext.PROTOTIPO_V0}
-                  onChange={(e) => handleContextChange('PROTOTIPO_V0', e.target.value)}
-                  placeholder="Especificação ou link do Protótipo V0 construído..."
-                  className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Plano de Teste {'{PLANO_DE_TESTE}'}
-                </label>
-                <textarea
-                  rows={3}
-                  value={localContext.PLANO_DE_TESTE}
-                  onChange={(e) => handleContextChange('PLANO_DE_TESTE', e.target.value)}
-                  placeholder="Hipótese a testar, roteiro neutro e folha de registro..."
+                  value={localContext.AF08}
+                  onChange={(e) => handleContextChange('AF08', e.target.value)}
+                  placeholder="Menor versão testável, formato do protótipo e plano (quando, o que acontece, onde, quem)..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
@@ -437,65 +487,39 @@ export const PromptSynthesizerTab: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Evidências Brutas {'{EVIDENCIAS_BRUTAS}'}
+                  AF09 — Testes, Aprendizados e Evolução V0→V1 {'{AF09}'}
                 </label>
                 <textarea
-                  rows={3}
-                  value={localContext.EVIDENCIAS_BRUTAS}
-                  onChange={(e) => handleContextChange('EVIDENCIAS_BRUTAS', e.target.value)}
-                  placeholder="Anotações diretas e literais dos testes de campo..."
+                  rows={4}
+                  value={localContext.AF09}
+                  onChange={(e) => handleContextChange('AF09', e.target.value)}
+                  placeholder="Status de validação empírica, evidências reais observadas, hesitações e 3 a 5 prioridades de evolução..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Síntese de Evidências {'{SINTESE_DE_EVIDENCIAS}'}
+                  AF10 — Modelo de Sustentabilidade {'{AF10}'}
                 </label>
                 <textarea
-                  rows={3}
-                  value={localContext.SINTESE_DE_EVIDENCIAS}
-                  onChange={(e) => handleContextChange('SINTESE_DE_EVIDENCIAS', e.target.value)}
-                  placeholder="O que funcionou, hesitações, falhas, hipóteses e conclusões..."
-                  className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Modelo de Sustentabilidade (BMC) {'{BMC}'}
-                </label>
-                <textarea
-                  rows={3}
-                  value={localContext.BMC}
-                  onChange={(e) => handleContextChange('BMC', e.target.value)}
-                  placeholder="Os 9 blocos e 3 hipóteses críticas de sustentabilidade..."
-                  className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Roadmap {'{ROADMAP}'}
-                </label>
-                <textarea
-                  rows={3}
-                  value={localContext.ROADMAP}
-                  onChange={(e) => handleContextChange('ROADMAP', e.target.value)}
-                  placeholder="Agora, Depois e Futuramente..."
+                  rows={4}
+                  value={localContext.AF10}
+                  onChange={(e) => handleContextChange('AF10', e.target.value)}
+                  placeholder="Os 9 blocos autorais de sustentabilidade e 3 hipóteses críticas testáveis..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Protótipo V1 {'{PROTOTIPO_V1}'}
+                  AF11 — Roadmap de Prioridades e Linha do Tempo {'{AF11}'}
                 </label>
                 <textarea
                   rows={3}
-                  value={localContext.PROTOTIPO_V1}
-                  onChange={(e) => handleContextChange('PROTOTIPO_V1', e.target.value)}
-                  placeholder="Mudanças implementadas da V0 para a V1 com origem declarada..."
+                  value={localContext.AF11}
+                  onChange={(e) => handleContextChange('AF11', e.target.value)}
+                  placeholder="Matriz Agora / Depois / Futuramente e Linha do Tempo em 7 Etapas com responsáveis..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
@@ -504,100 +528,89 @@ export const PromptSynthesizerTab: React.FC = () => {
 
           {/* Encontro 4 Artifacts */}
           {activeContextTab === 'enc4' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Pitch Integral {'{PITCH_INTEGRAL}'}
+                  AF12 — Kit de Comunicação Final {'{AF12}'}
                 </label>
                 <textarea
-                  rows={4}
-                  value={localContext.PITCH_INTEGRAL}
-                  onChange={(e) => handleContextChange('PITCH_INTEGRAL', e.target.value)}
-                  placeholder="Discurso de 3 minutos em primeira pessoa..."
-                  className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Roteiro Visual da Apresentação {'{ROTEIRO_VISUAL}'}
-                </label>
-                <textarea
-                  rows={4}
-                  value={localContext.ROTEIRO_VISUAL}
-                  onChange={(e) => handleContextChange('ROTEIRO_VISUAL', e.target.value)}
-                  placeholder="Roteiro visual de 6 a 8 slides de suporte..."
+                  rows={5}
+                  value={localContext.AF12}
+                  onChange={(e) => handleContextChange('AF12', e.target.value)}
+                  placeholder="Pitch V1 oral (3 min), Roteiro Visual de até 6 telas e Simulação de Banca com 5 perguntas desafiadoras..."
                   className="w-full p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>
             </div>
           )}
         </div>
+          </div>
+        )}
       </div>
 
       {/* Controls Bar: Filters, Search & Mode Toggle */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
           
           {/* Encounter Filter Buttons */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs font-black text-slate-400 uppercase tracking-wider mr-2 hidden sm:inline">
-              Encontros:
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <span className="text-xs font-black text-slate-400 uppercase tracking-wider mr-1 hidden xl:inline">
+              Filtro:
             </span>
 
             <button
               onClick={() => setSelectedEncounterFilter('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer ${
                 selectedEncounterFilter === 'all'
-                  ? 'bg-slate-950 text-amber-400 shadow-sm'
+                  ? 'bg-slate-950 text-amber-400 dark:bg-amber-500 dark:text-slate-950 shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
-              Todos (15)
+              Todos (12)
             </button>
 
             <button
               onClick={() => setSelectedEncounterFilter(1)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer ${
                 selectedEncounterFilter === 1
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
-              Encontro 1 (01-02)
+              Encontro 1 (4)
             </button>
 
             <button
               onClick={() => setSelectedEncounterFilter(2)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer ${
                 selectedEncounterFilter === 2
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
-              Encontro 2 (03-08)
+              Encontro 2 (4)
             </button>
 
             <button
               onClick={() => setSelectedEncounterFilter(3)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer ${
                 selectedEncounterFilter === 3
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
-              Encontro 3 (09-12)
+              Encontro 3 (3)
             </button>
 
             <button
               onClick={() => setSelectedEncounterFilter(4)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap cursor-pointer ${
                 selectedEncounterFilter === 4
                   ? 'bg-amber-500 text-slate-950 shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
-              Encontro 4 (13-15)
+              Encontro 4 (1)
             </button>
           </div>
 
@@ -608,32 +621,29 @@ export const PromptSynthesizerTab: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por título ou termo..."
-              className="w-full pl-10 pr-4 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              placeholder="Buscar comando por palavra..."
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             />
           </div>
         </div>
 
-        {/* Mode Toggle Option */}
+        {/* Mode Toggle Option & Counter */}
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700 dark:text-slate-300 select-none">
-              <input
-                type="checkbox"
-                checked={useInterpolatedValues}
-                onChange={(e) => setUseInterpolatedValues(e.target.checked)}
-                className="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500"
-              />
-              <span>Interpolar variáveis do projeto nos comandos</span>
-            </label>
-            <span className="text-slate-400 hidden sm:inline">•</span>
-            <span className="text-slate-500 dark:text-slate-400">
-              {useInterpolatedValues ? 'Substitui {VAR} pelos dados atuais preenchidos' : 'Exibe chaves canônicas {VAR}'}
+          <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700 dark:text-slate-300 select-none">
+            <input
+              type="checkbox"
+              checked={useInterpolatedValues}
+              onChange={(e) => setUseInterpolatedValues(e.target.checked)}
+              className="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500"
+            />
+            <span>Interpolar variáveis do projeto nos comandos</span>
+            <span className="text-slate-400 font-normal hidden sm:inline">
+              ({useInterpolatedValues ? 'substitui {VAR} pelos dados atuais' : 'exibe chaves canônicas {VAR}'})
             </span>
-          </div>
+          </label>
 
           <div className="text-slate-500 dark:text-slate-400 font-semibold">
-            Mostrando <strong>{filteredPrompts.length}</strong> de {OFFICIAL_PROMPTS.length} prompts
+            Mostrando <strong>{filteredPrompts.length}</strong> de {OFFICIAL_PROMPTS.length} comandos
           </div>
         </div>
       </div>
@@ -669,7 +679,7 @@ export const PromptSynthesizerTab: React.FC = () => {
               >
                 {/* Prompt Header */}
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="px-2.5 py-0.5 rounded-md bg-slate-950 text-amber-400 text-[10px] font-black tracking-wider">
                         PROMPT {prompt.numberFormatted}
@@ -682,7 +692,7 @@ export const PromptSynthesizerTab: React.FC = () => {
                       </span>
                     </div>
 
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                    <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                       {prompt.title}
                     </h3>
 
@@ -693,7 +703,7 @@ export const PromptSynthesizerTab: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1 text-xs">
                       <div>
                         <span className="text-slate-400 font-semibold">Ferramentas: </span>
-                        <strong className="text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                        <strong className="text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md font-bold">
                           {prompt.recommendedTools}
                         </strong>
                       </div>
@@ -713,11 +723,11 @@ export const PromptSynthesizerTab: React.FC = () => {
                   </div>
 
                   {/* 2 Distinct Action Buttons: Copiar Prompt & Copiar Prompt + Contexto */}
-                  <div className="shrink-0 flex flex-wrap items-center gap-2 self-start lg:self-auto">
+                  <div className="shrink-0 flex flex-wrap sm:flex-nowrap items-center gap-2 self-start lg:self-center">
                     {/* Action 1: Copiar Prompt */}
                     <button
                       onClick={() => handleCopyPromptOnly(prompt)}
-                      className={`px-3.5 py-2.5 rounded-2xl font-black text-xs flex items-center gap-1.5 transition-all shadow-xs border ${
+                      className={`px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs border cursor-pointer ${
                         isPromptOnlyCopied
                           ? 'bg-emerald-500 text-slate-950 border-emerald-500 scale-105'
                           : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 active:scale-95'
@@ -740,12 +750,12 @@ export const PromptSynthesizerTab: React.FC = () => {
                     {/* Action 2: Copiar Prompt + Contexto */}
                     <button
                       onClick={() => handleCopyPromptWithContext(prompt)}
-                      className={`px-4 py-2.5 rounded-2xl font-black text-xs flex items-center gap-1.5 transition-all shadow-xs ${
+                      className={`px-4 py-2.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
                         isPromptContextCopied
                           ? 'bg-emerald-500 text-slate-950 scale-105'
                           : 'bg-amber-500 hover:bg-amber-400 text-slate-950 active:scale-95'
                       }`}
-                      title="Combina o prompt atual com os insumos mínimos necessários segundo a matriz V3.2"
+                      title="Combina o prompt atual com os insumos mínimos necessários segundo a matriz canônica V2.2"
                     >
                       {isPromptContextCopied ? (
                         <>
@@ -763,11 +773,11 @@ export const PromptSynthesizerTab: React.FC = () => {
                 </div>
 
                 {/* Prompt Dependencies & Context Required Matrix */}
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-2">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
                       <Layers className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Contexto Mínimo Suficiente (V3.2):</span>
+                      <span>Contexto Mínimo Suficiente (V2.2):</span>
                     </div>
                     {requiredCount > 0 ? (
                       <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${

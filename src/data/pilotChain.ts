@@ -1,5 +1,5 @@
 import { ActivityV2 } from '../types/workshop';
-import { OFFICIAL_PROMPTS_V3 } from './officialPrompts';
+import { OFFICIAL_PROMPTS_V3, OFFICIAL_PROMPTS_BY_CANONICAL_ID } from './officialPrompts';
 
 export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
   // ==========================================
@@ -43,7 +43,7 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       stillOpen: 'A formulação precisa do problema, a separação entre fatos e hipóteses e suas causas profundas.',
       nextActivityId: 'E1-A01',
       nextActivityTitle: 'Diagnóstico do Problema',
-      nextActivityPurpose: 'Enquadrar o problema, separar rigorosamente Problemas, Hipóteses e Dúvidas (PHD) e aprofundar possíveis causas (5 Porquês).',
+      nextActivityPurpose: 'Enquadrar o problema, separar rigorosamente fatos, hipóteses e dúvidas e aprofundar possíveis causas.',
       contextPassedAhead: ['Foco de problema escolhido pela equipe'],
     },
   },
@@ -66,21 +66,21 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       positionInSequence: 'Atividade 1 de 3 (Digital)',
       progressPercent: 10,
     },
-    whyItMatters: 'Unifica o enquadramento do problema, a separação rigorosa em Problemas (fatos observados), Hipóteses (suposições causais) e Dúvidas (incertezas a checar), e a investigação dos Porquês em uma única unidade cognitiva consistente.',
+    whyItMatters: 'Unifica o enquadramento do problema, a separação rigorosa em fatos observados, hipóteses causais e dúvidas a checar, e a investigação causal em uma única unidade cognitiva consistente.',
     youWillNeed: {
       required: [],
       optional: ['Problema selecionado no Mapa de Problemas ou no Mapeamento Coletivo'],
     },
     whatToDo: [
       'Apresente à IA o problema ou situação inicial que a equipe escolheu investigar no Mapa de Problemas.',
-      'Classifique os elementos trazidos em P (Problemas observados), H (Hipóteses causais) e D (Dúvidas a checar).',
-      'Investigue as possíveis causas (Cinco Porquês) até o limite das evidências reais sem aceitar suposições como fatos.',
+      'Classifique os elementos trazidos em fatos observados, hipóteses causais e dúvidas a checar.',
+      'Investigue as possíveis causas até o limite das evidências reais sem aceitar suposições como fatos.',
       'Estacione soluções prematuras e consolide o Diagnóstico do Problema V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[0].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[0].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[0].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P01.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P01.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P01.promptText,
       contextPackConfig: {
         snapshotFields: ['problem', 'audience', 'keyObservations', 'openQuestions'],
       },
@@ -102,7 +102,7 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       nowWeKnow: 'A formulação do problema, as observações concretas, hipóteses causais e dúvidas críticas.',
       stillOpen: 'O propósito transformador do projeto e a direção estratégica da solução.',
       nextActivityId: 'E1-A02',
-      nextActivityTitle: 'Círculo Dourado (Golden Circle)',
+      nextActivityTitle: 'Propósito e Direção',
       nextActivityPurpose: 'Transformar a compreensão do problema em propósito (Por quê?), princípios (Como?) e direção da solução (O quê?).',
       contextPassedAhead: ['Diagnóstico do Problema V0'],
     },
@@ -113,7 +113,7 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
     encounterId: 1,
     movementId: 'investigar',
     movementTitle: '1. Investigar',
-    title: 'Círculo Dourado (Golden Circle) — Propósito e Direção Estratégica',
+    title: 'Propósito e Direção',
     durationMinutes: 20,
     type: 'digital',
     pedagogicalIntervention: {
@@ -138,9 +138,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o Círculo Dourado V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[1].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[1].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[1].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P02.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P02.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P02.promptText,
       contextPackConfig: {
         requiredArtifacts: ['diagnostico'],
       },
@@ -197,9 +197,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide somente a versão que a equipe assumir como atual.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[2].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[2].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[2].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P03.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P03.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P03.promptText,
       contextPackConfig: {
         requiredArtifacts: ['diagnostico', 'golden-circle'],
       },
@@ -258,9 +258,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o Briefing V1 (que substitui a versão V0).',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[3].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[3].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[3].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P04.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P04.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P04.promptText,
       contextPackConfig: {
         requiredArtifacts: ['briefing'],
       },
@@ -316,9 +316,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o PRD V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[4].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[4].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[4].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P05.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P05.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P05.promptText,
       contextPackConfig: {
         requiredArtifacts: ['briefing'],
       },
@@ -370,9 +370,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o MVP V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[5].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[5].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[5].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P06.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P06.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P06.promptText,
       contextPackConfig: {
         requiredArtifacts: ['briefing', 'prd'],
       },
@@ -424,9 +424,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide a especificação do Protótipo V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[6].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[6].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[6].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P07.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P07.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P07.promptText,
       contextPackConfig: {
         requiredArtifacts: ['mvp', 'prd'],
       },
@@ -482,9 +482,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o Plano e Registros de Teste V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[7].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[7].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[7].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P08.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P08.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P08.promptText,
       contextPackConfig: {
         requiredArtifacts: ['mvp', 'prototipo'],
       },
@@ -534,9 +534,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide a Síntese de Evidências V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[8].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[8].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[8].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P09.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P09.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P09.promptText,
       contextPackConfig: {
         requiredArtifacts: ['prototipo', 'user-tests'],
       },
@@ -555,7 +555,7 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       nowWeKnow: 'Quais padrões surgiram nos testes e quais hipóteses ganharam/perderam sustentação.',
       stillOpen: 'Dúvidas que permanecem e implicações para o modelo de sustentabilidade e roadmap.',
       nextActivityId: 'E3-A03',
-      nextActivityTitle: 'Business Model Canvas',
+      nextActivityTitle: 'Modelo de Sustentabilidade',
       nextActivityPurpose: 'Confrontar nossas hipóteses com o que realmente observamos e preservar o que ainda não sabemos.',
       contextPassedAhead: ['Síntese de Evidências V0'],
     },
@@ -566,7 +566,7 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
     encounterId: 3,
     movementId: 'validar_evoluir',
     movementTitle: '3. Validar e Evoluir',
-    title: 'Business Model Canvas (BMC)',
+    title: 'Modelo de Sustentabilidade',
     durationMinutes: 25,
     pedagogicalIntervention: {
       principle: 'HIPOTESE',
@@ -590,9 +590,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o BMC V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[9].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[9].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[9].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P10.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P10.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P10.promptText,
       contextPackConfig: {
         requiredArtifacts: ['briefing', 'mvp'],
         optionalArtifacts: ['evidence-summary'],
@@ -646,9 +646,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o Roadmap V0.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[10].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[10].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[10].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P11.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P11.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P11.promptText,
       contextPackConfig: {
         requiredArtifacts: ['mvp', 'prototipo', 'bmc'],
         optionalArtifacts: ['evidence-summary'],
@@ -701,9 +701,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o Registro de Evolução V0 → V1 e a especificação do Protótipo V1.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[11].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[11].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[11].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.promptText,
       contextPackConfig: {
         requiredArtifacts: ['mvp', 'prototipo', 'roadmap'],
         optionalArtifacts: ['evidence-summary'],
@@ -760,9 +760,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide as três entregas em blocos isolados.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[12].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[12].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[12].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.promptText,
       contextPackConfig: {
         requiredArtifacts: ['briefing', 'mvp', 'prototipo', 'roadmap'],
         optionalArtifacts: ['evidence-summary', 'bmc'],
@@ -815,9 +815,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o Roteiro Visual da Apresentação.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[13].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[13].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[13].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.promptText,
       contextPackConfig: {
         requiredArtifacts: ['pitch'],
         optionalArtifacts: ['prototipo'],
@@ -869,9 +869,9 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
       'Consolide o Pitch Revisado e a Síntese Crítica com Cartão de Banca.',
     ],
     aiPrompt: {
-      purpose: OFFICIAL_PROMPTS_V3[14].title,
-      whatAiHelpsDo: OFFICIAL_PROMPTS_V3[14].shortDescription,
-      templatePrompt: OFFICIAL_PROMPTS_V3[14].promptText,
+      purpose: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.title,
+      whatAiHelpsDo: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.shortDescription,
+      templatePrompt: OFFICIAL_PROMPTS_BY_CANONICAL_ID.P12.promptText,
       contextPackConfig: {
         requiredArtifacts: ['pitch'],
         optionalArtifacts: ['presentation'],
@@ -897,8 +897,24 @@ export const PILOT_CHAIN_ACTIVITIES: ActivityV2[] = [
   },
 ];
 
+const CANONICAL_TO_PILOT_MAP: Record<string, string> = {
+  'A01': 'E1-A00',
+  'A02': 'E1-A01',
+  'A03': 'E1-A01',
+  'A04': 'E1-A02',
+  'A05': 'E2-A01',
+  'A06': 'E2-A02',
+  'A07': 'E2-A03',
+  'A08': 'E2-A05',
+  'A09': 'E3-A01',
+  'A10': 'E3-A03',
+  'A11': 'E3-A04',
+  'A12': 'E4-A01',
+};
+
 export function getPilotActivityById(id: string): ActivityV2 {
-  if (!id) return PILOT_CHAIN_ACTIVITIES[0];
+  const defaultActivity = PILOT_CHAIN_ACTIVITIES.find((a) => a.id === 'E1-A00') || PILOT_CHAIN_ACTIVITIES[0];
+  if (!id) return defaultActivity;
   const normalized = id.trim().toUpperCase();
   const direct = PILOT_CHAIN_ACTIVITIES.find((a) => a.id.toUpperCase() === normalized);
   if (direct) return direct;
@@ -906,5 +922,10 @@ export function getPilotActivityById(id: string): ActivityV2 {
     (a) => a.id.replace(/-/g, '').toUpperCase() === normalized.replace(/-/g, '')
   );
   if (matchNoHyphen) return matchNoHyphen;
-  return PILOT_CHAIN_ACTIVITIES[0];
+  if (CANONICAL_TO_PILOT_MAP[normalized]) {
+    const canonicalTarget = CANONICAL_TO_PILOT_MAP[normalized];
+    const canonicalMatch = PILOT_CHAIN_ACTIVITIES.find((a) => a.id.toUpperCase() === canonicalTarget);
+    if (canonicalMatch) return canonicalMatch;
+  }
+  return defaultActivity;
 }

@@ -1,4 +1,7 @@
 import { MappedProblem } from '../data/problemsData';
+import { CanonicalProjectState, ConductionMechanism } from './canonical';
+import { ToolItem } from './tools';
+export * from './canonical';
 
 export type UserMode = 'participante' | 'facilitador';
 
@@ -17,9 +20,13 @@ export type TestExecutionStatus =
 
 export interface Activity {
   id: string;
+  code?: string;
+  order?: number;
   title: string;
   durationMinutes: number;
   description: string;
+  conduction?: ConductionMechanism[];
+  category?: string;
   whatIsIt?: string;
   whyDoIt?: string;
   howToApply?: string[];
@@ -27,6 +34,12 @@ export interface Activity {
   facilitatorInstructions?: string;
   checklist?: string[];
   suggestedPromptIds?: string[];
+  promptId?: string;
+  artifactFamilyId?: string;
+  artifactVersionName?: string;
+  producesEvidence?: boolean;
+  isPrivateToParticipant?: boolean;
+  isCollectiveClassActivity?: boolean;
   relatedDocumentStep?: string;
   notes?: string;
 }
@@ -38,8 +51,12 @@ export interface Encounter {
   objective: string;
   totalDurationMinutes: number;
   activities: Activity[];
+  suggestedActivities?: string[];
+  suggestedExperience?: string[];
+  expectedProgress?: string;
   homeworkMission?: string;
   deliverable: string;
+  mainDeliverables?: string[];
 }
 
 export interface MethodTool {
@@ -108,13 +125,13 @@ export interface TeamProjectData {
   individualChallengesNote: string;
   collectiveChallenge: string;
   
-  // PHD
+  // Diagnóstico Causal & Fatos/Hipóteses
   phdProblems: string;
   phdHypotheses: string;
   phdDoubts: string;
   phdFacts: string;
   
-  // Cinco Porquês
+  // Investigação Causal
   fiveWhysProblem: string;
   fiveWhysLevels: Array<{
     why: string;
@@ -124,7 +141,7 @@ export interface TeamProjectData {
   }>;
   rootCause: string;
   
-  // Golden Circle
+  // Propósito e Direção
   goldenCircleWhy: string;
   goldenCircleHow: string;
   goldenCircleWhat: string;
@@ -184,26 +201,32 @@ export interface TeamProjectData {
   pitchCallToAction: string;
   pitchScriptText: string;
 
-  // V3 Official Artifacts & V3.2 Composite Extensions
-  v3ProblemDiagnosis?: string;
+  // V1.4.1 Official Artifacts (14 Famílias Canônicas)
+  v3ChosenProblem?: string;
+  v3ProblemDiagnosis?: string; // AF01
+  v3Mapa4d?: string; // AF02 - Mapa de Recursos (4 Dimensões)
+  v3MapaRecursos?: string;
   v3DiagnosisReviewSummary?: string | DiagnosisReviewSummaryData;
-  v3GoldenCircle?: string;
-  v3BriefingV0?: string;
-  v3BriefingReview?: string;
-  v3BriefingV1?: string;
-  v3PrdV0?: string;
-  v3Mvp?: string;
+  v3GoldenCircle?: string; // AF03 - Propósito e Direção
+  v3Proposito?: string;
+  v3BriefingV0?: string; // AF04 V0
+  v3BriefingReview?: string; // Output transitório
+  v3BriefingV1?: string; // AF04 V1
+  v3PrdV0?: string; // AF05 - PRD
+  v3Mvp?: string; // AF06 - MVP
   v3MvpSummary?: string | MvpSummaryData;
-  v3PrototypeV0?: string;
-  v3TestPlan?: string;
+  v3MapaTevep?: string; // AF07 - Plano de Realização
+  v3PrototypeV0?: string; // AF08 V0
+  v3TestPlan?: string; // AF09 - Plano de Teste
   v3RawFeedbacks?: string; // Legacy V3 fallback
-  v3RawEvidence?: string; // V3.2 canonical
+  v3RawEvidence?: string; // V1.4.1 canonical
   v3RawEvidenceItems?: RawEvidenceItem[];
   v3FeedbackSynthesis?: string; // Legacy V3 fallback
-  v3EvidenceSummary?: string; // V3.2 canonical
+  v3EvidenceSummary?: string; // V1.4.1 canonical (AF10)
   v3EvidenceSynthesisStructured?: EvidenceSynthesisData;
-  v3Bmc?: string;
-  v3Roadmap?: string;
+  v3Sustentabilidade?: string;
+  v3Bmc?: string; // AF11 - Modelo de Sustentabilidade (BMC)
+  v3Roadmap?: string; // AF12 - Roadmap
   v3RoadmapNow?: string;
   v3RoadmapNext?: string;
   v3RoadmapFuture?: string;
@@ -520,7 +543,7 @@ export interface FacilitatorObservation {
 
 export interface AppState {
   currentView: 'landing' | 'webapp';
-  activeWebappTab: 'jornada' | 'atividade' | 'projeto' | 'recursos' | 'ajuda' | 'facilitador' | 'ementa' | 'mapa' | 'mapa-problemas' | 'encontros' | 'equipes' | 'prompts' | 'exportar' | 'dashboard' | 'materiais' | 'v2-atividade' | 'v2-projeto';
+  activeWebappTab: 'jornada' | 'atividade' | 'projeto' | 'recursos' | 'ajuda' | 'facilitador' | 'ementa' | 'mapa' | 'mapa-problemas' | 'encontros' | 'equipes' | 'prompts' | 'exportar' | 'dashboard' | 'materiais' | 'ferramentas' | 'caixa-ferramentas' | 'v2-atividade' | 'v2-projeto';
   selectedEncounterId: number;
   selectedProblemId?: number;
   userMode: UserMode;
@@ -541,12 +564,14 @@ export interface AppState {
   facilitatorNotes?: Record<number, string>;
   projectData?: TeamProjectData;
   customProblems?: MappedProblem[];
+  customTools?: ToolItem[];
 
-  // V2 State Extensions
+  // V2 & V1.4.1 State Extensions
   version: '2.0';
   artifactVersions: ArtifactVersion[];
   projectStateV2: ProjectStateV2;
   facilitatorObservations: FacilitatorObservation[];
   currentPilotActivityId: string;
   draftArtifacts: Record<string, string>; // activityId -> content currently being edited before checkpoint
+  projectStateV1_4_1?: CanonicalProjectState;
 }

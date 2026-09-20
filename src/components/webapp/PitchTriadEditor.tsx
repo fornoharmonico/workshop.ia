@@ -83,7 +83,7 @@ export const PitchTriadEditor: React.FC<{
         </div>
 
         <div className="text-2xs font-extrabold text-slate-500 hidden sm:inline">
-          Tríade do Pitch V3.2
+          Tríade do Pitch V1.4.1
         </div>
       </div>
 

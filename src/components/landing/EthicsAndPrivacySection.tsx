@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { ShieldCheck, Lock, FileText, UserCheck, CheckCircle, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Lock, FileText, CheckCircle } from 'lucide-react';
 
 export const EthicsAndPrivacySection: React.FC = () => {
   const { openPrivacyModal } = useApp();
@@ -26,89 +26,71 @@ export const EthicsAndPrivacySection: React.FC = () => {
           </p>
         </div>
 
-        {/* 4 Pillars of Data Safety */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          
-          {/* Card 1: LGPD Art. 14 */}
-          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-300 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                <ShieldCheck className="w-6 h-6" />
+        {/* Consolidated Information Block: 3 Pillars of Data Safety */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-300 dark:border-slate-800 shadow-sm mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800">
+            
+            {/* Pillar 1: LGPD Art. 14 */}
+            <div className="space-y-2 pt-4 first:pt-0 md:pt-0 md:px-4 md:first:pl-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-950 dark:text-white">
+                    Conformidade LGPD
+                  </h3>
+                  <p className="text-2xs font-extrabold text-emerald-700 dark:text-emerald-400 uppercase">
+                    Art. 14 • Melhor interesse
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-950 dark:text-white">
-                  1. Conformidade com a LGPD (Art. 14)
-                </h3>
-                <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
-                  Melhor interesse da criança e do adolescente
-                </p>
-              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                Prioridade integral aos direitos do estudante, garantindo salvaguarda de dados pessoais e autorização formal dos responsáveis legais.
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-              Todo o processo pedagógico do workshop observa os direitos fundamentais do público jovem. O consentimento dos pais ou responsáveis legais é solicitado previamente pelas escolas e instituições parceiras.
-            </p>
-          </div>
 
-          {/* Card 2: Local-First Privacy */}
-          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-300 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                <Lock className="w-6 h-6" />
+            {/* Pillar 2: Privacidade 100% Local */}
+            <div className="space-y-2 pt-4 md:pt-0 md:px-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shrink-0">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-950 dark:text-white">
+                    Privacidade 100% Local
+                  </h3>
+                  <p className="text-2xs font-extrabold text-blue-700 dark:text-blue-400 uppercase">
+                    Sem servidores externos
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-950 dark:text-white">
-                  2. Mapeamento Íntimo 100% Local
-                </h3>
-                <p className="text-xs font-bold text-blue-800 dark:text-blue-400">
-                  Sem armazenamento em servidores externos
-                </p>
-              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                Reflexões e registros pessoais ficam salvos estritamente no dispositivo do aluno (<code className="text-[11px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">localStorage</code>), sem coleta ou transmissão externa.
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-              O exercício de mapeamento de desafios individuais é estritamente confidencial: é gravado apenas na memória local (<code className="text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">localStorage</code>) do dispositivo do aluno. Não é recolhido, transmitido nem avaliado.
-            </p>
-          </div>
 
-          {/* Card 3: Safe AI Practices */}
-          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-300 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                <CheckCircle className="w-6 h-6" />
+            {/* Pillar 3: Uso Seguro de IA */}
+            <div className="space-y-2 pt-4 md:pt-0 md:px-4 md:last:pr-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-950 dark:text-white">
+                    IA Ética & Segura
+                  </h3>
+                  <p className="text-2xs font-extrabold text-amber-700 dark:text-amber-400 uppercase">
+                    Zero dados sensíveis
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-950 dark:text-white">
-                  3. Uso Seguro de Ferramentas de IA
-                </h3>
-                <p className="text-xs font-bold text-amber-800 dark:text-amber-400">
-                  Sem dados sensíveis e sem cobrança aos alunos
-                </p>
-              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                Práticas ativas para não incluir dados pessoais em prompts de IA, utilizando planos institucionais com checagem criteriosa de alucinações.
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-              Diretrizes claras de segurança digital: os alunos são treinados a não inserir dados pessoais em prompts de IA, a utilizar planos gratuitos institucionais e a checar alucinações antes de aceitar qualquer resposta.
-            </p>
-          </div>
 
-          {/* Card 4: Parental Consent & Documentation */}
-          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-300 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-950 dark:text-white">
-                  4. Minuta de Consentimento Institucional
-                </h3>
-                <p className="text-xs font-bold text-purple-800 dark:text-purple-400">
-                  Documentação pronta para a coordenação pedagógica
-                </p>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-              Disponibilizamos para as escolas parceiras uma minuta padronizada de autorização dos pais/responsáveis legais e um guia de conformidade com a LGPD para anexar ao planejamento pedagógico.
-            </p>
           </div>
-
         </div>
 
         {/* Action Box to Open Consent Terms */}
@@ -125,7 +107,7 @@ export const EthicsAndPrivacySection: React.FC = () => {
 
           <button
             onClick={openPrivacyModal}
-            className="px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm transition-all flex items-center gap-2 shrink-0 shadow-lg shadow-amber-500/20 active:scale-[0.98]"
+            className="px-6 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm transition-all flex items-center gap-2 shrink-0 shadow-lg shadow-amber-500/20 active:scale-[0.98] cursor-pointer"
           >
             <FileText className="w-4 h-4" />
             <span>Visualizar Minuta LGPD</span>

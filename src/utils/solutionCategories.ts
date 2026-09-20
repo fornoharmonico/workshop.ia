@@ -141,7 +141,7 @@ export const CATEGORY_DETAILS: Record<SolutionCategory, CategoryMetadata> = {
     elementFocus: 'Proposta de valor, estrutura de custos, fontes de receita e parcerias.',
     userFlowFocus: 'Ciclo comercial: aquisição, venda, entrega de valor e pós-venda.',
     prototypingIdeas: [
-      'Business Model Canvas detalhado com premissas de preço',
+      'Modelo de sustentabilidade detalhado com premissas de continuidade',
       'Página de teste de demanda (smoke test / landing de pré-venda)',
       'Simulação de precificação e custos unitários',
       'Pitch deck de viabilidade e tração'

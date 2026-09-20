@@ -10,14 +10,25 @@ import {
   StructuredClaimValue,
   TeamProject, 
   TeamProjectData, 
-  UserMode 
+  UserMode,
+  CanonicalProjectState,
+  CanonicalEvidenceRecord,
+  ArtifactFamilyId,
+  ActivityId
 } from '../types/workshop';
-import { migrateStateToV2 } from '../utils/migrationV1ToV2';
+import { 
+  migrateStateToV1_4_1, 
+  buildCanonicalProjectStateFromLegacy,
+  syncCanonicalToLegacyProjectData,
+  createDefaultCanonicalProjectState,
+  verifyStateMigrationIntegrity
+} from '../utils/migrationV1_4_1';
 import { getPilotActivityById } from '../data/pilotChain';
 
 const STORAGE_KEY = 'oforno_ia_workshop_app_v1';
 const BACKUP_KEY = 'oforno_ia_workshop_app_v1_backup';
 const PRE_RESET_KEY = 'oforno_ia_workshop_app_v1_pre_reset_snapshot';
+const FAKE_AUTH_STORAGE_KEY = 'oforno_webapp_fake_auth';
 
 /**
  * Safely writes data to localStorage with exception and quota handling.
@@ -38,10 +49,10 @@ function safeSaveToLocalStorage(key: string, data: any): boolean {
 }
 
 /**
- * Normalizes and validates state, populating default structures for V2.
+ * Normalizes and validates state, populating default structures for V1.4.1.
  */
 function hydrateAndNormalizeState(rawState: any): AppState {
-  const migrated = migrateStateToV2(rawState);
+  const migrated = migrateStateToV1_4_1(rawState);
   return {
     ...migrated,
     version: '2.0',
@@ -57,6 +68,9 @@ function hydrateAndNormalizeState(rawState: any): AppState {
     facilitatorObservations: Array.isArray(migrated.facilitatorObservations) ? migrated.facilitatorObservations : [],
     currentPilotActivityId: migrated.currentPilotActivityId || 'E1-A01',
     draftArtifacts: migrated.draftArtifacts || {},
+    customProblems: Array.isArray(migrated.customProblems) ? migrated.customProblems : [],
+    customTools: Array.isArray(migrated.customTools) ? migrated.customTools : [],
+    projectStateV1_4_1: migrated.projectStateV1_4_1 || createDefaultCanonicalProjectState(),
   };
 }
 
@@ -249,24 +263,45 @@ const INITIAL_PROJECT_DATA: TeamProjectData = {
   pitchLearnings: '',
   pitchCallToAction: '',
   pitchScriptText: '',
+  v3ChosenProblem: '',
   v3ProblemDiagnosis: '',
-  v3GoldenCircle: '',
+  v3MapaRecursos: '',
+  v3Proposito: '',
   v3BriefingV0: '',
   v3BriefingReview: '',
   v3BriefingV1: '',
   v3PrdV0: '',
   v3Mvp: '',
+  v3EvidenceSummary: '',
+  v3Sustentabilidade: '',
+  v3Roadmap: '',
+  v3PitchScript: '',
+  v3Mapa4d: '',
+  v3GoldenCircle: '',
+  v3MapaTevep: '',
   v3PrototypeV0: '',
   v3TestPlan: '',
   v3RawFeedbacks: '',
+  v3RawEvidence: '',
+  v3RawEvidenceItems: [],
   v3FeedbackSynthesis: '',
   v3Bmc: '',
-  v3Roadmap: '',
   v3PrototypeV1: '',
-  v3PitchScript: '',
   v3PitchPresentation: '',
+  v3PitchStructure: '',
+  v3PitchSummary: '',
+  v3PitchRevised: '',
+  v3EvolutionRecord: '',
+  v3RoadmapNow: '',
+  v3RoadmapNext: '',
+  v3RoadmapFuture: '',
+  v3RoadmapWontDoNow: '',
+  v3RoadmapThreePriorities: '',
+  v3RoadmapSummary: '',
+  testExecutionNotes: '',
   v3RehearsalStatus: 'nao_iniciado',
-  v3RehearsalNotes: ''
+  v3RehearsalNotes: '',
+  selectedProblemId: undefined
 };
 
 export interface TimerState {
@@ -293,6 +328,8 @@ interface AppContextType {
   saveStatus: 'saved' | 'saving' | 'pending' | 'just_saved';
   hasUnsavedChanges: boolean;
   showUnsavedPrompt: boolean;
+  showDeviceNotice: boolean;
+  setShowDeviceNotice: (show: boolean) => void;
   triggerManualSave: () => boolean;
   dismissUnsavedPrompt: () => void;
   
@@ -302,6 +339,11 @@ interface AppContextType {
   setSelectedEncounterId: (id: number) => void;
   setUserMode: (mode: UserMode) => void;
   toggleTheme: () => void;
+  
+  // Fake Authentication (Prototype Mode: admin / segredo)
+  isWebappAuthenticated: boolean;
+  loginWebapp: (user: string, pass: string) => boolean;
+  logoutWebapp: () => void;
   
   // Activity Status & Checklists
   toggleActivityCompleted: (activityId: string) => void;
@@ -356,6 +398,24 @@ interface AppContextType {
   saveDraftArtifact: (activityId: string, content: string) => void;
   setCurrentPilotActivityId: (activityId: string) => void;
 
+  // V1.4.1 Canonical Methods
+  canonicalProjectState: CanonicalProjectState;
+  updateCanonicalArtifact: (
+    familyId: ArtifactFamilyId,
+    content: string,
+    status?: 'draft' | 'validated',
+    version?: 'V0' | 'V1'
+  ) => void;
+  addEvidenceRecord: (
+    evidence: Omit<CanonicalEvidenceRecord, 'id' | 'createdAt'>
+  ) => void;
+  deleteEvidenceRecord: (id: string) => void;
+  updateCanonicalProjectState: (
+    updates: Partial<CanonicalProjectState>
+  ) => void;
+  exportCanonicalBackupJson: () => string;
+  importBackupJson: (jsonString: string) => boolean;
+
   // Brand Preview Modal
   brandModal: {
     isOpen: boolean;
@@ -379,9 +439,24 @@ interface AppContextType {
   openPrivacyModal: () => void;
   closePrivacyModal: () => void;
 
+  // Onboarding & Welcome Modal
+  isOnboardingModalOpen: boolean;
+  openOnboardingModal: () => void;
+  closeOnboardingModal: () => void;
+
   // Local-First Hardening & Emergency Recovery
   restoreSafetyBackup: () => boolean;
   hasSafetyBackup: boolean;
+
+  // Requisitos Obrigatórios de Identificação do Projeto (Salvar & Exportar)
+  isProjectIdentified: boolean;
+  isProjectIdentModalOpen: boolean;
+  projectIdentActionTitle: string;
+  projectIdentSuccessCallback?: () => void;
+  openProjectIdentModal: (actionTitle?: string, onSuccess?: () => void) => void;
+  closeProjectIdentModal: () => void;
+  ensureProjectIdentification: (onSuccess: () => void, actionTitle?: string) => boolean;
+  confirmProjectIdentification: (projectName: string, teamName: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -505,12 +580,117 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'pending' | 'just_saved'>('saved');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [showUnsavedPrompt, setShowUnsavedPrompt] = useState<boolean>(false);
+  const [showDeviceNotice, setShowDeviceNotice] = useState<boolean>(false);
   const isInitialMount = React.useRef(true);
   const unsavedTimerRef = React.useRef<any>(null);
 
-  // Trigger manual save
-  const triggerManualSave = (): boolean => {
+  // Fake Authentication State (Prototype mode: admin / segredo)
+  const [isWebappAuthenticated, setIsWebappAuthenticated] = useState<boolean>(() => {
     try {
+      const sessionAuth = sessionStorage.getItem(FAKE_AUTH_STORAGE_KEY);
+      if (sessionAuth === 'true') return true;
+      const localAuth = localStorage.getItem(FAKE_AUTH_STORAGE_KEY);
+      return localAuth === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const loginWebapp = (user: string, pass: string): boolean => {
+    const normalizedPass = pass.trim();
+    // O login pode ser "admin" ou qualquer outro nome/identificação inserido pelo usuário
+    if (normalizedPass === 'segredo') {
+      setIsWebappAuthenticated(true);
+      try {
+        sessionStorage.setItem(FAKE_AUTH_STORAGE_KEY, 'true');
+        localStorage.setItem(FAKE_AUTH_STORAGE_KEY, 'true');
+        if (user.trim()) {
+          localStorage.setItem('oforno_webapp_fake_user', user.trim());
+        }
+      } catch (e) {
+        console.warn('[FakeAuth] Storage write error:', e);
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const logoutWebapp = () => {
+    setIsWebappAuthenticated(false);
+    try {
+      sessionStorage.removeItem(FAKE_AUTH_STORAGE_KEY);
+      localStorage.removeItem(FAKE_AUTH_STORAGE_KEY);
+    } catch (e) {
+      console.warn('[FakeAuth] Storage clear error:', e);
+    }
+  };
+
+  // Mandatory Project Identification state for saving and exporting
+  const isProjectIdentified = Boolean(
+    (state.projectData?.projectName || '').trim() &&
+    (state.projectData?.teamName || '').trim()
+  );
+
+  const [projectIdentModal, setProjectIdentModal] = useState<{
+    isOpen: boolean;
+    actionTitle: string;
+    onSuccess?: () => void;
+  }>({
+    isOpen: false,
+    actionTitle: 'salvar ou exportar o projeto',
+  });
+
+  const openProjectIdentModal = (actionTitle = 'salvar ou exportar o projeto', onSuccess?: () => void) => {
+    setProjectIdentModal({
+      isOpen: true,
+      actionTitle,
+      onSuccess,
+    });
+  };
+
+  const closeProjectIdentModal = () => {
+    setProjectIdentModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const confirmProjectIdentification = (projectName: string, teamName: string) => {
+    const trimmedProject = projectName.trim();
+    const trimmedTeam = teamName.trim();
+    updateProjectData({
+      projectName: trimmedProject,
+      teamName: trimmedTeam,
+    });
+    const pendingSuccess = projectIdentModal.onSuccess;
+    setProjectIdentModal({ isOpen: false, actionTitle: 'salvar ou exportar o projeto' });
+    if (pendingSuccess) {
+      setTimeout(() => {
+        pendingSuccess();
+      }, 60);
+    }
+  };
+
+  const ensureProjectIdentification = (onSuccess: () => void, actionTitle = 'salvar ou exportar o projeto'): boolean => {
+    const pName = (state.projectData?.projectName || '').trim();
+    const tName = (state.projectData?.teamName || '').trim();
+    if (pName && tName) {
+      onSuccess();
+      return true;
+    }
+    openProjectIdentModal(actionTitle, onSuccess);
+    return false;
+  };
+
+  // Trigger manual save
+  const triggerManualSave = (force = false): boolean => {
+    try {
+      const pName = (state.projectData?.projectName || '').trim();
+      const tName = (state.projectData?.teamName || '').trim();
+      if (!force && (!pName || !tName)) {
+        openProjectIdentModal('salvar as alterações do projeto', () => {
+          triggerManualSave(true);
+        });
+        return false;
+      }
+
       setSaveStatus('saving');
       safeSaveToLocalStorage(STORAGE_KEY, state);
       safeSaveToLocalStorage(BACKUP_KEY, state);
@@ -521,6 +701,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLastManualSaveTime(timeStr);
       setHasUnsavedChanges(false);
       setShowUnsavedPrompt(false);
+      setShowDeviceNotice(true);
       setSaveStatus('just_saved');
       
       if (unsavedTimerRef.current) {
@@ -582,6 +763,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const openPrivacyModal = () => setIsPrivacyModalOpen(true);
   const closePrivacyModal = () => setIsPrivacyModalOpen(false);
+
+  // Onboarding Modal State
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
+  const openOnboardingModal = () => setIsOnboardingModalOpen(true);
+  const closeOnboardingModal = () => setIsOnboardingModalOpen(false);
+
+  // Check if onboarding should open automatically on entering webapp
+  useEffect(() => {
+    if (state.currentView === 'webapp') {
+      const seen = localStorage.getItem('oforno_onboarding_seen');
+      if (seen !== 'true') {
+        setIsOnboardingModalOpen(true);
+      }
+    }
+  }, [state.currentView]);
 
   // Timer internal state
   const [timerInternal, setTimerInternal] = useState(() => {
@@ -869,14 +1065,160 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Project Data
   const updateProjectData = (fields: Partial<TeamProjectData>) => {
-    setState((prev) => ({
-      ...prev,
-      projectData: {
+    setState((prev) => {
+      const mergedProjectData = {
         ...INITIAL_PROJECT_DATA,
         ...(prev.projectData || {}),
-        ...fields
+        ...fields,
+      };
+      // Synchronize into Canonical Project State
+      const updatedCanonical = buildCanonicalProjectStateFromLegacy(mergedProjectData, prev);
+      return {
+        ...prev,
+        projectData: mergedProjectData,
+        projectStateV1_4_1: updatedCanonical,
+      };
+    });
+  };
+
+  // Canonical V1.4.1 State Handlers
+  const updateCanonicalArtifact = (
+    familyId: ArtifactFamilyId,
+    content: string,
+    status: 'draft' | 'validated' = 'validated',
+    version: 'V0' | 'V1' = 'V0'
+  ) => {
+    setState((prev) => {
+      const currentCanonical = prev.projectStateV1_4_1 || createDefaultCanonicalProjectState();
+      const now = new Date().toISOString();
+      const updatedArtifacts = { ...currentCanonical.artifacts };
+
+      if (familyId === 'AF04') {
+        const prevAf04 = updatedArtifacts.AF04 || { activeVersion: 'V0', status: 'draft', updatedAt: now };
+        updatedArtifacts.AF04 = {
+          ...prevAf04,
+          v0Content: version === 'V0' ? content : prevAf04.v0Content,
+          v1Content: version === 'V1' ? content : prevAf04.v1Content,
+          activeVersion: version,
+          status,
+          updatedAt: now,
+        };
+      } else if (familyId === 'AF08') {
+        const prevAf08 = updatedArtifacts.AF08 || { activeVersion: 'V0', status: 'draft', updatedAt: now };
+        updatedArtifacts.AF08 = {
+          ...prevAf08,
+          v0Content: version === 'V0' ? content : prevAf08.v0Content,
+          v1Content: version === 'V1' ? content : prevAf08.v1Content,
+          activeVersion: version,
+          status,
+          updatedAt: now,
+        };
+      } else {
+        updatedArtifacts[familyId] = {
+          content,
+          status,
+          updatedAt: now,
+        };
       }
-    }));
+
+      const updatedCanonical: CanonicalProjectState = {
+        ...currentCanonical,
+        artifacts: updatedArtifacts,
+      };
+
+      const updatedLegacy = syncCanonicalToLegacyProjectData(
+        updatedCanonical,
+        prev.projectData || INITIAL_PROJECT_DATA
+      );
+
+      return {
+        ...prev,
+        projectStateV1_4_1: updatedCanonical,
+        projectData: updatedLegacy,
+      };
+    });
+  };
+
+  const addEvidenceRecord = (
+    evidence: Omit<CanonicalEvidenceRecord, 'id' | 'createdAt'>
+  ) => {
+    setState((prev) => {
+      const currentCanonical = prev.projectStateV1_4_1 || createDefaultCanonicalProjectState();
+      const now = new Date().toISOString();
+      const newRecord: CanonicalEvidenceRecord = {
+        ...evidence,
+        id: `ev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        createdAt: now,
+      };
+      const updatedEvidences = [...currentCanonical.evidences, newRecord];
+      const updatedCanonical: CanonicalProjectState = {
+        ...currentCanonical,
+        evidences: updatedEvidences,
+        hasExternalEvidence: true,
+        testStatus: 'realizado',
+      };
+
+      return {
+        ...prev,
+        projectStateV1_4_1: updatedCanonical,
+      };
+    });
+  };
+
+  const deleteEvidenceRecord = (id: string) => {
+    setState((prev) => {
+      const currentCanonical = prev.projectStateV1_4_1 || createDefaultCanonicalProjectState();
+      const updatedEvidences = currentCanonical.evidences.filter((e) => e.id !== id);
+      const updatedCanonical: CanonicalProjectState = {
+        ...currentCanonical,
+        evidences: updatedEvidences,
+        hasExternalEvidence: updatedEvidences.length > 0,
+        testStatus: updatedEvidences.length > 0 ? 'realizado' : 'nao_realizado',
+      };
+
+      return {
+        ...prev,
+        projectStateV1_4_1: updatedCanonical,
+      };
+    });
+  };
+
+  const updateCanonicalProjectState = (updates: Partial<CanonicalProjectState>) => {
+    setState((prev) => {
+      const currentCanonical = prev.projectStateV1_4_1 || createDefaultCanonicalProjectState();
+      const updatedCanonical: CanonicalProjectState = {
+        ...currentCanonical,
+        ...updates,
+      };
+      const updatedLegacy = syncCanonicalToLegacyProjectData(
+        updatedCanonical,
+        prev.projectData || INITIAL_PROJECT_DATA
+      );
+
+      return {
+        ...prev,
+        projectStateV1_4_1: updatedCanonical,
+        projectData: updatedLegacy,
+      };
+    });
+  };
+
+  const exportCanonicalBackupJson = (): string => {
+    return JSON.stringify(state, null, 2);
+  };
+
+  const importBackupJson = (jsonString: string): boolean => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      const normalized = hydrateAndNormalizeState(parsed);
+      setState(normalized);
+      safeSaveToLocalStorage(STORAGE_KEY, normalized);
+      safeSaveToLocalStorage(BACKUP_KEY, normalized);
+      return true;
+    } catch (e) {
+      console.error('[Backup Import] Error importing JSON backup:', e);
+      return false;
+    }
   };
 
   const [hasSafetyBackup, setHasSafetyBackup] = useState<boolean>(() => {
@@ -910,10 +1252,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     safeSaveToLocalStorage(PRE_RESET_KEY, state);
     setHasSafetyBackup(true);
 
-    // 2. Build reset state
-    const resetState: AppState = hydrateAndNormalizeState({
+    // 2. Build clean canonical project state (clears all canonical artifacts, test status, evidences, etc.)
+    const cleanCanonical = createDefaultCanonicalProjectState();
+
+    // 3. Build reset state ensuring all artifacts, document mestre, and project claims are cleared
+    const resetState: AppState = {
       ...state,
-      projectData: INITIAL_PROJECT_DATA,
+      projectData: { ...INITIAL_PROJECT_DATA },
+      projectStateV1_4_1: cleanCanonical,
       activityProgress: {},
       facilitatorChecklists: {},
       completedActivityIds: [],
@@ -924,9 +1270,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       facilitatorObservations: [],
       currentPilotActivityId: 'E1-A01',
       draftArtifacts: {},
-    });
+      customProblems: [],
+      selectedProblemId: undefined,
+    };
 
     setState(resetState);
+    setHasUnsavedChanges(false);
+    setSaveStatus('saved');
     safeSaveToLocalStorage(STORAGE_KEY, resetState);
     safeSaveToLocalStorage(BACKUP_KEY, resetState);
   };
@@ -1011,17 +1361,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 ## 1. DESAFIO COLETIVO E PROPÓSITO
 - **Desafio Selecionado:** ${p.collectiveChallenge || 'Pendente'}
-- **Golden Circle - POR QUÊ (Propósito):** ${p.goldenCircleWhy || 'Pendente'}
-- **Golden Circle - COMO (Valores):** ${p.goldenCircleHow || 'Pendente'}
-- **Golden Circle - O QUÊ (Iniciativa):** ${p.goldenCircleWhat || 'Pendente'}
+- **Propósito (Por Quê):** ${p.goldenCircleWhy || 'Pendente'}
+- **Critérios e Valores (Como):** ${p.goldenCircleHow || 'Pendente'}
+- **Iniciativa (O Quê):** ${p.goldenCircleWhat || 'Pendente'}
 
 ---
 
-## 2. INVESTIGAÇÃO DE CAUSAS-RAIZ (PHD & 5 PORQUÊS)
+## 2. INVESTIGAÇÃO CAUSAL (FATOS E HIPÓTESES)
 - **Problemas:** ${p.phdProblems || 'Pendente'}
 - **Hipóteses:** ${p.phdHypotheses || 'Pendente'}
 - **Dúvidas a Checar:** ${p.phdDoubts || 'Pendente'}
-- **Causa-Raiz Prioritária:** ${p.rootCause || 'Pendente'}
+- **Causa Prioritária:** ${p.rootCause || 'Pendente'}
 
 ---
 
@@ -1291,6 +1641,8 @@ ${p.pitchScriptText || 'Pendente'}
         saveStatus,
         hasUnsavedChanges,
         showUnsavedPrompt,
+        showDeviceNotice,
+        setShowDeviceNotice,
         triggerManualSave,
         dismissUnsavedPrompt,
         setCurrentView,
@@ -1298,6 +1650,9 @@ ${p.pitchScriptText || 'Pendente'}
         setSelectedEncounterId,
         setUserMode,
         toggleTheme,
+        isWebappAuthenticated,
+        loginWebapp,
+        logoutWebapp,
         toggleActivityCompleted,
         updateEncounterNote,
         setActivityStatus,
@@ -1325,14 +1680,32 @@ ${p.pitchScriptText || 'Pendente'}
         deleteFacilitatorObservation,
         saveDraftArtifact,
         setCurrentPilotActivityId,
+        canonicalProjectState: state.projectStateV1_4_1 || createDefaultCanonicalProjectState(),
+        updateCanonicalArtifact,
+        addEvidenceRecord,
+        deleteEvidenceRecord,
+        updateCanonicalProjectState,
+        exportCanonicalBackupJson,
+        importBackupJson,
         brandModal,
         openBrandModal,
         closeBrandModal,
         isPrivacyModalOpen,
         openPrivacyModal,
         closePrivacyModal,
+        isOnboardingModalOpen,
+        openOnboardingModal,
+        closeOnboardingModal,
         restoreSafetyBackup,
         hasSafetyBackup,
+        isProjectIdentified,
+        isProjectIdentModalOpen: projectIdentModal.isOpen,
+        projectIdentActionTitle: projectIdentModal.actionTitle,
+        projectIdentSuccessCallback: projectIdentModal.onSuccess,
+        openProjectIdentModal,
+        closeProjectIdentModal,
+        ensureProjectIdentification,
+        confirmProjectIdentification,
       }}
     >
       {children}

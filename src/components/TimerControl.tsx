@@ -31,12 +31,14 @@ export const TimerControl: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const [hasBeenActivated, setHasBeenActivated] = useState<boolean>(false);
   const [isZeroAlertDismissed, setIsZeroAlertDismissed] = useState<boolean>(false);
+  const [isDismissed, setIsDismissed] = useState<boolean>(false);
 
   // Track if timer has ever been started in this session
   useEffect(() => {
     if (timer.isRunning) {
       setHasBeenActivated(true);
       setIsZeroAlertDismissed(false);
+      setIsDismissed(false);
     }
   }, [timer.isRunning]);
 
@@ -45,8 +47,8 @@ export const TimerControl: React.FC = () => {
     setIsZeroAlertDismissed(false);
   }, [state.currentPilotActivityId]);
 
-  // Hide floating footer timer ONLY before any timer has been activated
-  if (!hasBeenActivated && !timer.isRunning && !timer.isFinished) return null;
+  // Hide floating footer timer if dismissed or before any timer has been activated
+  if (isDismissed || (!hasBeenActivated && !timer.isRunning && !timer.isFinished)) return null;
 
   const formatTime = (mins: number, secs: number) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -129,6 +131,19 @@ export const TimerControl: React.FC = () => {
           )}
 
           <ChevronUp className="w-4 h-4 text-amber-400" />
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDismissed(true);
+            }}
+            className="p-1 text-slate-400 hover:text-white transition-colors ml-1 cursor-pointer"
+            title="Fechar barra de cronômetro"
+            aria-label="Fechar barra de cronômetro"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     );
@@ -292,6 +307,16 @@ export const TimerControl: React.FC = () => {
                 aria-label="Minimizar Cronômetro"
               >
                 <ChevronDown className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsDismissed(true)}
+                className="p-2 sm:p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                title="Fechar barra de cronômetro"
+                aria-label="Fechar barra de cronômetro"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
