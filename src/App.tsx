@@ -1,76 +1,90 @@
-import React, { Suspense, lazy } from 'react';
-import { AppProvider, useApp } from './context/AppContext';
-import { Navbar } from './components/Navbar';
-import { Footer } from './components/Footer';
-import { LandingPage } from './components/landing/LandingPage';
-import { FakeLoginScreen } from './components/auth/FakeLoginScreen';
-import { Loader2 } from 'lucide-react';
+/**
+ * App Root Component V3
+ * Greenfield Fornologia V3 Implementation
+ * Workshop Inteligência Artificial Aplicada: do Problema ao Protótipo
+ */
+import React, { useEffect } from 'react';
+import { ProjectProvider } from './state/ProjectContext.tsx';
+import { DraftProvider } from './state/DraftContext.tsx';
+import { PreferencesProvider, usePreferences } from './state/PreferencesContext.tsx';
+import { SessionProvider, useSession } from './state/SessionContext.tsx';
+import { TimerProvider } from './state/TimerContext.tsx';
 
-// Code-splitting: Lazy load heavy webapp workspace and secondary overlays
-const WebappLayout = lazy(() => import('./components/webapp/WebappLayout').then(m => ({ default: m.WebappLayout })));
-const TimerControl = lazy(() => import('./components/TimerControl').then(m => ({ default: m.TimerControl })));
-const ProjectionModal = lazy(() => import('./components/ProjectionModal').then(m => ({ default: m.ProjectionModal })));
-const BrandPreviewModal = lazy(() => import('./components/BrandPreviewModal').then(m => ({ default: m.BrandPreviewModal })));
-const PrivacyModal = lazy(() => import('./components/PrivacyModal').then(m => ({ default: m.PrivacyModal })));
-const OnboardingModal = lazy(() => import('./components/OnboardingModal').then(m => ({ default: m.OnboardingModal })));
-const ProjectIdentificationModal = lazy(() => import('./components/ProjectIdentificationModal').then(m => ({ default: m.ProjectIdentificationModal })));
+import { Header } from './components/common/Header.tsx';
+import { ToastContainer, StorageAlert } from './components/common/ToastContainer.tsx';
+import { LandingPage } from './components/landing/LandingPage.tsx';
+import { CurrentActivityView } from './components/activity/CurrentActivityView.tsx';
+import { JourneyMapView } from './components/journey/JourneyMapView.tsx';
+import { MyProjectView } from './components/project/MyProjectView.tsx';
+import { ResourcesView } from './components/resources/ResourcesView.tsx';
 
-const WebappLoadingFallback: React.FC = () => (
-  <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 py-20 px-4 text-center">
-    <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-800 animate-pulse">
-      <Loader2 className="w-6 h-6 animate-spin" />
-    </div>
-    <div className="space-y-1">
-      <p className="text-base font-black text-slate-900 dark:text-white">
-        Carregando Ambiente da Turma...
-      </p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-        Inicializando ferramentas de prototipagem e atividades práticas da Fornologia.
-      </p>
-    </div>
-  </div>
-);
+import { FakeLoginModal } from './components/auth/FakeLoginModal.tsx';
+import { OnboardingModal } from './components/onboarding/OnboardingModal.tsx';
+import { HelpModal } from './components/help/HelpModal.tsx';
+import { InstitutionalContactModal } from './components/landing/InstitutionalContactModal.tsx';
+import { TimerOverlay } from './components/timer/TimerOverlay.tsx';
 
-const MainAppContent: React.FC = () => {
-  const { appState, isWebappAuthenticated } = useApp();
+const MainContent: React.FC = () => {
+  const { activeTab, isAuthenticated, setIsOnboardingModalOpen } = useSession();
+  const { hasSeenOnboarding } = usePreferences();
+
+  // If user is authenticated and hasn't seen onboarding, prompt onboarding once
+  useEffect(() => {
+    if (isAuthenticated && !hasSeenOnboarding) {
+      setIsOnboardingModalOpen(true);
+    }
+  }, [isAuthenticated, hasSeenOnboarding, setIsOnboardingModalOpen]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
-      <Navbar />
-      
-      <main id="main-content" className="flex-1">
-        {appState.currentView === 'landing' ? (
-          <LandingPage />
-        ) : !isWebappAuthenticated ? (
-          <FakeLoginScreen />
-        ) : (
-          <Suspense fallback={<WebappLoadingFallback />}>
-            <WebappLayout />
-          </Suspense>
-        )}
+    <div className="min-h-screen flex flex-col bg-neutral-950 text-neutral-100 selection:bg-amber-500/20 selection:text-amber-200">
+      <StorageAlert />
+      <Header />
+
+      <main className="flex-1 pb-16">
+        {activeTab === 'landing' && <LandingPage />}
+        {activeTab === 'current' && <CurrentActivityView />}
+        {activeTab === 'journey' && <JourneyMapView />}
+        {activeTab === 'project' && <MyProjectView />}
+        {activeTab === 'resources' && <ResourcesView />}
       </main>
 
-      {appState.currentView === 'landing' && <Footer />}
+      {/* Footer */}
+      <footer className="border-t border-neutral-800/80 bg-neutral-950 py-8 px-4 sm:px-6 text-center text-xs text-neutral-500 space-y-3">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
+          <span>Fornologia V3</span>
+          <span>•</span>
+          <span>Inteligência Artificial Aplicada: do Problema ao Protótipo</span>
+          <span>•</span>
+          <span className="text-amber-400 font-medium">Classificação 13+</span>
+        </div>
+        <p className="text-[11px] text-neutral-600 max-w-xl mx-auto">
+          Ambiente autônomo local-first sem backend ou segredos de API. Os artefatos e o State of Work permanecem exclusivamente neste navegador.
+        </p>
+      </footer>
 
-      {isWebappAuthenticated && (
-        <Suspense fallback={null}>
-          <TimerControl />
-          <ProjectionModal />
-          <BrandPreviewModal />
-          <PrivacyModal />
-          <OnboardingModal />
-          <ProjectIdentificationModal />
-        </Suspense>
-      )}
+      {/* Global Modals & Overlays */}
+      <FakeLoginModal />
+      <OnboardingModal />
+      <HelpModal />
+      <InstitutionalContactModal />
+      <TimerOverlay />
+      <ToastContainer />
     </div>
   );
 };
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainAppContent />
-    </AppProvider>
+    <PreferencesProvider>
+      <ProjectProvider>
+        <DraftProvider>
+          <SessionProvider>
+            <TimerProvider>
+              <MainContent />
+            </TimerProvider>
+          </SessionProvider>
+        </DraftProvider>
+      </ProjectProvider>
+    </PreferencesProvider>
   );
 }
-

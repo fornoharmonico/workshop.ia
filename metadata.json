@@ -1,8 +1,6 @@
 {
-  "name": "v2.0.2 WS IA Aplicada: do Problema ao Protótipo",
-  "description": "Plataforma interativa e webapp do workshop de Inteligência Artificial Aplicada: do Problema ao Protótipo, estruturado na metodologia Fornologia V2.3 (O Forno).",
+  "name": "Fornologia V3 — Do Problema ao Protótipo",
+  "description": "Guia autônomo da jornada do Workshop Inteligência Artificial Aplicada: do Problema ao Protótipo.",
   "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
