@@ -44,7 +44,7 @@ export const ResourcesView: React.FC = () => {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 space-y-6">
       {/* Subtab Navigation Pills */}
-      <div className="flex overflow-x-auto pb-1 space-x-2 border-b border-neutral-800">
+      <div className="flex overflow-x-auto pb-1 space-x-2 border-b border-neutral-800 no-scrollbar">
         {tabs.map((tab) => {
           const isActive = activeSubTab === tab.id;
           return (

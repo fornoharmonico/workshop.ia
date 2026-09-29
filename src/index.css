@@ -1,1 +1,148 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: dark;
+}
+
+html.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-neutral-950: #09090b; /* base deep dark background */
+  --color-neutral-900: #141416; /* elevated surface */
+  --color-neutral-800: #26262a; /* border */
+  --color-neutral-700: #3f3f46; /* input border */
+  --color-neutral-600: #52525b; /* muted accents */
+  --color-neutral-500: #71717a; /* muted text */
+  --color-neutral-400: #a1a1aa; /* secondary text */
+  --color-neutral-300: #d4d4d8; /* body text */
+  --color-neutral-200: #e4e4e7; /* strong text */
+  --color-neutral-100: #fafafa; /* headings */
+  --color-neutral-50: #ffffff;  /* pure white */
+
+  --color-amber-400: #fbbf24;
+  --color-amber-300: #fde68a;
+}
+
+html.light,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Inverted neutral palette for ultra-clean, immaculate light mode */
+  --color-neutral-950: #ffffff; /* Base page & header background: pure spotless white */
+  --color-neutral-900: #fbfcfd; /* Cards and elevated panels: crisp, pristine surface */
+  --color-neutral-800: #e2e8f0; /* Borders, dividers, subtle separators */
+  --color-neutral-700: #cbd5e1; /* Input borders, pill outlines */
+  --color-neutral-600: #94a3b8; /* Subtle icons, muted accents */
+  --color-neutral-500: #64748b; /* Secondary helper text */
+  --color-neutral-400: #475569; /* Medium contrast body text */
+  --color-neutral-300: #334155; /* Primary high-readability body text */
+  --color-neutral-200: #1e293b; /* Bold labels and subheadings */
+  --color-neutral-100: #0f172a; /* Deep charcoal headings */
+  --color-neutral-50: #020617;  /* Maximum contrast black */
+
+  /* High-contrast accessible accents for light mode */
+  --color-amber-500: #d97706;
+  --color-amber-400: #b45309;
+  --color-amber-300: #92400e;
+  --color-amber-200: #78350f;
+
+  --color-emerald-400: #059669;
+  --color-emerald-300: #047857;
+  --color-emerald-200: #065f46;
+
+  --color-rose-400: #e11d48;
+  --color-rose-300: #be123c;
+  --color-rose-200: #9f1239;
+
+  --color-sky-400: #0284c7;
+  --color-sky-300: #0369a1;
+  --color-sky-200: #075985;
+}
+
+/* High contrast text on amber/emerald/sky filled buttons */
+html.light .text-neutral-950,
+[data-theme="light"] .text-neutral-950 {
+  color: #0f172a !important;
+}
+
+/* Subtle modern card shadows in light mode */
+html.light .shadow-xl,
+html.light .shadow-2xl,
+[data-theme="light"] .shadow-xl,
+[data-theme="light"] .shadow-2xl {
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03) !important;
+}
+
+html.light .shadow-lg,
+html.light .shadow-md,
+[data-theme="light"] .shadow-lg,
+[data-theme="light"] .shadow-md {
+  box-shadow: 0 2px 10px -1px rgba(15, 23, 42, 0.04), 0 1px 3px 0 rgba(15, 23, 42, 0.02) !important;
+}
+
+/* Form controls in light mode */
+html.light input,
+html.light textarea,
+html.light select,
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input:focus,
+html.light textarea:focus,
+html.light select:focus,
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus,
+[data-theme="light"] select:focus {
+  background-color: #ffffff !important;
+  border-color: #d97706 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder,
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Only modal & overlay backdrops get dimmed backdrop in light mode */
+html.light .fixed.inset-0.z-50,
+html.light .fixed.inset-0.z-40,
+[data-theme="light"] .fixed.inset-0.z-50,
+[data-theme="light"] .fixed.inset-0.z-40 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Smooth background transitions when toggling theme */
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Selection highlight */
+html.light ::selection,
+[data-theme="light"] ::selection {
+  background-color: #fde68a;
+  color: #78350f;
+}
+
+/* Mobile-friendly horizontal scrollbar hiding for tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mobile safe area utility */
+.safe-area-pb {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}

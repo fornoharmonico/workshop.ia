@@ -50,7 +50,7 @@ export const TimerOverlay: React.FC = () => {
   // 1. Minimized Mode (Compact Pill)
   if (displayMode === 'minimized') {
     return (
-      <div className="fixed bottom-4 right-4 z-40 flex items-center space-x-2 rounded-full border border-neutral-700 bg-neutral-900/95 px-3 py-1.5 shadow-2xl backdrop-blur-md">
+      <div className="fixed bottom-18 md:bottom-4 right-4 z-40 flex items-center space-x-2 rounded-full border border-neutral-700 bg-neutral-900/95 px-3 py-1.5 shadow-2xl backdrop-blur-md">
         <span className="font-mono text-xs font-bold text-amber-400">
           {formatTime(secondsRemaining)}
         </span>
@@ -75,7 +75,7 @@ export const TimerOverlay: React.FC = () => {
   // 2. Restored Mode (Floating widget bottom-right)
   if (displayMode === 'restored') {
     return (
-      <div className="fixed bottom-4 right-4 z-40 w-72 rounded-2xl border border-neutral-800 bg-neutral-900/95 p-4 shadow-2xl backdrop-blur-md space-y-3 animate-in slide-in-from-bottom-3 duration-200">
+      <div className="fixed bottom-18 md:bottom-4 right-4 z-40 w-72 rounded-2xl border border-neutral-800 bg-neutral-900/95 p-4 shadow-2xl backdrop-blur-md space-y-3 animate-in slide-in-from-bottom-3 duration-200">
         <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
           <div className="flex items-center space-x-1.5 text-xs text-neutral-300 truncate">
             <span className="font-mono font-bold text-amber-400 bg-amber-400/10 px-1 rounded text-[10px]">

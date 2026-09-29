@@ -38,10 +38,17 @@ export const PreferencesProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     savePreferences(prefs);
+    const root = document.documentElement;
     if (prefs.theme === 'dark') {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
+      root.classList.remove('light');
+      root.setAttribute('data-theme', 'dark');
+      root.style.colorScheme = 'dark';
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
+      root.classList.add('light');
+      root.setAttribute('data-theme', 'light');
+      root.style.colorScheme = 'light';
     }
   }, [prefs]);
 

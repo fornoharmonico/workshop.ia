@@ -40,7 +40,7 @@ const MainContent: React.FC = () => {
       <StorageAlert />
       <Header />
 
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-24 md:pb-16">
         {activeTab === 'landing' && <LandingPage />}
         {activeTab === 'current' && <CurrentActivityView />}
         {activeTab === 'journey' && <JourneyMapView />}
@@ -49,15 +49,37 @@ const MainContent: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-800/80 bg-neutral-950 py-8 px-4 sm:px-6 text-center text-xs text-neutral-500 space-y-3">
-        <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
-          <span>Fornologia V3</span>
-          <span>•</span>
-          <span>Inteligência Artificial Aplicada: do Problema ao Protótipo</span>
-          <span>•</span>
-          <span className="text-amber-400 font-medium">Classificação 13+</span>
+      <footer className="border-t border-neutral-800/80 bg-neutral-950 py-8 px-4 sm:px-6 text-center text-xs text-neutral-500 space-y-4">
+        <div className="flex flex-col items-center justify-center space-y-2">
+          <div className="flex items-center space-x-2">
+            <img
+              src="https://i.postimg.cc/RhpFKdKb/LOGO-FORNO-branco-sem-fundo.png"
+              alt="Logo d'O Forno"
+              width={36}
+              height={36}
+              loading="lazy"
+              decoding="async"
+              className="hidden dark:block h-8 w-8 object-contain"
+            />
+            <img
+              src="https://i.postimg.cc/htL0bQZ5/LOGO-FORNO-FUNDO-BRANCO.png"
+              alt="Logo d'O Forno"
+              width={36}
+              height={36}
+              loading="lazy"
+              decoding="async"
+              className="block dark:hidden h-8 w-8 object-contain rounded-lg"
+            />
+            <span className="font-bold text-neutral-200 text-sm tracking-tight">
+              O Forno
+            </span>
+          </div>
+          <p className="text-[11px] text-neutral-400">
+            Escola de Planejamento e Gestão de Projetos
+          </p>
         </div>
-        <p className="text-[11px] text-neutral-600 max-w-xl mx-auto">
+
+        <p className="text-[11px] text-neutral-500 max-w-xl mx-auto leading-relaxed">
           Ambiente autônomo local-first sem backend ou segredos de API. Os artefatos e o State of Work permanecem exclusivamente neste navegador.
         </p>
       </footer>

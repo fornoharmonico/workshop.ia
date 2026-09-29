@@ -52,8 +52,25 @@ ${message.trim()}`;
       <div className="relative w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-6 sm:p-7 shadow-2xl space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-          <div className="flex items-center space-x-2 text-amber-400 font-bold text-sm">
-            <MessageCircle className="w-5 h-5 text-emerald-400" />
+          <div className="flex items-center space-x-2.5 text-sm font-bold">
+            <img
+              src="https://i.postimg.cc/RhpFKdKb/LOGO-FORNO-branco-sem-fundo.png"
+              alt="Logo d'O Forno"
+              width={24}
+              height={24}
+              loading="lazy"
+              decoding="async"
+              className="hidden dark:block h-6 w-6 object-contain"
+            />
+            <img
+              src="https://i.postimg.cc/htL0bQZ5/LOGO-FORNO-FUNDO-BRANCO.png"
+              alt="Logo d'O Forno"
+              width={24}
+              height={24}
+              loading="lazy"
+              decoding="async"
+              className="block dark:hidden h-6 w-6 object-contain rounded"
+            />
             <span className="text-neutral-100">Falar com a Equipe / Institucional</span>
           </div>
           <button

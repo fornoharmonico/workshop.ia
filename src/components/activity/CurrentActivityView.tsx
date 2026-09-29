@@ -163,23 +163,23 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
   const journeyDone = isJourneyCompleted(project);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 space-y-6">
+    <div className="mx-auto max-w-4xl px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Journey Completed Banner */}
       {journeyDone && activeActivityId === 'A11' && currentStatus === 'CONCLUIDA' && (
-        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/60 to-neutral-900 p-6 shadow-xl text-center space-y-3">
+        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/60 to-neutral-900 p-5 sm:p-6 shadow-xl text-center space-y-3">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400">
             <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-neutral-100">
+          <h2 className="text-lg sm:text-xl font-bold text-neutral-100">
             Jornada Concluída com Sucesso!
           </h2>
-          <p className="text-xs text-neutral-300 max-w-lg mx-auto">
+          <p className="text-xs text-neutral-300 max-w-lg mx-auto leading-relaxed">
             Todas as 11 atividades foram consolidadas. Você pode revisar seus artefatos, gerar o Dossiê completo do projeto e preparar sua apresentação.
           </p>
           <div className="pt-2 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setActiveTab('project')}
-              className="rounded-xl bg-emerald-500 px-5 py-2 text-xs font-bold text-neutral-950 hover:bg-emerald-400 transition-colors shadow-md shadow-emerald-500/20"
+              className="rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-bold text-neutral-950 hover:bg-emerald-400 transition-colors shadow-md shadow-emerald-500/20"
             >
               Ver Meu Projeto e Dossiê
             </button>
@@ -189,7 +189,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
 
       {/* Viewed Activity Warning if inspecting different than canonical */}
       {viewedActivityId && viewedActivityId !== canonicalActivityId && (
-        <div className="rounded-xl border border-sky-500/30 bg-sky-950/30 p-3.5 flex items-center justify-between text-xs text-sky-200">
+        <div className="rounded-xl border border-sky-500/30 bg-sky-950/30 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-sky-200">
           <div className="flex items-center space-x-2">
             <Eye className="w-4 h-4 text-sky-400 shrink-0" />
             <span>
@@ -198,7 +198,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
           </div>
           <button
             onClick={() => setViewedActivityId(null)}
-            className="ml-3 shrink-0 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 px-2.5 py-1 text-[11px] font-semibold text-sky-200 transition-colors"
+            className="self-start sm:self-center shrink-0 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 px-3 py-1 text-[11px] font-semibold text-sky-200 transition-colors"
           >
             Voltar para {canonicalActivityId}
           </button>
@@ -207,7 +207,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
 
       {/* Revalidation Banner */}
       {currentStatus === 'REVALIDACAO_RECOMENDADA' && (
-        <div className="rounded-2xl border border-amber-500/40 bg-amber-950/40 p-5 space-y-2 text-amber-200 shadow-lg">
+        <div className="rounded-2xl border border-amber-500/40 bg-amber-950/40 p-4 sm:p-5 space-y-2 text-amber-200 shadow-lg">
           <div className="flex items-center space-x-2.5 font-bold text-sm text-amber-300">
             <RefreshCw className="w-4 h-4 text-amber-400 shrink-0 animate-spin-slow" />
             <span>Revalidação Recomendada</span>
@@ -220,7 +220,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
 
       {/* Blocked Notice */}
       {currentStatus === 'BLOQUEADA' && (
-        <div className="rounded-2xl border border-rose-800/40 bg-rose-950/30 p-5 space-y-3 text-rose-200">
+        <div className="rounded-2xl border border-rose-800/40 bg-rose-950/30 p-4 sm:p-5 space-y-3 text-rose-200">
           <div className="flex items-center space-x-2 font-bold text-sm text-rose-300">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>Etapa Bloqueada</span>
@@ -242,21 +242,21 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
       )}
 
       {/* Activity Header Card */}
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/90 p-6 shadow-xl space-y-4">
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-6 shadow-xl space-y-3 sm:space-y-4">
         {/* Breadcrumb & Movement Badge */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800/80 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-3">
           <div className="flex items-center space-x-2 text-xs">
             <span className="font-semibold text-amber-400 tracking-wide uppercase text-[11px]">
               {movement.title}
             </span>
-            <span className="text-neutral-600">•</span>
+            <span className="text-neutral-500">•</span>
             <span className="text-neutral-400">Encontro {activity.meetingRecommended}</span>
           </div>
 
           <div className="flex items-center space-x-2">
             <button
               onClick={() => openTimer(activity.id)}
-              className="flex items-center space-x-1.5 rounded-lg border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-xs font-mono text-neutral-300 hover:border-amber-500/40 hover:text-amber-300 transition-colors"
+              className="flex items-center space-x-1.5 rounded-lg border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-xs font-mono text-neutral-300 hover:border-amber-500/40 hover:text-amber-400 transition-colors shadow-sm"
               title="Abrir cronômetro para esta atividade"
             >
               <Clock className="w-3.5 h-3.5 text-amber-400" />
@@ -272,7 +272,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
             <span className="font-mono text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
               {activity.id}
             </span>
-            <h1 className="text-lg sm:text-xl font-bold text-neutral-100 tracking-tight">
+            <h1 className="text-base sm:text-xl font-bold text-neutral-100 tracking-tight">
               {activity.title}
             </h1>
           </div>
@@ -305,7 +305,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
 
         {/* Already Consolidated Notice */}
         {currentStatus === 'CONCLUIDA' && !explicitReviseMode && (
-          <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-emerald-200">
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-emerald-200">
             <div className="flex items-center space-x-2.5">
               <FileCheck className="w-5 h-5 text-emerald-400 shrink-0" />
               <span>
@@ -314,7 +314,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
             </div>
             <button
               onClick={() => setExplicitReviseMode(true)}
-              className="rounded-lg bg-neutral-900 border border-neutral-700 px-3 py-1.5 text-xs font-semibold text-neutral-200 hover:text-amber-300 hover:border-amber-500/40 transition-colors shrink-0"
+              className="rounded-lg bg-neutral-900 border border-neutral-700 px-3 py-1.5 text-xs font-semibold text-neutral-200 hover:text-amber-400 hover:border-amber-500/40 transition-colors shrink-0 shadow-sm"
             >
               Revisar esta etapa (Modo REVISE)
             </button>
@@ -323,14 +323,14 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
       </div>
 
       {/* READY TO TALK TO AI CARD */}
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/90 p-6 shadow-xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-neutral-800 pb-4">
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-6 shadow-xl space-y-4 sm:space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-neutral-800 pb-3 sm:pb-4">
           <div>
             <div className="flex items-center space-x-2">
-              <h2 className="text-sm font-bold text-neutral-100 uppercase tracking-wider">
+              <h2 className="text-xs sm:text-sm font-bold text-neutral-100 uppercase tracking-wider">
                 Pronto para conversar com a IA
               </h2>
-              <span className="rounded bg-neutral-800 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-300 border border-neutral-700">
+              <span className="rounded bg-neutral-800 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-400 border border-neutral-700">
                 MODO: {executionMode}
               </span>
             </div>
@@ -342,7 +342,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsViewerOpen(true)}
-              className="flex items-center space-x-1.5 rounded-xl border border-neutral-700 bg-neutral-800/80 px-3 py-1.5 text-xs text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800 transition-colors"
+              className="flex items-center space-x-1.5 rounded-xl border border-neutral-700 bg-neutral-800/80 px-3 py-1.5 text-xs text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800 transition-colors shadow-sm"
               title="Visualizar todo o pacote antes de copiar"
             >
               <Eye className="w-3.5 h-3.5" />
@@ -352,13 +352,13 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
         </div>
 
         {/* Included Blocks Summary */}
-        <div className="rounded-xl bg-neutral-950 p-4 border border-neutral-800/80 space-y-2">
+        <div className="rounded-xl bg-neutral-950 p-3.5 sm:p-4 border border-neutral-800 space-y-2">
           <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
             Conteúdo empacotado neste envio:
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-neutral-300">
             {activity.id === 'A01' && (
-              <div className="flex items-center space-x-1.5 text-amber-300 font-medium">
+              <div className="flex items-center space-x-1.5 text-amber-400 font-medium">
                 <Check className="w-3.5 h-3.5 text-amber-400" />
                 <span>Prompt Zero (IARA Core)</span>
               </div>
@@ -378,7 +378,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
               </div>
             )}
             {(executionMode === 'REVISE' || executionMode === 'REVALIDATE') && (
-              <div className="flex items-center space-x-1.5 text-amber-300">
+              <div className="flex items-center space-x-1.5 text-amber-400">
                 <Check className="w-3.5 h-3.5 text-amber-400" />
                 <span>Artefato Atual a {executionMode === 'REVISE' ? 'Revisar' : 'Revalidar'}</span>
               </div>
@@ -394,10 +394,10 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
         <div>
           <button
             onClick={handleCopyPack}
-            className={`w-full group flex items-center justify-center space-x-3 rounded-2xl py-4 px-6 font-bold text-sm transition-all shadow-lg ${
+            className={`w-full group flex items-center justify-center space-x-3 rounded-2xl py-3.5 sm:py-4 px-4 sm:px-6 font-bold text-xs sm:text-sm transition-all shadow-lg min-h-[48px] ${
               copiedSuccess
                 ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/20'
-                : 'bg-gradient-to-r from-amber-500 to-amber-400 text-neutral-950 hover:from-amber-400 hover:to-amber-300 shadow-amber-500/20 hover:scale-[1.01]'
+                : 'bg-gradient-to-r from-amber-500 to-amber-400 text-neutral-950 hover:from-amber-400 hover:to-amber-300 shadow-amber-500/20 hover:scale-[1.005]'
             }`}
           >
             {copiedSuccess ? (
@@ -419,10 +419,10 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
       </div>
 
       {/* RETURN & CONSOLIDATION FORM */}
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/90 p-6 shadow-xl space-y-5">
-        <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-6 shadow-xl space-y-4 sm:space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-neutral-800 pb-3">
           <div>
-            <h2 className="text-sm font-bold text-neutral-100 uppercase tracking-wider">
+            <h2 className="text-xs sm:text-sm font-bold text-neutral-100 uppercase tracking-wider">
               Retorno da Conversa & Consolidação
             </h2>
             <p className="text-xs text-neutral-400">
@@ -462,8 +462,8 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
             value={pastedInput}
             onChange={handlePastedChange}
             placeholder={`<<< ARTEFATO ${activity.artifactId} >>>\n...\n<<< FIM DO ARTEFATO >>>\n\n<<< STATE OF WORK — SOW >>>\n...\n<<< FIM DO SOW >>>`}
-            rows={10}
-            className="w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3.5 font-mono text-xs text-neutral-200 placeholder-neutral-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 leading-relaxed resize-y"
+            rows={9}
+            className="w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3 sm:p-3.5 font-mono text-sm sm:text-xs text-neutral-200 placeholder-neutral-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 leading-relaxed resize-y"
           />
         </div>
 
@@ -477,7 +477,7 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
             onChange={handleObservationChange}
             placeholder="Ex: Tivemos dificuldade em decidir a causa 3; queremos testar com a professora amanhã."
             rows={2}
-            className="w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3 text-xs text-neutral-200 placeholder-neutral-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-y"
+            className="w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3 text-sm sm:text-xs text-neutral-200 placeholder-neutral-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-y"
           />
           <p className="text-[11px] text-neutral-400 mt-1">
             Fica registrado no dossiê da etapa e será metabolizado na consolidação.
@@ -485,11 +485,11 @@ export const CurrentActivityView: React.FC<CurrentActivityViewProps> = ({
         </div>
 
         {/* Consolidate Button */}
-        <div className="pt-2">
+        <div className="pt-1 sm:pt-2">
           <button
             onClick={handleConsolidate}
             disabled={!pastedInput.trim()}
-            className={`w-full flex items-center justify-center space-x-2 rounded-xl py-3.5 px-6 font-bold text-xs uppercase tracking-wider transition-all shadow-md ${
+            className={`w-full flex items-center justify-center space-x-2 rounded-xl py-3.5 px-6 font-bold text-xs uppercase tracking-wider transition-all shadow-md min-h-[46px] ${
               pastedInput.trim()
                 ? 'bg-amber-500 text-neutral-950 hover:bg-amber-400 shadow-amber-500/20 cursor-pointer hover:scale-[1.005]'
                 : 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700/50'
